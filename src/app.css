@@ -1,0 +1,140 @@
+/* Estilos globales: tipografías, tokens de color, estilos base y utilidades del diseño «cuaderno de taller». */
+
+@import 'tailwindcss';
+
+/* Tipografías locales (subconjunto latino), con su licencia OFL en src/res/fonts/. */
+@font-face {
+    font-family: 'Caveat';
+    font-weight: 600 700;
+    font-display: swap;
+    src: url('./res/fonts/caveat.woff2') format('woff2');
+}
+@font-face {
+    font-family: 'Kalam';
+    font-weight: 400;
+    font-display: swap;
+    src: url('./res/fonts/kalam-400.woff2') format('woff2');
+}
+@font-face {
+    font-family: 'Kalam';
+    font-weight: 700;
+    font-display: swap;
+    src: url('./res/fonts/kalam-700.woff2') format('woff2');
+}
+@font-face {
+    font-family: 'IBM Plex Mono';
+    font-weight: 400;
+    font-display: swap;
+    src: url('./res/fonts/ibm-plex-mono-400.woff2') format('woff2');
+}
+@font-face {
+    font-family: 'IBM Plex Mono';
+    font-weight: 600;
+    font-display: swap;
+    src: url('./res/fonts/ibm-plex-mono-600.woff2') format('woff2');
+}
+
+:root {
+    --ink: #1b2733;
+    --muted: #4a5a6b;
+    --line: #c5d1de;
+    --accent: #1f4fa8;
+    --bad: #b42318;
+    /* Colores de las categorías, en el orden de «Categorías:» de la plantilla. */
+    --c1: #0e7c7b;
+    --c2: #b98a00;
+    --c3: #66727d;
+    --c4: #b5446f;
+    --c5: #3f67a6;
+    --c6: #7a55a8;
+    --c7: #c0562a;
+    --c8: #3f8a4f;
+    --c9: #8a6a2c;
+    --c10: #3b5b7a;
+}
+
+@theme inline {
+    --color-ink: var(--ink);
+    --color-muted: var(--muted);
+    --color-line: var(--line);
+    --color-accent: var(--accent);
+    --color-bad: var(--bad);
+    --font-mano: 'Caveat', cursive;
+    --font-cuaderno: 'Kalam', cursive;
+    --font-mono: 'IBM Plex Mono', ui-monospace, Consolas, monospace;
+}
+
+@layer base {
+    body {
+        @apply font-cuaderno text-lg text-ink tabular-nums;
+        background-color: #eef3f9;
+        background-image:
+            linear-gradient(#d9e3ef 1px, transparent 1px),
+            linear-gradient(90deg, #d9e3ef 1px, transparent 1px);
+        background-size: 24px 24px;
+    }
+    input:not([type='checkbox']),
+    textarea,
+    select {
+        @apply rounded border border-[#AEBCCB] bg-white px-1.5 py-1 text-ink;
+    }
+    button {
+        @apply cursor-pointer;
+    }
+    button:disabled {
+        @apply cursor-default opacity-50;
+    }
+    code {
+        @apply font-mono text-[0.85em];
+    }
+    :focus-visible {
+        @apply outline-2 outline-offset-1 outline-accent;
+    }
+}
+
+/* Fondo blanco obligatorio para todo texto: nunca se escribe sobre la cuadrícula. */
+@utility papel {
+    @apply min-w-0 rounded-md border-2 border-ink bg-white;
+}
+@utility papel-suave {
+    @apply self-start rounded bg-white/85 px-3 py-1.5 text-base text-muted;
+}
+@utility postit {
+    @apply flex flex-col gap-0.5 border-2 border-ink bg-[#FFF4A8] px-5 py-4 shadow-[4px_4px_0_var(--ink)];
+}
+@utility pestana {
+    @apply rounded-lg border-2 border-line bg-white px-4 py-1.5 text-ink;
+    &.activa {
+        @apply border-ink bg-[#FFF4A8] font-bold;
+    }
+}
+@utility guardar {
+    @apply inline-flex min-h-12 items-center gap-2.5 rounded-lg border-2 border-ink bg-ink px-5 text-lg font-bold text-white;
+}
+@utility boton-amarillo {
+    @apply min-h-11 rounded-lg border-2 border-ink bg-[#FFF4A8] px-4 font-bold;
+}
+@utility boton-peligro {
+    @apply min-h-11 rounded-lg border-2 border-bad bg-bad px-4 font-bold text-white;
+}
+@utility enlace {
+    @apply border-0 bg-transparent p-0 text-accent underline underline-offset-2 hover:text-[#163A7C];
+}
+@utility mini {
+    @apply border-0 bg-transparent px-1.5 py-0.5 text-muted hover:text-ink;
+}
+@utility titulo-editable {
+    @apply rounded-md border border-dashed border-[#B9C9DB] bg-[#F5F9FE]/80 px-2 py-0.5 hover:border-[#8FA6BF] hover:bg-white focus:border-solid focus:border-accent focus:bg-white;
+}
+@utility sin-caja {
+    @apply rounded-none border-0 bg-transparent px-0;
+}
+@utility numero {
+    @apply text-right font-mono text-[15px];
+}
+@utility usado {
+    @apply border-2 border-ink bg-[#FFF4A8] font-semibold;
+}
+@utility anadir {
+    @apply cursor-pointer border-0 bg-transparent p-0 text-accent;
+}
