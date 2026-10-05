@@ -4,11 +4,11 @@
 -->
 
 <script lang="ts">
-    import { store } from './documentos.client.svelte.ts'
-    import Barra from './Barra.svelte'
-    import { tagSegments } from './colores.ts'
-    import DondeSeVa from './DondeSeVa.svelte'
-    import { formatEuros, summarize } from './formato.ts'
+    import { tagSegments } from './colors.ts'
+    import { formatEuros, summarize } from './format.ts'
+    import { store } from './store.client.svelte.ts'
+    import TagBar from './TagBar.svelte'
+    import TagRanking from './TagRanking.svelte'
 
     const summaries = $derived(Object.fromEntries(Object.entries(store.products).map(([file, product]) => [file, summarize(product)])))
     const maxTotal = $derived(Math.max(0, ...Object.values(summaries).map((s) => s.total)))
@@ -32,7 +32,7 @@
     {#if store.files.length === 0}
         <p class="paper p-4">Todavía no hay nada. Dale a «+ nuevo» para empezar.</p>
     {:else}
-        <DondeSeVa segments={combined.segments} total={combined.total} />
+        <TagRanking segments={combined.segments} total={combined.total} />
         <h2 class="paper-soft font-hand text-[34px] leading-none font-bold text-[#183F86]">Por producto</h2>
         {#each store.files as file (file)}
             {@const product = store.products[file]}
@@ -43,7 +43,7 @@
                         {product.name} <span class="text-[15px] font-normal text-muted">{product.date}</span>
                     </span>
                     <span class="font-mono font-semibold">{formatEuros(summary.total)}</span>
-                    <span class="col-span-2"><Barra segments={tagSegments(summary.byTag, store.tags)} scale={maxTotal} height={12} /></span>
+                    <span class="col-span-2"><TagBar segments={tagSegments(summary.byTag, store.tags)} scale={maxTotal} height={12} /></span>
                 </button>
             {/if}
         {/each}

@@ -2,7 +2,7 @@
  * @file Categorías (`tag` en el código): limpieza, listas y las que usa un producto.
  */
 
-import type { Section, Surcharge } from './modelo.ts'
+import type { Section, Surcharge } from './model.ts'
 
 /** Categoría con la que se agrupan las líneas que no llevan ninguna. */
 export const UNTAGGED = 'Sin categoría'

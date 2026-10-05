@@ -5,9 +5,9 @@
 -->
 
 <script lang="ts">
-    import { store } from './documentos.client.svelte.ts'
-    import { ask } from './Dialogo.svelte'
-    import Icono from './Icono.svelte'
+    import { ask } from './Dialog.svelte'
+    import Icon from './Icon.svelte'
+    import { store } from './store.client.svelte.ts'
 
     async function createProduct() {
         const name = await ask({ title: 'Nuevo producto', message: '¿Cómo se llama?', value: '', confirmLabel: 'Crear' })
@@ -35,7 +35,7 @@
                 <span class="text-sm text-muted">{store.status}</span>
             {/if}
             <button class="save-button" onclick={() => store.saveAll()} disabled={!store.hasUnsaved} title="Ctrl+S">
-                <Icono name="save" size={20} />
+                <Icon name="save" size={20} />
                 Guardar <span class="font-mono text-xs font-normal opacity-80">Ctrl+S</span>
             </button>
         </div>

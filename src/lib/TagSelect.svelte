@@ -5,8 +5,8 @@
 -->
 
 <script lang="ts" module>
-    import { cleanTag } from './formato.ts'
-    import { ask } from './Dialogo.svelte'
+    import { ask } from './Dialog.svelte'
+    import { cleanTag } from './format.ts'
 
     /** Pide el nombre de una categoría nueva; `null` si se cancela o queda vacío. */
     export async function askNewTag(): Promise<string | null> {
@@ -16,8 +16,8 @@
 </script>
 
 <script lang="ts">
-    import { store } from './documentos.client.svelte.ts'
-    import { softColor, tagColor } from './colores.ts'
+    import { softColor, tagColor } from './colors.ts'
+    import { store } from './store.client.svelte.ts'
 
     let { item }: { item: { tag: string } } = $props()
 

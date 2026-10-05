@@ -4,8 +4,8 @@
 -->
 
 <script lang="ts">
-    import type { Segment } from './colores.ts'
-    import { formatEuros } from './formato.ts'
+    import type { Segment } from './colors.ts'
+    import { formatEuros } from './format.ts'
 
     let { segments, total }: { segments: Segment[]; total: number } = $props()
 

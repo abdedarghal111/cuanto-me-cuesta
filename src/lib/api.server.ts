@@ -6,7 +6,7 @@
 import type { Plugin } from 'vite'
 import fs from 'node:fs'
 import path from 'node:path'
-import { TEMPLATE_INSTRUCTIONS } from './formato.ts'
+import { TEMPLATE_INSTRUCTIONS } from './format.ts'
 
 /** Carpeta de datos: un `titulo_fecha.txt` por producto. */
 const DATA_DIR = path.resolve(import.meta.dirname, '../../datos')

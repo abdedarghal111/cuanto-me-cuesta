@@ -5,8 +5,8 @@
 
 <script lang="ts">
     import { untrack } from 'svelte'
-    import { store } from './documentos.client.svelte.ts'
-    import { productToText, type Product } from './formato.ts'
+    import { productToText, type Product } from './format.ts'
+    import { store } from './store.client.svelte.ts'
 
     let { product }: { product: Product } = $props()
 

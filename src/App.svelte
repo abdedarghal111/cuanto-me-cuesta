@@ -6,17 +6,17 @@
 
 <script lang="ts">
     import { onMount } from 'svelte'
-    import { store, clone } from './lib/documentos.client.svelte.ts'
-    import Bloque from './lib/Bloque.svelte'
-    import { tagSegments } from './lib/colores.ts'
-    import Dialogo from './lib/Dialogo.svelte'
-    import DondeSeVa from './lib/DondeSeVa.svelte'
-    import { emptyLine, formatEuros, type Section } from './lib/formato.ts'
-    import Pestanas from './lib/Pestanas.svelte'
-    import Producto from './lib/Producto.svelte'
-    import SobreTotal from './lib/SobreTotal.svelte'
-    import TextoArchivo from './lib/TextoArchivo.svelte'
-    import Todo from './lib/Todo.svelte'
+    import { tagSegments } from './lib/colors.ts'
+    import Dialog from './lib/Dialog.svelte'
+    import FileTextView from './lib/FileTextView.svelte'
+    import { emptyLine, formatEuros, type Section } from './lib/format.ts'
+    import Overview from './lib/Overview.svelte'
+    import ProductHeader from './lib/ProductHeader.svelte'
+    import SectionEditor from './lib/SectionEditor.svelte'
+    import { store, clone } from './lib/store.client.svelte.ts'
+    import TabBar from './lib/TabBar.svelte'
+    import TagRanking from './lib/TagRanking.svelte'
+    import TotalSurcharges from './lib/TotalSurcharges.svelte'
 
     onMount(() => {
         // Un «#archivo.txt» en la dirección abre ese producto.
@@ -69,21 +69,21 @@
     }
 </script>
 
-<Dialogo />
-<Pestanas />
+<Dialog />
+<TabBar />
 
 <main class="mx-auto flex max-w-[1500px] flex-wrap items-start gap-6 p-6">
     {#if store.product && store.summary}
         {@const product = store.product}
         {@const summary = store.summary}
         <section class="flex min-w-0 flex-[999_1_680px] flex-col gap-[18px]">
-            <Producto {product} />
+            <ProductHeader {product} />
 
             {#if store.textMode}
-                <TextoArchivo {product} />
+                <FileTextView {product} />
             {:else}
                 {#each product.sections as section, index (section)}
-                    <Bloque {product} {summary} {section} {index} />
+                    <SectionEditor {product} {summary} {section} {index} />
                 {/each}
 
                 <select class="cursor-pointer self-start text-accent rounded-md border-2 border-dashed border-[#1F4FA8] bg-white px-4 py-2 font-hand text-[26px] font-bold" onchange={addSection} aria-label="Nuevo bloque">
@@ -92,7 +92,7 @@
                     {#each store.template.sections as templateSection, i (i)}<option value={i}>{templateSection.title}</option>{/each}
                 </select>
 
-                <SobreTotal {product} {summary} />
+                <TotalSurcharges {product} {summary} />
 
                 <p class="paper-soft">
                     Coste = Precio / por × consumo × multiplicador. Solo números con coma (<code>0,5</code>). El tipo dice cómo se escriben «por» y «consumo»: número, tiempo (unidad en días, horas o minutos y consumo como duración: <code>3d 5h 1m 3s</code>) o fijo (el consumo es un importe en €).
@@ -109,7 +109,7 @@
                 {#if summary.total !== summary.cost}<span class="font-bold">Con lo de sobre el total: {formatEuros(summary.total)}</span>{/if}
                 {#if summary.excluded > 0}<span class="text-sm">+ {formatEuros(summary.excluded)} que no cuentan</span>{/if}
             </div>
-            <DondeSeVa segments={tagSegments(summary.byTag, store.tags)} total={summary.total} />
+            <TagRanking segments={tagSegments(summary.byTag, store.tags)} total={summary.total} />
             <div class="paper grid gap-1 p-4">
                 <h2 class="mb-1 font-hand text-[26px] leading-none">Por bloques</h2>
                 {#each product.sections as section, index (section)}
@@ -120,6 +120,6 @@
             </div>
         </aside>
     {:else}
-        <Todo />
+        <Overview />
     {/if}
 </main>

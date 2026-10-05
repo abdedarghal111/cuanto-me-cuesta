@@ -4,10 +4,10 @@
 -->
 
 <script lang="ts">
-    import Acciones from './Acciones.svelte'
-    import { store } from './documentos.client.svelte.ts'
-    import { emptySurcharge, formatEuros, type Product, type Summary } from './formato.ts'
-    import SelectorCategoria from './SelectorCategoria.svelte'
+    import { emptySurcharge, formatEuros, type Product, type Summary } from './format.ts'
+    import RowActions from './RowActions.svelte'
+    import { store } from './store.client.svelte.ts'
+    import TagSelect from './TagSelect.svelte'
 
     let { product, summary }: { product: Product; summary: Summary } = $props()
 
@@ -44,10 +44,10 @@
                                 <input class="borderless w-full min-w-24 border-b border-[#C5D1DE] py-1" bind:value={surcharge.name} placeholder="Ej. Margen" aria-label="Concepto" />
                             </td>
                             <td><input class="numeric highlighted w-18" bind:value={surcharge.percent} inputmode="decimal" placeholder="0" aria-label="Porcentaje" /></td>
-                            <td><SelectorCategoria item={surcharge} /></td>
+                            <td><TagSelect item={surcharge} /></td>
                             <td class="text-right font-mono font-semibold {surcharge.counts ? '' : 'line-through'}">{formatEuros(summary.totalSurcharges[index]?.amount ?? 0)}</td>
                             <td class="text-right font-mono">{formatEuros(summary.totalSurcharges[index]?.runningTotal ?? 0)}</td>
-                            <td><Acciones list={product.totalSurcharges} {index} /></td>
+                            <td><RowActions list={product.totalSurcharges} {index} /></td>
                         </tr>
                     {/each}
                 </tbody>

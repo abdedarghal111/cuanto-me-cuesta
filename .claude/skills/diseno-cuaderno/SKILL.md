@@ -38,5 +38,5 @@ Locales, en `src/res/fonts/`.
 - Tema claro, colores planos y sombras duras.
 - Lenguaje llano en primera persona.
 - En escritorio, el contenido cabe a lo ancho; la tabla se desplaza de lado solo en pantallas estrechas.
-- Los iconos son SVG de trazo de `src/lib/Icono.svelte`, donde se añaden los que falten. Los botones que solo llevan icono tienen `aria-label`.
-- Los diálogos se hacen con `src/lib/Dialogo.svelte`. Lo único que avisa el navegador es el cierre con cambios sin guardar.
+- Los iconos son SVG de trazo de `src/lib/Icon.svelte`, donde se añaden los que falten. Los botones que solo llevan icono tienen `aria-label`.
+- Los diálogos se hacen con `src/lib/Dialog.svelte`. Lo único que avisa el navegador es el cierre con cambios sin guardar.

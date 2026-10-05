@@ -5,14 +5,14 @@
 -->
 
 <script lang="ts">
-    import Acciones, { move, remove } from './Acciones.svelte'
-    import { store } from './documentos.client.svelte.ts'
     import {
         LINE_TYPE_LABELS, TIME_UNIT_SECONDS, emptyLine, emptySurcharge, formatEuros, lineCost, normalizeDuration, surchargeAmount, timeUnit,
         type Line, type LineType, type Product, type Section, type Summary,
-    } from './formato.ts'
-    import Icono from './Icono.svelte'
-    import SelectorCategoria from './SelectorCategoria.svelte'
+    } from './format.ts'
+    import Icon from './Icon.svelte'
+    import RowActions, { move, remove } from './RowActions.svelte'
+    import { store } from './store.client.svelte.ts'
+    import TagSelect from './TagSelect.svelte'
 
     /** `section` es el bloque número `index` de `product`. */
     let { product, summary, section, index }: { product: Product; summary: Summary; section: Section; index: number } = $props()
@@ -59,9 +59,9 @@
         />
         <strong class="font-mono text-lg">{formatEuros(summary.sectionSubtotals[index] ?? 0)}</strong>
         <span class="inline-flex">
-            <button class="mini" onclick={() => move(product.sections, index, -1)} title="Subir bloque" aria-label="Subir bloque"><Icono name="up" /></button>
-            <button class="mini" onclick={() => move(product.sections, index, 1)} title="Bajar bloque" aria-label="Bajar bloque"><Icono name="down" /></button>
-            <button class="mini" onclick={() => remove(product.sections, index, `Quitar el bloque «${section.title}»`)} title="Quitar bloque" aria-label="Quitar bloque"><Icono name="remove" /></button>
+            <button class="mini" onclick={() => move(product.sections, index, -1)} title="Subir bloque" aria-label="Subir bloque"><Icon name="up" /></button>
+            <button class="mini" onclick={() => move(product.sections, index, 1)} title="Bajar bloque" aria-label="Bajar bloque"><Icon name="down" /></button>
+            <button class="mini" onclick={() => remove(product.sections, index, `Quitar el bloque «${section.title}»`)} title="Quitar bloque" aria-label="Quitar bloque"><Icon name="remove" /></button>
         </span>
     </div>
     <div class="overflow-x-auto" oninput={() => store.markChanged()} onchange={() => store.markChanged()}>
@@ -124,9 +124,9 @@
                             {/if}
                         </td>
                         <td><input class="numeric w-12" bind:value={line.multiplier} inputmode="decimal" placeholder="1" aria-label="Multiplicador" /></td>
-                        <td><SelectorCategoria item={line} /></td>
+                        <td><TagSelect item={line} /></td>
                         <td class="text-right font-mono font-semibold {line.counts ? '' : 'line-through'}">{formatEuros(lineCost(line))}</td>
-                        <td><Acciones list={section.lines} index={lineIndex} /></td>
+                        <td><RowActions list={section.lines} index={lineIndex} /></td>
                     </tr>
                 {/each}
                 {#if section.surcharges.length}
@@ -148,9 +148,9 @@
                                 <span class="font-mono text-[13px] text-[#3F4E5D]">% de la base</span>
                             </span>
                         </td>
-                        <td><SelectorCategoria item={surcharge} /></td>
+                        <td><TagSelect item={surcharge} /></td>
                         <td class="text-right font-mono font-semibold {surcharge.counts ? '' : 'line-through'}">{formatEuros(surchargeAmount(surcharge, base))}</td>
-                        <td><Acciones list={section.surcharges} index={surchargeIndex} /></td>
+                        <td><RowActions list={section.surcharges} index={surchargeIndex} /></td>
                     </tr>
                 {/each}
             </tbody>

@@ -5,8 +5,8 @@
 -->
 
 <script lang="ts" module>
-    import { store } from './documentos.client.svelte.ts'
-    import { ask } from './Dialogo.svelte'
+    import { ask } from './Dialog.svelte'
+    import { store } from './store.client.svelte.ts'
 
     /** Cambia el elemento `index` de sitio con el de al lado. */
     export function move<T>(list: T[], index: number, step: -1 | 1) {
@@ -29,13 +29,13 @@
 </script>
 
 <script lang="ts">
-    import Icono from './Icono.svelte'
+    import Icon from './Icon.svelte'
 
     let { list, index }: { list: unknown[]; index: number } = $props()
 </script>
 
 <span class="inline-flex">
-    <button class="mini px-0.5" onclick={() => move(list, index, -1)} title="Subir" aria-label="Subir"><Icono name="up" size={16} /></button>
-    <button class="mini px-0.5" onclick={() => move(list, index, 1)} title="Bajar" aria-label="Bajar"><Icono name="down" size={16} /></button>
-    <button class="mini px-0.5" onclick={() => remove(list, index)} title="Quitar" aria-label="Quitar"><Icono name="remove" size={16} /></button>
+    <button class="mini px-0.5" onclick={() => move(list, index, -1)} title="Subir" aria-label="Subir"><Icon name="up" size={16} /></button>
+    <button class="mini px-0.5" onclick={() => move(list, index, 1)} title="Bajar" aria-label="Bajar"><Icon name="down" size={16} /></button>
+    <button class="mini px-0.5" onclick={() => remove(list, index)} title="Quitar" aria-label="Quitar"><Icon name="remove" size={16} /></button>
 </span>

@@ -3,12 +3,12 @@
  * acepta los formatos anteriores, ignora lo que no entiende y nunca lanza errores.
  */
 
-import { parseFileName, today } from './archivo.ts'
-import { parseTagList, usedTags } from './categorias.ts'
-import { LINE_COLUMNS, SURCHARGE_COLUMNS, columnKey, normalizeKey } from './columnas.ts'
-import { normalizeLine } from './lineas.ts'
-import { LINE_TYPE_LABELS, type Line, type LineType, type Product, type Section, type Surcharge, type Template } from './modelo.ts'
-import { formatNumber, normalizeNumber, parseNumber } from './numeros.ts'
+import { parseFileName, today } from './files.ts'
+import { parseTagList, usedTags } from './tags.ts'
+import { LINE_COLUMNS, SURCHARGE_COLUMNS, columnKey, normalizeKey } from './columns.ts'
+import { normalizeLine } from './lines.ts'
+import { LINE_TYPE_LABELS, type Line, type LineType, type Product, type Section, type Surcharge, type Template } from './model.ts'
+import { formatNumber, normalizeNumber, parseNumber } from './numbers.ts'
 
 /** Valores de una fila, por clave de columna; sin las columnas calculadas («= …»). */
 type RowValues = Record<string, string>

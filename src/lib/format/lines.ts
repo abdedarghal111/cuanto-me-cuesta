@@ -2,8 +2,8 @@
  * @file Reglas de cada tipo de línea: cómo se normaliza y cuánto cuesta. Un tipo nuevo solo necesita su entrada en `LINE_TYPE_RULES`.
  */
 
-import type { Line, LineType, Surcharge } from './modelo.ts'
-import { TIME_UNIT_SECONDS, durationSeconds, formatNumber, normalizeDuration, normalizeNumber, parseNumber, timeUnit } from './numeros.ts'
+import type { Line, LineType, Surcharge } from './model.ts'
+import { TIME_UNIT_SECONDS, durationSeconds, formatNumber, normalizeDuration, normalizeNumber, parseNumber, timeUnit } from './numbers.ts'
 
 /** Valores numéricos con los que se calcula el coste de una línea. */
 interface CostInputs {

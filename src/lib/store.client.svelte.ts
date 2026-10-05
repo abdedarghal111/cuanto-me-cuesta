@@ -4,10 +4,10 @@
  */
 
 import * as api from './api.client.ts'
-import { sortTags } from './colores.ts'
+import { sortTags } from './colors.ts'
 import {
     cleanTag, fileName, parseProduct, parseTemplate, productToText, summarize, today, usedTags, type Product, type Template,
-} from './formato.ts'
+} from './format.ts'
 
 /** Copia profunda de un valor reactivo, sin vínculo con el original. */
 export const clone = <T>(value: T): T => structuredClone($state.snapshot(value) as T)

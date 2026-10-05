@@ -2,7 +2,7 @@
  * @file Nombre de los archivos de producto y fecha de hoy.
  */
 
-import type { Product } from './modelo.ts'
+import type { Product } from './model.ts'
 
 /** Fecha de hoy como AAAA-MM-DD. */
 export function today(): string {

@@ -3,12 +3,12 @@
  * Los costes, subtotales y el resumen se escriben para leerlos a mano; al cargar se recalculan.
  */
 
-import { LINE_HEADER, LINE_WIDTH, SURCHARGE_HEADER, TOTAL_SURCHARGE_HEADER } from './columnas.ts'
-import { PRODUCT_INSTRUCTIONS } from './instrucciones.ts'
-import { lineCost, normalizeLine, surchargeAmount } from './lineas.ts'
-import { LINE_TYPE_LABELS, type Line, type Product, type Section, type Surcharge } from './modelo.ts'
-import { formatEuros, formatPercent, normalizeNumber } from './numeros.ts'
-import { summarize, type Summary } from './resumen.ts'
+import { LINE_HEADER, LINE_WIDTH, SURCHARGE_HEADER, TOTAL_SURCHARGE_HEADER } from './columns.ts'
+import { PRODUCT_INSTRUCTIONS } from './instructions.ts'
+import { lineCost, normalizeLine, surchargeAmount } from './lines.ts'
+import { LINE_TYPE_LABELS, type Line, type Product, type Section, type Surcharge } from './model.ts'
+import { formatEuros, formatPercent, normalizeNumber } from './numbers.ts'
+import { summarize, type Summary } from './summary.ts'
 
 /** Comienzo de una línea que se leería como el inicio de una parte del archivo. */
 const PART_MARKER = /^(##|SOBRE EL TOTAL|RESUMEN|INSTRUCCIONES|DESCRIPCI)/

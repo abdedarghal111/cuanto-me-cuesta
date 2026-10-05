@@ -5,12 +5,12 @@
 -->
 
 <script lang="ts">
-    import { store } from './documentos.client.svelte.ts'
-    import { softColor, tagColor } from './colores.ts'
-    import { ask } from './Dialogo.svelte'
-    import { formatEuros, type Product } from './formato.ts'
-    import Icono from './Icono.svelte'
-    import { askNewTag } from './SelectorCategoria.svelte'
+    import { softColor, tagColor } from './colors.ts'
+    import { ask } from './Dialog.svelte'
+    import { formatEuros, type Product } from './format.ts'
+    import Icon from './Icon.svelte'
+    import { store } from './store.client.svelte.ts'
+    import { askNewTag } from './TagSelect.svelte'
 
     let { product }: { product: Product } = $props()
 
@@ -121,7 +121,7 @@
                     {tag}
                     <span class="font-mono text-xs text-muted">{formatEuros(usage.cost)}</span>
                     <button class="mini px-0.5" onclick={() => removeTag(tag)} aria-label="Quitar la categoría {tag}" title="Quitar categoría">
-                        <Icono name="remove" size={14} />
+                        <Icon name="remove" size={14} />
                     </button>
                 </span>
             {:else}

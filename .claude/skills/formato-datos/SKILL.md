@@ -1,6 +1,6 @@
 ---
 name: formato-datos
-description: Formato de los archivos de texto de «Cuánto me cuesta» (productos en datos/ y la plantilla src/res/template.txt), cálculo del coste, guardado y categorías. Úsala siempre que vayas a tocar src/lib/formato.ts, src/lib/api.server.ts, src/lib/api.client.ts, src/lib/documentos.client.svelte.ts, la plantilla, el guardado o las categorías, o a leer o editar un .txt de datos/.
+description: Formato de los archivos de texto de «Cuánto me cuesta» (productos en datos/ y la plantilla src/res/template.txt), cálculo del coste, guardado y categorías. Úsala siempre que vayas a tocar src/lib/format.ts, src/lib/format/, src/lib/api.server.ts, src/lib/api.client.ts, src/lib/store.client.svelte.ts, la plantilla, el guardado o las categorías, o a leer o editar un .txt de datos/.
 ---
 
 # Formato de los datos
@@ -11,9 +11,9 @@ Los `.txt` son la fuente de verdad y se tienen que poder leer y editar a mano.
 
 - Cada producto es un archivo `datos/titulo_fecha.txt`; la app lo renombra al guardar si cambian el título o la fecha.
 - Borrar un producto lo renombra a `nombre.txt.borrado`.
-- La plantilla, `src/res/template.txt`, guarda los bloques que se copian al crear un bloque, las categorías de siempre, y los bloques y recargos sobre el total con los que empieza un producto nuevo. La app la usa directamente, sin copias. Cada vez que el servidor la lee, le reescribe al final `TEMPLATE_INSTRUCTIONS` de `formato/instrucciones.ts` (para crear productos a partir de ella) si faltan o no coinciden.
-- El formato se implementa en `src/lib/formato/`, un módulo por tarea (`modelo`, `numeros`, `lineas`, `resumen`, `categorias`, `columnas`, `instrucciones`, `lectura`, `escritura`, `archivo`); `src/lib/formato.ts` reexporta la API pública. Un tipo de línea nuevo se añade en `LINE_TYPE_RULES` de `lineas.ts` y en `LineType` y `LINE_TYPE_LABELS` de `modelo.ts`.
-- El código va en inglés y el archivo en español: los títulos de columna y los campos de la cabecera se traducen a claves en inglés al leer (`COLUMN_KEYS` de `columnas.ts` y `HEADER_FIELD_KEYS` de `lectura.ts`).
+- La plantilla, `src/res/template.txt`, guarda los bloques que se copian al crear un bloque, las categorías de siempre, y los bloques y recargos sobre el total con los que empieza un producto nuevo. La app la usa directamente, sin copias. Cada vez que el servidor la lee, le reescribe al final `TEMPLATE_INSTRUCTIONS` de `format/instructions.ts` (para crear productos a partir de ella) si faltan o no coinciden.
+- El formato se implementa en `src/lib/format/`, un módulo por tarea (`model`, `numbers`, `lines`, `summary`, `tags`, `columns`, `instructions`, `parser`, `writer`, `files`); `src/lib/format.ts` reexporta la API pública. Un tipo de línea nuevo se añade en `LINE_TYPE_RULES` de `lines.ts` y en `LineType` y `LINE_TYPE_LABELS` de `model.ts`.
+- El código va en inglés y el archivo en español: los títulos de columna y los campos de la cabecera se traducen a claves en inglés al leer (`COLUMN_KEYS` de `columns.ts` y `HEADER_FIELD_KEYS` de `parser.ts`).
 
 ## Estructura de un producto
 
@@ -32,11 +32,11 @@ En orden: cabecera (`Producto:`, `Fecha:`, `Categorías:`), `DESCRIPCIÓN`, bloq
 
 - Los archivos con formatos anteriores se siguen leyendo.
 - Leer → escribir → leer deja los datos iguales.
-- Actualiza a la vez `PRODUCT_INSTRUCTIONS`, `TEMPLATE_INSTRUCTIONS` y `LINE_RULES` de `formato/instrucciones.ts`, y el `README.md`.
+- Actualiza a la vez `PRODUCT_INSTRUCTIONS`, `TEMPLATE_INSTRUCTIONS` y `LINE_RULES` de `format/instructions.ts`, y el `README.md`.
 
 ## Guardado
 
-Se guarda solo con el botón Guardar o con Ctrl+S. Hasta entonces, los cambios viven en memoria (`unsaved`, en `src/lib/documentos.client.svelte.ts`) y `beforeunload` avisa al cerrar.
+Se guarda solo con el botón Guardar o con Ctrl+S. Hasta entonces, los cambios viven en memoria (`unsaved`, en `src/lib/store.client.svelte.ts`) y `beforeunload` avisa al cerrar.
 
 ## Categorías
 

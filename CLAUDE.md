@@ -19,8 +19,8 @@ App local para apuntar lo que cuesta cada cosa que hago y ver en qué se va el d
 - Indentación de 4 espacios.
 - Todo el código vive en `src/`, y el nombre de cada archivo dice dónde se ejecuta:
   - `.server.ts`: solo en Node, dentro del servidor de Vite (p. ej. `api.server.ts`, que usa `node:fs`).
-  - `.client.ts` (o `.client.svelte.ts` si usa runes): solo en el navegador (p. ej. `main.client.ts`, `api.client.ts`, `documentos.client.svelte.ts`).
-  - Sin sufijo: de uso general, sirve en los dos lados porque no depende ni de Node ni del navegador (p. ej. `formato/`, `colores.ts`). Un archivo así no importa nunca uno `.server` ni `.client`.
+  - `.client.ts` (o `.client.svelte.ts` si usa runes): solo en el navegador (p. ej. `main.client.ts`, `api.client.ts`, `store.client.svelte.ts`).
+  - Sin sufijo: de uso general, sirve en los dos lados porque no depende ni de Node ni del navegador (p. ej. `format/`, `colors.ts`). Un archivo así no importa nunca uno `.server` ni `.client`.
   - Los componentes `.svelte` son de navegador por naturaleza y no llevan sufijo.
 - Las importaciones relativas llevan la extensión del archivo (`.ts`, `.svelte.ts`, `.svelte`), como pide el cargador nativo de configuración de Vite.
 - Comentarios en español, formales, cortos, sobre lo que hace el código, y con el estándar de documentación oficial del lenguaje en funciones y tipos.

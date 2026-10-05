@@ -2,9 +2,9 @@
  * @file Cuentas de un producto: base y subtotal de cada bloque, recargos sobre el total y reparto por categoría.
  */
 
-import { UNTAGGED } from './categorias.ts'
-import { lineCost, surchargeAmount } from './lineas.ts'
-import type { Product } from './modelo.ts'
+import { UNTAGGED } from './tags.ts'
+import { lineCost, surchargeAmount } from './lines.ts'
+import type { Product } from './model.ts'
 
 export interface Summary {
     /** Total con los recargos de «Sobre el total». */
