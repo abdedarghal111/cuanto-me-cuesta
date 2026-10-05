@@ -1,11 +1,13 @@
 <!--
     @component
     Diálogo modal de la app para confirmar acciones o pedir un texto, en lugar de `prompt`,
-    `confirm` y `alert` del navegador. Se usa con `await dialogo.preguntar({ … })`.
+    `confirm` y `alert` del navegador. La app lo monta una vez y cualquier componente lo abre con
+    `await preguntar({ … })`.
 -->
 
-<script lang="ts">
-    interface Opciones {
+<script lang="ts" module>
+    /** Lo que muestra el diálogo. */
+    export interface Opciones {
         titulo: string
         mensaje?: string
         /** Si se indica, muestra un campo de texto con este valor inicial. */
@@ -15,14 +17,23 @@
         peligro?: boolean
     }
 
+    /** Abre el diálogo montado; no existe hasta que se monta. */
+    let abrir: ((opciones: Opciones) => Promise<string | null>) | undefined
+
+    /** Abre el diálogo. Devuelve el texto escrito (con campo), `'si'` (sin campo) o `null` si se cancela. */
+    export function preguntar(opciones: Opciones): Promise<string | null> {
+        return abrir ? abrir(opciones) : Promise.resolve(null)
+    }
+</script>
+
+<script lang="ts">
     let ventana: HTMLDialogElement
     let campo = $state<HTMLInputElement>()
     let op = $state<Opciones>({ titulo: '' })
     let texto = $state('')
     let responder: (r: string | null) => void = () => {}
 
-    /** Abre el diálogo. Devuelve el texto escrito (con campo), `'si'` (sin campo) o `null` si se cancela. */
-    export function preguntar(opciones: Opciones): Promise<string | null> {
+    abrir = (opciones) => {
         op = opciones
         texto = opciones.valor ?? ''
         ventana.showModal()
