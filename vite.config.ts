@@ -8,7 +8,8 @@ import tailwindcss from '@tailwindcss/vite'
 import { apiServer } from './src/lib/api.server.ts'
 
 export default defineConfig({
-    plugins: [svelte(), tailwindcss(), apiServer()],
+    // Sin `svelte.config.js`: la configuración por defecto basta y así no se busca.
+    plugins: [svelte({ configFile: false }), tailwindcss(), apiServer()],
     server: {
         // Los cambios en `datos/` y en la plantilla no recargan la página: la app los relee al recuperar el foco.
         watch: { ignored: ['**/datos/**', '**/src/res/template.txt'] },
