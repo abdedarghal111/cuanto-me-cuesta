@@ -5,55 +5,55 @@
 -->
 
 <script lang="ts" module>
-    import { limpiarTag } from './formato.ts'
-    import { preguntar } from './Dialogo.svelte'
+    import { cleanTag } from './formato.ts'
+    import { ask } from './Dialogo.svelte'
 
     /** Pide el nombre de una categoría nueva; `null` si se cancela o queda vacío. */
-    export async function pedirCategoria(): Promise<string | null> {
-        const t = await preguntar({ titulo: 'Nueva categoría', mensaje: '¿Cómo se llama?', valor: '', aceptar: 'Crear' })
-        return t ? limpiarTag(t) || null : null
+    export async function askNewTag(): Promise<string | null> {
+        const tag = await ask({ title: 'Nueva categoría', message: '¿Cómo se llama?', value: '', confirmLabel: 'Crear' })
+        return tag ? cleanTag(tag) || null : null
     }
 </script>
 
 <script lang="ts">
-    import { documentos } from './documentos.client.svelte.ts'
-    import { colorDe, suave } from './colores.ts'
+    import { store } from './documentos.client.svelte.ts'
+    import { softColor, tagColor } from './colores.ts'
 
-    let { l }: { l: { tag: string } } = $props()
+    let { item }: { item: { tag: string } } = $props()
 
     /** Valor de la opción que crea una categoría nueva. */
-    const NUEVO_TAG = '__nuevo_tag__'
-    const color = $derived(colorDe(l.tag.trim(), documentos.tags))
+    const NEW_TAG_OPTION = '__new_tag__'
+    const color = $derived(tagColor(item.tag.trim(), store.tags))
 
-    async function elegir(e: Event & { currentTarget: HTMLSelectElement }) {
+    async function onChange(e: Event & { currentTarget: HTMLSelectElement }) {
         const select = e.currentTarget
-        if (select.value !== NUEVO_TAG) {
-            l.tag = select.value
-            return documentos.cambiado()
+        if (select.value !== NEW_TAG_OPTION) {
+            item.tag = select.value
+            return store.markChanged()
         }
         // Mientras se escribe el nombre, el desplegable sigue mostrando la categoría anterior.
-        select.value = l.tag.trim()
-        const tag = await pedirCategoria()
+        select.value = item.tag.trim()
+        const tag = await askNewTag()
         if (!tag) {
             return
         }
-        documentos.asegurarTag(tag)
-        l.tag = tag
-        documentos.cambiado()
+        store.ensureTag(tag)
+        item.tag = tag
+        store.markChanged()
     }
 </script>
 
 <select
     class="w-28 cursor-pointer rounded-[3px] border px-1.5 py-0.5 text-sm"
-    style:background={suave(color)}
+    style:background={softColor(color)}
     style:border-color={color}
-    value={l.tag.trim()}
-    onchange={elegir}
+    value={item.tag.trim()}
+    onchange={onChange}
     aria-label="Categoría"
 >
-    {#if !documentos.doc?.tags.includes(l.tag.trim())}<option value={l.tag.trim()} style:background="white">{l.tag.trim() || '— sin categoría —'}</option>{/if}
-    {#each documentos.doc?.tags ?? [] as t (t)}
-        <option value={t} style:background={suave(colorDe(t, documentos.tags))} style:color="var(--ink)">{t}</option>
+    {#if !store.product?.tags.includes(item.tag.trim())}<option value={item.tag.trim()} style:background="white">{item.tag.trim() || '— sin categoría —'}</option>{/if}
+    {#each store.product?.tags ?? [] as tag (tag)}
+        <option value={tag} style:background={softColor(tagColor(tag, store.tags))} style:color="var(--ink)">{tag}</option>
     {/each}
-    <option value={NUEVO_TAG} style:background="white" style:color="var(--accent)">+ nueva categoría…</option>
+    <option value={NEW_TAG_OPTION} style:background="white" style:color="var(--accent)">+ nueva categoría…</option>
 </select>

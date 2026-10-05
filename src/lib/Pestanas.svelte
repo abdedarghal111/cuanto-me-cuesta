@@ -5,14 +5,14 @@
 -->
 
 <script lang="ts">
-    import { documentos } from './documentos.client.svelte.ts'
-    import { preguntar } from './Dialogo.svelte'
+    import { store } from './documentos.client.svelte.ts'
+    import { ask } from './Dialogo.svelte'
     import Icono from './Icono.svelte'
 
-    async function nuevo() {
-        const producto = await preguntar({ titulo: 'Nuevo producto', mensaje: '¿Cómo se llama?', valor: '', aceptar: 'Crear' })
-        if (producto) {
-            documentos.crear(producto)
+    async function createProduct() {
+        const name = await ask({ title: 'Nuevo producto', message: '¿Cómo se llama?', value: '', confirmLabel: 'Crear' })
+        if (name) {
+            store.create(name)
         }
     }
 </script>
@@ -20,22 +20,22 @@
 <header class="sticky top-0 z-10 border-b-2 border-ink bg-white px-4 py-2.5">
     <div class="mx-auto flex max-w-[1500px] flex-wrap items-center justify-between gap-3">
         <nav class="flex flex-wrap gap-1.5">
-            <button class="pestana" class:activa={documentos.sel === ''} onclick={() => documentos.elegir('')}>Todo</button>
-            {#each documentos.archivos as nombre (nombre)}
-                <button class="pestana" class:activa={documentos.sel === nombre} onclick={() => documentos.elegir(nombre)}>
-                    {documentos.docs[nombre]?.producto ?? nombre}{#if documentos.sucios[nombre]}<span class="text-bad" title="Sin guardar"> ●</span>{/if}
+            <button class="tab" class:active={store.selected === ''} onclick={() => store.select('')}>Todo</button>
+            {#each store.files as file (file)}
+                <button class="tab" class:active={store.selected === file} onclick={() => store.select(file)}>
+                    {store.products[file]?.name ?? file}{#if store.unsaved[file]}<span class="text-bad" title="Sin guardar"> ●</span>{/if}
                 </button>
             {/each}
-            <button class="pestana border-dashed text-muted" onclick={nuevo}>+ nuevo</button>
+            <button class="tab border-dashed text-muted" onclick={createProduct}>+ nuevo</button>
         </nav>
         <div class="flex flex-wrap items-center gap-3.5">
-            {#if documentos.haySucios}
+            {#if store.hasUnsaved}
                 <span class="font-bold text-bad">● Cambios sin guardar</span>
             {:else}
-                <span class="text-sm text-muted">{documentos.estado}</span>
+                <span class="text-sm text-muted">{store.status}</span>
             {/if}
-            <button class="guardar" onclick={() => documentos.guardarTodo()} disabled={!documentos.haySucios} title="Ctrl+S">
-                <Icono nombre="guardar" tam={20} />
+            <button class="save-button" onclick={() => store.saveAll()} disabled={!store.hasUnsaved} title="Ctrl+S">
+                <Icono name="save" size={20} />
                 Guardar <span class="font-mono text-xs font-normal opacity-80">Ctrl+S</span>
             </button>
         </div>

@@ -1,201 +1,201 @@
 /**
- * @file Gestor de documentos (navegador): lee los productos de `datos/` y la plantilla, lleva el producto
- * abierto y los cambios sin guardar, y los escribe en disco. Los componentes lo importan como `documentos`.
+ * @file Gestor de productos (navegador): lee los productos de `datos/` y la plantilla, lleva el producto
+ * abierto y los cambios sin guardar, y los escribe en disco. Los componentes lo importan como `store`.
  */
 
 import * as api from './api.client.ts'
-import { ordenarTags } from './colores.ts'
+import { sortTags } from './colores.ts'
 import {
-    aTexto, deTexto, hoy, limpiarTag, nombreDeArchivo, plantillaDeTexto, resumir, usados, type Documento, type Plantilla,
+    cleanTag, fileName, parseProduct, parseTemplate, productToText, summarize, today, usedTags, type Product, type Template,
 } from './formato.ts'
 
 /** Copia profunda de un valor reactivo, sin vínculo con el original. */
-export const copia = <T>(x: T): T => structuredClone($state.snapshot(x) as T)
+export const clone = <T>(value: T): T => structuredClone($state.snapshot(value) as T)
 
 /** Productos, plantilla, producto abierto y cambios sin guardar. */
-class GestorDeDocumentos {
+class ProductStore {
     /** Productos cargados, por nombre de archivo. */
-    docs = $state<Record<string, Documento>>({})
-    archivos = $state<string[]>([])
-    plantilla = $state<Plantilla>({ tags: [], porDefecto: [], secciones: [], sobreTotal: [] })
+    products = $state<Record<string, Product>>({})
+    files = $state<string[]>([])
+    template = $state<Template>({ tags: [], defaultSectionTitles: [], sections: [], totalSurcharges: [] })
     /** Archivo abierto; `''` es la vista «Todo». */
-    sel = $state('')
+    selected = $state('')
     /** Si el producto abierto se muestra como texto del archivo. */
-    modoTexto = $state(false)
+    textMode = $state(false)
     /** Último aviso para la barra de arriba. */
-    estado = $state('')
+    status = $state('')
     /** Productos con cambios sin guardar; solo se escriben en disco al pulsar Guardar o Ctrl+S. */
-    sucios = $state<Record<string, true>>({})
+    unsaved = $state<Record<string, true>>({})
 
-    haySucios = $derived(Object.keys(this.sucios).length > 0)
-    doc = $derived(this.sel ? this.docs[this.sel] : undefined)
-    resumen = $derived(this.doc ? resumir(this.doc) : undefined)
+    hasUnsaved = $derived(Object.keys(this.unsaved).length > 0)
+    product = $derived(this.selected ? this.products[this.selected] : undefined)
+    summary = $derived(this.product ? summarize(this.product) : undefined)
     /** Todas las categorías, en el orden que fija su color. */
     tags = $derived(
-        ordenarTags(this.plantilla.tags, [
-            ...Object.values(this.docs).flatMap((d) => [...d.tags, ...usados(d.secciones, d.sobreTotal)]),
-            ...usados(this.plantilla.secciones, this.plantilla.sobreTotal),
+        sortTags(this.template.tags, [
+            ...Object.values(this.products).flatMap((p) => [...p.tags, ...usedTags(p.sections, p.totalSurcharges)]),
+            ...usedTags(this.template.sections, this.template.totalSurcharges),
         ]),
     )
 
     /** Último texto leído o escrito de cada archivo, para detectar cambios hechos fuera de la app. */
-    #ultimoTexto: Record<string, string> = {}
+    #lastText: Record<string, string> = {}
     /** Cola de escrituras, que se hacen de una en una. */
-    #cola: Promise<void> = Promise.resolve()
+    #writeQueue: Promise<void> = Promise.resolve()
 
     /** Marca como sin guardar el producto abierto. */
-    cambiado() {
-        if (this.sel) {
-            this.sucios[this.sel] = true
+    markChanged() {
+        if (this.selected) {
+            this.unsaved[this.selected] = true
         }
     }
 
     /** Abre un producto, o la vista «Todo» con `''`. */
-    elegir(nombre: string) {
-        this.modoTexto = false
-        this.sel = nombre
+    select(name: string) {
+        this.textMode = false
+        this.selected = name
     }
 
-    /** Nombre de archivo libre para el producto; `actual` es el que ya tiene, si lo tiene. */
-    #nombreLibre(d: Documento, actual = ''): string {
-        let nombre = nombreDeArchivo(d)
-        for (let i = 2; nombre !== actual && this.archivos.includes(nombre); i++) {
-            nombre = nombreDeArchivo(d, String(i))
+    /** Nombre de archivo libre para el producto; `current` es el que ya tiene, si lo tiene. */
+    #freeFileName(product: Product, current = ''): string {
+        let name = fileName(product)
+        for (let i = 2; name !== current && this.files.includes(name); i++) {
+            name = fileName(product, String(i))
         }
-        return nombre
+        return name
     }
 
-    /** Guarda un producto. Si ha cambiado el título o la fecha, el archivo cambia de nombre. */
-    guardar(nombre: string): Promise<void> {
-        const d = this.docs[nombre]
-        if (!d) {
-            return this.#cola
+    /** Guarda un producto. Si ha cambiado el nombre o la fecha, el archivo cambia de nombre. */
+    save(name: string): Promise<void> {
+        const product = this.products[name]
+        if (!product) {
+            return this.#writeQueue
         }
-        const nuevo = this.#nombreLibre(d, nombre)
-        if (nuevo !== nombre) {
-            this.docs[nuevo] = d
-            delete this.docs[nombre]
-            this.archivos = this.archivos.map((a) => (a === nombre ? nuevo : a)).sort()
-            if (this.sel === nombre) {
-                this.sel = nuevo
+        const newName = this.#freeFileName(product, name)
+        if (newName !== name) {
+            this.products[newName] = product
+            delete this.products[name]
+            this.files = this.files.map((f) => (f === name ? newName : f)).sort()
+            if (this.selected === name) {
+                this.selected = newName
             }
         }
-        delete this.sucios[nombre]
-        const texto = aTexto($state.snapshot(d))
-        this.#cola = this.#cola.then(async () => {
+        delete this.unsaved[name]
+        const text = productToText($state.snapshot(product))
+        this.#writeQueue = this.#writeQueue.then(async () => {
             try {
-                await api.escribir(nuevo, texto, nombre)
-                if (nombre !== nuevo) {
-                    delete this.#ultimoTexto[nombre]
+                await api.writeFile(newName, text, name)
+                if (name !== newName) {
+                    delete this.#lastText[name]
                 }
-                this.#ultimoTexto[nuevo] = texto
-                this.estado = `Guardado en datos/${nuevo}`
+                this.#lastText[newName] = text
+                this.status = `Guardado en datos/${newName}`
             } catch (e) {
-                this.sucios[nuevo] = true
-                this.estado = `No se pudo guardar: ${e}`
+                this.unsaved[newName] = true
+                this.status = `No se pudo guardar: ${e}`
             }
         })
-        return this.#cola
+        return this.#writeQueue
     }
 
     /** Guarda todos los productos con cambios sin guardar. */
-    guardarTodo(): Promise<void> {
-        for (const nombre of Object.keys(this.sucios)) {
-            this.guardar(nombre)
+    saveAll(): Promise<void> {
+        for (const name of Object.keys(this.unsaved)) {
+            this.save(name)
         }
-        return this.#cola
+        return this.#writeQueue
     }
 
     /** Relee los archivos de disco sin sobrescribir los productos con cambios sin guardar. */
-    async recargar() {
-        await this.#cola
+    async reload() {
+        await this.#writeQueue
         try {
-            const lista = await api.listar()
-            for (const nombre of lista) {
-                if (this.sucios[nombre]) {
+            const diskFiles = await api.listFiles()
+            for (const name of diskFiles) {
+                if (this.unsaved[name]) {
                     continue
                 }
-                const texto = await api.leer(nombre)
-                if (texto !== this.#ultimoTexto[nombre]) {
-                    this.docs[nombre] = deTexto(texto, nombre)
-                    this.#ultimoTexto[nombre] = texto
+                const text = await api.readFile(name)
+                if (text !== this.#lastText[name]) {
+                    this.products[name] = parseProduct(text, name)
+                    this.#lastText[name] = text
                 }
             }
             // Se conservan los productos nuevos sin guardar, que aún no están en disco.
-            for (const nombre of Object.keys(this.docs)) {
-                if (!lista.includes(nombre) && !this.sucios[nombre]) {
-                    delete this.docs[nombre]
+            for (const name of Object.keys(this.products)) {
+                if (!diskFiles.includes(name) && !this.unsaved[name]) {
+                    delete this.products[name]
                 }
             }
-            this.archivos = [...new Set([...lista, ...Object.keys(this.sucios)])].sort()
-            if (this.sel && !this.archivos.includes(this.sel)) {
-                this.sel = ''
+            this.files = [...new Set([...diskFiles, ...Object.keys(this.unsaved)])].sort()
+            if (this.selected && !this.files.includes(this.selected)) {
+                this.selected = ''
             }
-            this.plantilla = plantillaDeTexto(await api.leerPlantilla())
+            this.template = parseTemplate(await api.readTemplate())
         } catch (e) {
-            this.estado = `No se pudieron leer los archivos: ${e}`
+            this.status = `No se pudieron leer los archivos: ${e}`
         }
     }
 
-    /** Crea un producto sin guardar, en blanco o copia de `base`, y lo abre. */
-    crear(producto: string, base?: Documento) {
-        const p = this.plantilla
-        const d: Documento = base
-            ? { ...copia(base), producto, fecha: hoy() }
+    /** Crea un producto sin guardar, en blanco o copia de `source`, y lo abre. */
+    create(name: string, source?: Product) {
+        const template = this.template
+        const product: Product = source
+            ? { ...clone(source), name, date: today() }
             : {
-                producto,
-                fecha: hoy(),
-                descripcion: '',
-                tags: [...p.tags],
+                name,
+                date: today(),
+                description: '',
+                tags: [...template.tags],
                 // Empieza con los bloques de «Por defecto:» de la plantilla.
-                secciones: p.secciones.filter((s) => p.porDefecto.includes(s.titulo)).map(copia),
-                sobreTotal: copia(p.sobreTotal),
+                sections: template.sections.filter((s) => template.defaultSectionTitles.includes(s.title)).map(clone),
+                totalSurcharges: clone(template.totalSurcharges),
             }
-        const nombre = this.#nombreLibre(d)
-        this.docs[nombre] = d
-        this.archivos = [...this.archivos, nombre].sort()
-        this.sucios[nombre] = true
-        this.elegir(nombre)
+        const newName = this.#freeFileName(product)
+        this.products[newName] = product
+        this.files = [...this.files, newName].sort()
+        this.unsaved[newName] = true
+        this.select(newName)
     }
 
     /** Descarta los cambios sin guardar del producto abierto y vuelve a leer su archivo. */
-    async descartar() {
-        delete this.sucios[this.sel]
-        delete this.#ultimoTexto[this.sel]
-        this.modoTexto = false
-        await this.recargar()
+    async discard() {
+        delete this.unsaved[this.selected]
+        delete this.#lastText[this.selected]
+        this.textMode = false
+        await this.reload()
     }
 
     /** Borra el producto abierto: su archivo se queda como `.txt.borrado`. */
-    async borrar() {
-        const nombre = this.sel
-        await this.#cola
+    async delete() {
+        const name = this.selected
+        await this.#writeQueue
         // Un producto que nunca se ha guardado no tiene archivo.
-        if (nombre in this.#ultimoTexto) {
-            await api.borrar(nombre)
+        if (name in this.#lastText) {
+            await api.deleteFile(name)
         }
-        delete this.docs[nombre]
-        delete this.sucios[nombre]
-        delete this.#ultimoTexto[nombre]
-        this.archivos = this.archivos.filter((a) => a !== nombre)
-        this.sel = ''
-        this.estado = `Borrado «${nombre}»`
+        delete this.products[name]
+        delete this.unsaved[name]
+        delete this.#lastText[name]
+        this.files = this.files.filter((f) => f !== name)
+        this.selected = ''
+        this.status = `Borrado «${name}»`
     }
 
-    /** Sustituye el producto abierto por el que se lee de `texto`, como cambio sin guardar. */
-    cargarTexto(texto: string) {
-        this.docs[this.sel] = deTexto(texto, this.sel)
-        this.modoTexto = false
-        this.cambiado()
+    /** Sustituye el producto abierto por el que se lee de `text`, como cambio sin guardar. */
+    loadText(text: string) {
+        this.products[this.selected] = parseProduct(text, this.selected)
+        this.textMode = false
+        this.markChanged()
     }
 
     /** Añade la categoría a las del producto abierto si aún no está. */
-    asegurarTag(tag: string) {
-        const t = limpiarTag(tag)
-        if (this.doc && t && !this.doc.tags.includes(t)) {
-            this.doc.tags.push(t)
+    ensureTag(tag: string) {
+        const t = cleanTag(tag)
+        if (this.product && t && !this.product.tags.includes(t)) {
+            this.product.tags.push(t)
         }
     }
 }
 
-export const documentos = new GestorDeDocumentos()
+export const store = new ProductStore()

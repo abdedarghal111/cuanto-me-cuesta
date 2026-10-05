@@ -2,10 +2,10 @@
  * @file Instrucciones que se escriben al final de los productos y de la plantilla para quien los edite a mano.
  */
 
-import { ANCHO } from './columnas.ts'
+import { LINE_WIDTH } from './columnas.ts'
 
 /** Reglas de las líneas de gasto, comunes a los productos y a la plantilla. */
-const REGLAS_LINEAS = [
+const LINE_RULES = [
     '- Cada línea de un bloque:',
     '    Cuenta | Concepto | Tipo | Precio € | Por | Unidad | Consumo | Multiplicador | Categoría | = Coste',
     '  Coste = Precio / Por × Consumo × Multiplicador. Por y Multiplicador vacíos = 1.',
@@ -32,9 +32,9 @@ const REGLAS_LINEAS = [
 ]
 
 /** Instrucciones al final de cada archivo para quien lo edite a mano. */
-export const INSTRUCCIONES = [
+export const PRODUCT_INSTRUCTIONS = [
     'INSTRUCCIONES (para quien edite este archivo, persona o IA)',
-    '-'.repeat(ANCHO),
+    '-'.repeat(LINE_WIDTH),
     '- Es un producto de «Cuánto me cuesta». La app lo lee y lo reescribe al guardar.',
     '- Orden: cabecera (Producto, Fecha, Categorías) · DESCRIPCIÓN · bloques "## Título" ·',
     '  SOBRE EL TOTAL · RESUMEN · INSTRUCCIONES.',
@@ -45,7 +45,7 @@ export const INSTRUCCIONES = [
     '- DESCRIPCIÓN: texto libre de varias líneas con anotaciones del documento.',
     '  Ninguna línea puede empezar por "##", "SOBRE EL TOTAL", "RESUMEN" ni',
     '  "INSTRUCCIONES".',
-    ...REGLAS_LINEAS,
+    ...LINE_RULES,
     '- Categorías: la línea "Categorías:" de la cabecera dice cuáles hay en este',
     '  documento, separadas por comas. Cada línea de gasto lleva una de ellas (sirve',
     '  para ver en qué se va el dinero). Una nueva se añade primero ahí. Las de',
@@ -58,9 +58,9 @@ export const INSTRUCCIONES = [
 ]
 
 /** Instrucciones que el servidor mantiene al final de la plantilla, para hacer productos a partir de ella. */
-export const INSTRUCCIONES_PLANTILLA = [
+export const TEMPLATE_INSTRUCTIONS = [
     'INSTRUCCIONES (para quien use esta plantilla, persona o IA)',
-    '-'.repeat(ANCHO),
+    '-'.repeat(LINE_WIDTH),
     '- Es la plantilla de «Cuánto me cuesta». La app solo lee Categorías, Por',
     '  defecto, los bloques y SOBRE EL TOTAL; desde INSTRUCCIONES se ignora.',
     '- Para crear un producto a partir de ella, escribe un archivo nuevo con:',
@@ -76,7 +76,7 @@ export const INSTRUCCIONES_PLANTILLA = [
     '  "Por defecto:".',
     '- En la DESCRIPCIÓN, ninguna línea puede empezar por "##", "SOBRE EL TOTAL",',
     '  "RESUMEN" ni "INSTRUCCIONES".',
-    ...REGLAS_LINEAS,
+    ...LINE_RULES,
     '- Cada línea lleva una categoría de la lista. No uses "|" dentro de un texto.',
     '- Si te dan un presupuesto, ajusta los consumos a él y anota en la',
     '  DESCRIPCIÓN el total que sale y lo que has supuesto.',

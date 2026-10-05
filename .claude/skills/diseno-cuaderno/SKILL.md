@@ -11,8 +11,8 @@ Un cuaderno cuadriculado de taller con la claridad de un terminal. La cuadrícul
 
 Locales, en `src/res/fonts/`.
 
-- `font-mano` (Caveat): títulos, cabeceras de bloque y totales grandes.
-- `font-cuaderno` (Kalam): texto normal.
+- `font-hand` (Caveat): títulos, cabeceras de bloque y totales grandes.
+- `font-notebook` (Kalam): texto normal.
 - `font-mono` (IBM Plex Mono): números, importes, cabeceras de tabla y rutas.
 
 ## Colores
@@ -21,15 +21,15 @@ Locales, en `src/res/fonts/`.
 - Azul `#1F4FA8` para los enlaces.
 - Rojo `#B42318` para borrar y para «sin guardar».
 - Amarillo pósit `#FFF4A8`.
-- Cada categoría tiene su color `--c1…--c10` según el orden de la plantilla, con fondo claro mediante `suave()`.
+- Cada categoría tiene su color `--c1…--c10` según el orden de la plantilla, con fondo claro mediante `softColor()`.
 
 ## Piezas
 
-- `papel` para todo lo que se lee; `papel-suave` para textos sueltos.
-- `postit` para la cifra importante.
+- `paper` para todo lo que se lee; `paper-soft` para textos sueltos.
+- `note-card` para la cifra importante.
 - Ranking con barras de bloques en el color de cada categoría para comparar importes.
-- Tablas con filas alternas bien distinguibles; los números con `numero` y el campo que más se cambia con `usado`.
-- `titulo-editable` para los títulos que se editan en el sitio y `enlace` para las acciones secundarias.
+- Tablas con filas alternas bien distinguibles; los números con `numeric` y el campo que más se cambia con `highlighted`.
+- `editable-title` para los títulos que se editan en el sitio y `link` para las acciones secundarias.
 - Las pantallas nuevas se construyen con estas mismas piezas.
 
 ## Reglas

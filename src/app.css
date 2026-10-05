@@ -59,14 +59,14 @@
     --color-line: var(--line);
     --color-accent: var(--accent);
     --color-bad: var(--bad);
-    --font-mano: 'Caveat', cursive;
-    --font-cuaderno: 'Kalam', cursive;
+    --font-hand: 'Caveat', cursive;
+    --font-notebook: 'Kalam', cursive;
     --font-mono: 'IBM Plex Mono', ui-monospace, Consolas, monospace;
 }
 
 @layer base {
     body {
-        @apply font-cuaderno text-lg text-ink tabular-nums;
+        @apply font-notebook text-lg text-ink tabular-nums;
         background-color: #eef3f9;
         background-image:
             linear-gradient(#d9e3ef 1px, transparent 1px),
@@ -93,48 +93,48 @@
 }
 
 /* Fondo blanco obligatorio para todo texto: nunca se escribe sobre la cuadrícula. */
-@utility papel {
+@utility paper {
     @apply min-w-0 rounded-md border-2 border-ink bg-white;
 }
-@utility papel-suave {
+@utility paper-soft {
     @apply self-start rounded bg-white/85 px-3 py-1.5 text-base text-muted;
 }
-@utility postit {
+@utility note-card {
     @apply flex flex-col gap-0.5 border-2 border-ink bg-[#FFF4A8] px-5 py-4 shadow-[4px_4px_0_var(--ink)];
 }
-@utility pestana {
+@utility tab {
     @apply rounded-lg border-2 border-line bg-white px-4 py-1.5 text-ink;
-    &.activa {
+    &.active {
         @apply border-ink bg-[#FFF4A8] font-bold;
     }
 }
-@utility guardar {
+@utility save-button {
     @apply inline-flex min-h-12 items-center gap-2.5 rounded-lg border-2 border-ink bg-ink px-5 text-lg font-bold text-white;
 }
-@utility boton-amarillo {
+@utility button-yellow {
     @apply min-h-11 rounded-lg border-2 border-ink bg-[#FFF4A8] px-4 font-bold;
 }
-@utility boton-peligro {
+@utility button-danger {
     @apply min-h-11 rounded-lg border-2 border-bad bg-bad px-4 font-bold text-white;
 }
-@utility enlace {
+@utility link {
     @apply border-0 bg-transparent p-0 text-accent underline underline-offset-2 hover:text-[#163A7C];
 }
 @utility mini {
     @apply border-0 bg-transparent px-1.5 py-0.5 text-muted hover:text-ink;
 }
-@utility titulo-editable {
+@utility editable-title {
     @apply rounded-md border border-dashed border-[#B9C9DB] bg-[#F5F9FE]/80 px-2 py-0.5 hover:border-[#8FA6BF] hover:bg-white focus:border-solid focus:border-accent focus:bg-white;
 }
-@utility sin-caja {
+@utility borderless {
     @apply rounded-none border-0 bg-transparent px-0;
 }
-@utility numero {
+@utility numeric {
     @apply text-right font-mono text-[15px];
 }
-@utility usado {
+@utility highlighted {
     @apply border-2 border-ink bg-[#FFF4A8] font-semibold;
 }
-@utility anadir {
+@utility add-link {
     @apply cursor-pointer border-0 bg-transparent p-0 text-accent;
 }

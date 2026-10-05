@@ -6,90 +6,90 @@
 import type { Plugin } from 'vite'
 import fs from 'node:fs'
 import path from 'node:path'
-import { INSTRUCCIONES_PLANTILLA } from './formato.ts'
+import { TEMPLATE_INSTRUCTIONS } from './formato.ts'
 
 /** Carpeta de datos: un `titulo_fecha.txt` por producto. */
-const DATOS = path.resolve(import.meta.dirname, '../../datos')
+const DATA_DIR = path.resolve(import.meta.dirname, '../../datos')
 /** Plantilla: lo que se ofrece al apuntar, las categorías de siempre y con qué empieza un producto nuevo. */
-const PLANTILLA = path.resolve(import.meta.dirname, '../res/template.txt')
+const TEMPLATE_PATH = path.resolve(import.meta.dirname, '../res/template.txt')
 
-/** Lee `PLANTILLA` y le reescribe al final `INSTRUCCIONES_PLANTILLA` cuando faltan o no coinciden con las del programa. */
-function plantillaAlDia(): string {
-    const texto = fs.readFileSync(PLANTILLA, 'utf8')
-    const i = texto.search(/^INSTRUCCIONES/m)
-    const instrucciones = i < 0 ? '' : texto.slice(i).replace(/\r\n/g, '\n').trimEnd()
-    if (instrucciones === INSTRUCCIONES_PLANTILLA) {
-        return texto
+/** Lee `TEMPLATE_PATH` y le reescribe al final `TEMPLATE_INSTRUCTIONS` cuando faltan o no coinciden con las del programa. */
+function readTemplate(): string {
+    const text = fs.readFileSync(TEMPLATE_PATH, 'utf8')
+    const start = text.search(/^INSTRUCCIONES/m)
+    const instructions = start < 0 ? '' : text.slice(start).replace(/\r\n/g, '\n').trimEnd()
+    if (instructions === TEMPLATE_INSTRUCTIONS) {
+        return text
     }
-    const cuerpo = (i < 0 ? texto : texto.slice(0, i)).trimEnd()
-    const nuevo = `${cuerpo}\n\n${INSTRUCCIONES_PLANTILLA}\n`
-    fs.writeFileSync(PLANTILLA, nuevo, 'utf8')
-    return nuevo
+    const body = (start < 0 ? text : text.slice(0, start)).trimEnd()
+    const updated = `${body}\n\n${TEMPLATE_INSTRUCTIONS}\n`
+    fs.writeFileSync(TEMPLATE_PATH, updated, 'utf8')
+    return updated
 }
 
 /** Ruta dentro de `datos/` para un nombre `.txt` simple (sin rutas), o `null` si no es válido. */
-function rutaSegura(nombre: string | null): string | null {
-    if (!nombre || !/^[\w\-. ]+\.txt$/.test(nombre) || nombre.startsWith('.')) {
+function safeDataPath(name: string | null): string | null {
+    if (!name || !/^[\w\-. ]+\.txt$/.test(name) || name.startsWith('.')) {
         return null
     }
-    return path.join(DATOS, nombre)
+    return path.join(DATA_DIR, name)
 }
 
 /** Lee el cuerpo completo de una petición como texto. */
-function leerCuerpo(req: import('node:http').IncomingMessage): Promise<string> {
+function readBody(req: import('node:http').IncomingMessage): Promise<string> {
     return new Promise((resolve, reject) => {
-        let cuerpo = ''
+        let body = ''
         req.setEncoding('utf8')
-        req.on('data', (trozo) => (cuerpo += trozo))
-        req.on('end', () => resolve(cuerpo))
+        req.on('data', (chunk) => (body += chunk))
+        req.on('end', () => resolve(body))
         req.on('error', reject)
     })
 }
 
 /** Plugin que sirve `/api` para listar, leer, escribir y borrar los `.txt` de `datos/` y leer la plantilla. */
-export function servidor(): Plugin {
+export function apiServer(): Plugin {
     return {
-        name: 'servidor',
+        name: 'api-server',
         configureServer(server) {
-            fs.mkdirSync(DATOS, { recursive: true })
+            fs.mkdirSync(DATA_DIR, { recursive: true })
             server.middlewares.use('/api', async (req, res) => {
                 const url = new URL(req.url ?? '/', 'http://x')
                 try {
-                    if (url.pathname === '/archivos' && req.method === 'GET') {
-                        const archivos = fs
-                            .readdirSync(DATOS)
+                    if (url.pathname === '/files' && req.method === 'GET') {
+                        const files = fs
+                            .readdirSync(DATA_DIR)
                             .filter((f) => f.endsWith('.txt'))
                             .sort()
                         res.setHeader('Content-Type', 'application/json')
-                        return res.end(JSON.stringify(archivos))
+                        return res.end(JSON.stringify(files))
                     }
-                    if (url.pathname === '/plantilla' && req.method === 'GET') {
+                    if (url.pathname === '/template' && req.method === 'GET') {
                         res.setHeader('Content-Type', 'text/plain; charset=utf-8')
-                        return res.end(plantillaAlDia())
+                        return res.end(readTemplate())
                     }
-                    if (url.pathname === '/archivo') {
-                        const nombre = url.searchParams.get('nombre')
-                        const ruta = rutaSegura(nombre)
-                        if (!ruta || !nombre) {
+                    if (url.pathname === '/file') {
+                        const name = url.searchParams.get('name')
+                        const filePath = safeDataPath(name)
+                        if (!filePath || !name) {
                             res.statusCode = 400
                             return res.end('Nombre de archivo no válido')
                         }
                         if (req.method === 'GET') {
                             res.setHeader('Content-Type', 'text/plain; charset=utf-8')
-                            return res.end(fs.existsSync(ruta) ? fs.readFileSync(ruta, 'utf8') : '')
+                            return res.end(fs.existsSync(filePath) ? fs.readFileSync(filePath, 'utf8') : '')
                         }
                         if (req.method === 'PUT') {
-                            fs.writeFileSync(ruta, await leerCuerpo(req), 'utf8')
-                            // Con «antes» distinto, es un cambio de nombre: se elimina el archivo anterior.
-                            const antes = rutaSegura(url.searchParams.get('antes'))
-                            if (antes && antes !== ruta && fs.existsSync(antes)) {
-                                fs.unlinkSync(antes)
+                            fs.writeFileSync(filePath, await readBody(req), 'utf8')
+                            // Con «previous» distinto, es un cambio de nombre: se elimina el archivo anterior.
+                            const previousPath = safeDataPath(url.searchParams.get('previous'))
+                            if (previousPath && previousPath !== filePath && fs.existsSync(previousPath)) {
+                                fs.unlinkSync(previousPath)
                             }
                             return res.end('ok')
                         }
                         if (req.method === 'DELETE') {
                             // No se elimina: se renombra a `.txt.borrado`.
-                            fs.renameSync(ruta, `${ruta}.borrado`)
+                            fs.renameSync(filePath, `${filePath}.borrado`)
                             return res.end('ok')
                         }
                     }

@@ -11,8 +11,9 @@ Los `.txt` son la fuente de verdad y se tienen que poder leer y editar a mano.
 
 - Cada producto es un archivo `datos/titulo_fecha.txt`; la app lo renombra al guardar si cambian el título o la fecha.
 - Borrar un producto lo renombra a `nombre.txt.borrado`.
-- La plantilla, `src/res/template.txt`, guarda los bloques que se copian al crear un bloque, las categorías de siempre, y los bloques y recargos sobre el total con los que empieza un producto nuevo. La app la usa directamente, sin copias. Cada vez que el servidor la lee, le reescribe al final `INSTRUCCIONES_PLANTILLA` de `formato/instrucciones.ts` (para crear productos a partir de ella) si faltan o no coinciden.
-- El formato se implementa en `src/lib/formato/`, un módulo por tarea (`modelo`, `numeros`, `lineas`, `resumen`, `categorias`, `columnas`, `instrucciones`, `lectura`, `escritura`, `archivo`); `src/lib/formato.ts` reexporta la API pública. Un tipo de línea nuevo se añade en `REGLAS` de `lineas.ts`, en `Tipo` y `TIPOS` de `modelo.ts` y en `tipoDe` de `lectura.ts`.
+- La plantilla, `src/res/template.txt`, guarda los bloques que se copian al crear un bloque, las categorías de siempre, y los bloques y recargos sobre el total con los que empieza un producto nuevo. La app la usa directamente, sin copias. Cada vez que el servidor la lee, le reescribe al final `TEMPLATE_INSTRUCTIONS` de `formato/instrucciones.ts` (para crear productos a partir de ella) si faltan o no coinciden.
+- El formato se implementa en `src/lib/formato/`, un módulo por tarea (`modelo`, `numeros`, `lineas`, `resumen`, `categorias`, `columnas`, `instrucciones`, `lectura`, `escritura`, `archivo`); `src/lib/formato.ts` reexporta la API pública. Un tipo de línea nuevo se añade en `LINE_TYPE_RULES` de `lineas.ts` y en `LineType` y `LINE_TYPE_LABELS` de `modelo.ts`.
+- El código va en inglés y el archivo en español: los títulos de columna y los campos de la cabecera se traducen a claves en inglés al leer (`COLUMN_KEYS` de `columnas.ts` y `HEADER_FIELD_KEYS` de `lectura.ts`).
 
 ## Estructura de un producto
 
@@ -31,11 +32,11 @@ En orden: cabecera (`Producto:`, `Fecha:`, `Categorías:`), `DESCRIPCIÓN`, bloq
 
 - Los archivos con formatos anteriores se siguen leyendo.
 - Leer → escribir → leer deja los datos iguales.
-- Actualiza a la vez `INSTRUCCIONES`, `INSTRUCCIONES_PLANTILLA` y `REGLAS_LINEAS` de `formato/instrucciones.ts`, y el `README.md`.
+- Actualiza a la vez `PRODUCT_INSTRUCTIONS`, `TEMPLATE_INSTRUCTIONS` y `LINE_RULES` de `formato/instrucciones.ts`, y el `README.md`.
 
 ## Guardado
 
-Se guarda solo con el botón Guardar o con Ctrl+S. Hasta entonces, los cambios viven en memoria (`sucios`, en `src/lib/documentos.client.svelte.ts`) y `beforeunload` avisa al cerrar.
+Se guarda solo con el botón Guardar o con Ctrl+S. Hasta entonces, los cambios viven en memoria (`unsaved`, en `src/lib/documentos.client.svelte.ts`) y `beforeunload` avisa al cerrar.
 
 ## Categorías
 

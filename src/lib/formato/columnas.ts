@@ -3,29 +3,41 @@
  */
 
 /** Ancho de las líneas de título y separadores. */
-export const ANCHO = 78
+export const LINE_WIDTH = 78
 
-export const CABECERA = ['Cuenta', 'Concepto', 'Tipo', 'Precio €', 'Por', 'Unidad', 'Consumo', 'Multiplicador', 'Categoría', '= Coste']
-export const CABECERA_RECARGO = ['Cuenta', 'Concepto', '%', 'Categoría', '= Coste']
-export const CABECERA_TOTAL = ['Cuenta', 'Concepto', '%', 'Categoría', '= Importe', '= Acumulado']
+export const LINE_HEADER = ['Cuenta', 'Concepto', 'Tipo', 'Precio €', 'Por', 'Unidad', 'Consumo', 'Multiplicador', 'Categoría', '= Coste']
+export const SURCHARGE_HEADER = ['Cuenta', 'Concepto', '%', 'Categoría', '= Coste']
+export const TOTAL_SURCHARGE_HEADER = ['Cuenta', 'Concepto', '%', 'Categoría', '= Importe', '= Acumulado']
 
 /** Clave de cada columna en el orden por defecto; la fila de títulos de un bloque tiene prioridad. */
-export const COLUMNAS = ['cuenta', 'concepto', 'tipo', 'precio', 'por', 'unidad', 'consumo', 'multiplicador', 'tag']
+export const LINE_COLUMNS = ['counts', 'name', 'type', 'price', 'per', 'unit', 'usage', 'multiplier', 'tag']
 /** Clave de cada columna de los recargos en el orden por defecto. */
-export const COLUMNAS_RECARGO = ['cuenta', 'concepto', 'pct', 'tag']
+export const SURCHARGE_COLUMNS = ['counts', 'name', 'percent', 'tag']
 
 /** "Precio €" → "precio", "Categoría" → "categoria". */
-export const clave = (t: string) =>
-    t.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/[^a-z]/g, '')
+export const normalizeKey = (text: string) =>
+    text.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/[^a-z]/g, '')
 
-/** Nombres anteriores de algunas columnas: «Usado» es «Consumo» y «Cantidad» es «Multiplicador». */
-const ALIAS: Record<string, string> = { categoria: 'tag', usado: 'consumo', cantidad: 'multiplicador' }
+/** Clave de cada título de columna. «Usado» y «Cantidad» son los nombres anteriores de «Consumo» y «Multiplicador». */
+const COLUMN_KEYS: Record<string, string> = {
+    cuenta: 'counts',
+    concepto: 'name',
+    tipo: 'type',
+    precio: 'price',
+    por: 'per',
+    unidad: 'unit',
+    consumo: 'usage',
+    usado: 'usage',
+    multiplicador: 'multiplier',
+    cantidad: 'multiplier',
+    categoria: 'tag',
+}
 
-/** Clave de una columna a partir de su título: "%" → "pct", "Categoría" → "tag", "Usado" → "consumo". */
-export function claveColumna(t: string): string {
-    if (t.trim() === '%') {
-        return 'pct'
+/** Clave de una columna a partir de su título: "%" → "percent", "Categoría" → "tag", "Usado" → "usage". */
+export function columnKey(title: string): string {
+    if (title.trim() === '%') {
+        return 'percent'
     }
-    const k = clave(t)
-    return ALIAS[k] ?? k
+    const key = normalizeKey(title)
+    return COLUMN_KEYS[key] ?? key
 }

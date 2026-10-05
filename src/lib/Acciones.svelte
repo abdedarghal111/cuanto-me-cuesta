@@ -1,41 +1,41 @@
 <!--
     @component
     Botones de subir, bajar y quitar un elemento de una lista del producto abierto (una línea o un recargo).
-    `mover` y `quitar` también se usan sueltos, por ejemplo con los bloques.
+    `move` y `remove` también se usan sueltos, por ejemplo con los bloques.
 -->
 
 <script lang="ts" module>
-    import { documentos } from './documentos.client.svelte.ts'
-    import { preguntar } from './Dialogo.svelte'
+    import { store } from './documentos.client.svelte.ts'
+    import { ask } from './Dialogo.svelte'
 
-    /** Cambia el elemento `i` de sitio con el de al lado. */
-    export function mover<T>(lista: T[], i: number, paso: -1 | 1) {
-        const j = i + paso
-        if (j < 0 || j >= lista.length) {
+    /** Cambia el elemento `index` de sitio con el de al lado. */
+    export function move<T>(list: T[], index: number, step: -1 | 1) {
+        const other = index + step
+        if (other < 0 || other >= list.length) {
             return
         }
-        ;[lista[i], lista[j]] = [lista[j], lista[i]]
-        documentos.cambiado()
+        ;[list[index], list[other]] = [list[other], list[index]]
+        store.markChanged()
     }
 
-    /** Quita el elemento `i`; con `pregunta`, antes pide confirmarlo. */
-    export async function quitar<T>(lista: T[], i: number, pregunta?: string) {
-        if (pregunta && !(await preguntar({ titulo: pregunta, aceptar: 'Quitar', peligro: true }))) {
+    /** Quita el elemento `index`; con `confirmTitle`, antes pide confirmarlo. */
+    export async function remove<T>(list: T[], index: number, confirmTitle?: string) {
+        if (confirmTitle && !(await ask({ title: confirmTitle, confirmLabel: 'Quitar', danger: true }))) {
             return
         }
-        lista.splice(i, 1)
-        documentos.cambiado()
+        list.splice(index, 1)
+        store.markChanged()
     }
 </script>
 
 <script lang="ts">
     import Icono from './Icono.svelte'
 
-    let { lista, i }: { lista: unknown[]; i: number } = $props()
+    let { list, index }: { list: unknown[]; index: number } = $props()
 </script>
 
 <span class="inline-flex">
-    <button class="mini px-0.5" onclick={() => mover(lista, i, -1)} title="Subir" aria-label="Subir"><Icono nombre="arriba" tam={16} /></button>
-    <button class="mini px-0.5" onclick={() => mover(lista, i, 1)} title="Bajar" aria-label="Bajar"><Icono nombre="abajo" tam={16} /></button>
-    <button class="mini px-0.5" onclick={() => quitar(lista, i)} title="Quitar" aria-label="Quitar"><Icono nombre="quitar" tam={16} /></button>
+    <button class="mini px-0.5" onclick={() => move(list, index, -1)} title="Subir" aria-label="Subir"><Icono name="up" size={16} /></button>
+    <button class="mini px-0.5" onclick={() => move(list, index, 1)} title="Bajar" aria-label="Bajar"><Icono name="down" size={16} /></button>
+    <button class="mini px-0.5" onclick={() => remove(list, index)} title="Quitar" aria-label="Quitar"><Icono name="remove" size={16} /></button>
 </span>

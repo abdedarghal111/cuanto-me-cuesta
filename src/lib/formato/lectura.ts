@@ -3,217 +3,237 @@
  * acepta los formatos anteriores, ignora lo que no entiende y nunca lanza errores.
  */
 
-import { deNombreDeArchivo, hoy } from './archivo.ts'
-import { listaDeTags, usados } from './categorias.ts'
-import { COLUMNAS, COLUMNAS_RECARGO, clave, claveColumna } from './columnas.ts'
-import { normalizarLinea } from './lineas.ts'
-import type { Documento, Linea, Plantilla, Recargo, Seccion, Tipo } from './modelo.ts'
-import { aNumero, normalizar, numero } from './numeros.ts'
+import { parseFileName, today } from './archivo.ts'
+import { parseTagList, usedTags } from './categorias.ts'
+import { LINE_COLUMNS, SURCHARGE_COLUMNS, columnKey, normalizeKey } from './columnas.ts'
+import { normalizeLine } from './lineas.ts'
+import { LINE_TYPE_LABELS, type Line, type LineType, type Product, type Section, type Surcharge, type Template } from './modelo.ts'
+import { formatNumber, normalizeNumber, parseNumber } from './numeros.ts'
 
 /** Valores de una fila, por clave de columna; sin las columnas calculadas («= …»). */
-type Valores = Record<string, string>
+type RowValues = Record<string, string>
 
 /** Parte del archivo que se está leyendo; lo que sigue a RESUMEN o INSTRUCCIONES se ignora. */
-type Parte = 'cabecera' | 'descripcion' | 'bloques' | 'total' | 'ignorar'
+type FilePart = 'header' | 'description' | 'sections' | 'totalSurcharges' | 'ignored'
 
 /** Campos de la cabecera. «Notas:» y «Tags:» son de formatos anteriores. */
-const CAMPO = /^(Producto|Fecha|Notas|Tags|Categor[íi]as|Por defecto)\s*:\s*(.*)$/i
+const HEADER_FIELD = /^(Producto|Fecha|Notas|Tags|Categor[íi]as|Por defecto)\s*:\s*(.*)$/i
 
-/** Lo que se saca de un archivo; los campos van por clave («producto», «tags», «pordefecto»…). */
-interface Leido {
-    campos: Record<string, string>
-    descripcion: string[]
-    secciones: Seccion[]
-    sobreTotal: Recargo[]
+/** Clave de cada campo de la cabecera; «Tags:» se acepta como «Categorías:». */
+const HEADER_FIELD_KEYS: Record<string, string> = {
+    producto: 'name',
+    fecha: 'date',
+    notas: 'notes',
+    tags: 'tags',
+    categorias: 'tags',
+    pordefecto: 'defaultSectionTitles',
+}
+
+/** Lo que se saca de un archivo; los campos van por clave («name», «tags», «defaultSectionTitles»…). */
+interface ParsedFile {
+    fields: Record<string, string>
+    description: string[]
+    sections: Section[]
+    totalSurcharges: Surcharge[]
 }
 
 /** Si la fila suma: todo menos «no», «n», «0» o «false». */
-const cuentaDe = (v: Valores) => !/^(no|n|0|false)$/i.test(v.cuenta ?? '')
+const parseCounts = (values: RowValues) => !/^(no|n|0|false)$/i.test(values.counts ?? '')
 
-/** Tipo de una línea leída. Sin columna «Tipo» (formato anterior), es `tiempo` si la unidad es «h» o el consumo lleva «:». */
-function tipoDe(v: Valores): Tipo {
-    const t = clave(v.tipo ?? '')
-    if (t === 'numero' || t === 'tiempo' || t === 'fijo') {
-        return t
+/** Tipo de una línea leída. Sin columna «Tipo» (formato anterior), es `time` si la unidad es «h» o el consumo lleva «:». */
+function parseLineType(values: RowValues): LineType {
+    const key = normalizeKey(values.type ?? '')
+    const type = (Object.keys(LINE_TYPE_LABELS) as LineType[]).find((t) => normalizeKey(LINE_TYPE_LABELS[t]) === key)
+    if (type) {
+        return type
     }
-    return (v.unidad ?? '').trim() === 'h' || (v.consumo ?? '').includes(':') ? 'tiempo' : 'numero'
+    return (values.unit ?? '').trim() === 'h' || (values.usage ?? '').includes(':') ? 'time' : 'number'
 }
 
-function lineaDe(v: Valores): Linea {
-    return normalizarLinea({
-        cuenta: cuentaDe(v),
-        concepto: v.concepto ?? '',
-        tipo: tipoDe(v),
-        precio: v.precio ?? '',
-        por: v.por ?? '',
-        unidad: v.unidad ?? '',
-        consumo: v.consumo ?? '',
-        multiplicador: v.multiplicador ?? '',
-        tag: v.tag ?? '',
+function parseLine(values: RowValues): Line {
+    return normalizeLine({
+        counts: parseCounts(values),
+        name: values.name ?? '',
+        type: parseLineType(values),
+        price: values.price ?? '',
+        per: values.per ?? '',
+        unit: values.unit ?? '',
+        usage: values.usage ?? '',
+        multiplier: values.multiplier ?? '',
+        tag: values.tag ?? '',
     })
 }
 
-function recargoDe(v: Valores): Recargo {
-    return { cuenta: cuentaDe(v), concepto: v.concepto ?? '', pct: normalizar(v.pct ?? ''), tag: v.tag ?? '' }
+function parseSurcharge(values: RowValues): Surcharge {
+    return { counts: parseCounts(values), name: values.name ?? '', percent: normalizeNumber(values.percent ?? ''), tag: values.tag ?? '' }
 }
 
 /** Formato anterior: una línea con unidad «%» es un recargo del bloque (Consumo / Por × Multiplicador, en %). */
-function recargoAntiguo(v: Valores): Recargo {
-    const por = aNumero(v.por ?? '') ?? 1
-    const veces = (aNumero(v.consumo ?? '', true) ?? 0) * (aNumero(v.multiplicador ?? '') ?? 1)
-    return { cuenta: cuentaDe(v), concepto: v.concepto ?? '', pct: numero(por === 0 ? 0 : (veces / por) * 100), tag: v.tag ?? '' }
+function parseLegacySurcharge(values: RowValues): Surcharge {
+    const per = parseNumber(values.per ?? '') ?? 1
+    const times = (parseNumber(values.usage ?? '', true) ?? 0) * (parseNumber(values.multiplier ?? '') ?? 1)
+    return {
+        counts: parseCounts(values),
+        name: values.name ?? '',
+        percent: formatNumber(per === 0 ? 0 : (times / per) * 100),
+        tag: values.tag ?? '',
+    }
 }
 
 /** Lee un archivo línea a línea y acumula lo que encuentra. */
-class Lector {
-    readonly campos: Record<string, string> = {}
-    readonly descripcion: string[] = []
-    readonly secciones: Seccion[] = []
-    readonly sobreTotal: Recargo[] = []
+class Parser {
+    readonly fields: Record<string, string> = {}
+    readonly description: string[] = []
+    readonly sections: Section[] = []
+    readonly totalSurcharges: Surcharge[] = []
     /** Bloque que se está leyendo. */
-    private actual: Seccion | undefined
+    private currentSection: Section | undefined
     /** Clave de cada columna de las filas que siguen. */
-    private orden: string[] = [...COLUMNAS]
+    private columns: string[] = [...LINE_COLUMNS]
     /** Si las filas son recargos del bloque actual (tras su línea «--»). */
-    private enRecargos = false
+    private inSurcharges = false
     // Cabecera → descripción → bloques → sobre el total → ignorar.
-    private parte: Parte = 'cabecera'
+    private part: FilePart = 'header'
 
     /** Si las filas con "|" se leen: dentro de un bloque o de «Sobre el total». */
-    private get enTabla(): boolean {
-        return this.actual !== undefined || this.parte === 'total'
+    private get inTable(): boolean {
+        return this.currentSection !== undefined || this.part === 'totalSurcharges'
     }
 
     /** Lee una línea del archivo. */
-    leer(cruda: string): void {
-        if (this.marca(cruda) || this.parte === 'ignorar') {
+    readLine(raw: string): void {
+        if (this.enterPart(raw) || this.part === 'ignored') {
             return
         }
-        if (this.parte === 'descripcion') {
-            this.descripcion.push(cruda.trimEnd())
+        if (this.part === 'description') {
+            this.description.push(raw.trimEnd())
             return
         }
-        const linea = cruda.trim()
-        if (linea === '') {
+        const line = raw.trim()
+        if (line === '') {
             return
         }
-        if (!this.enTabla) {
-            this.campo(linea)
+        if (!this.inTable) {
+            this.readField(line)
             return
         }
-        if (this.actual && cruda.startsWith('--')) {
+        if (this.currentSection && raw.startsWith('--')) {
             // "-- Recargos sobre el bloque (base 8,01 €) --": lo que sigue son recargos del bloque.
-            this.orden = [...COLUMNAS_RECARGO]
-            this.enRecargos = true
+            this.columns = [...SURCHARGE_COLUMNS]
+            this.inSurcharges = true
             return
         }
-        if (linea.includes('|')) {
-            this.fila(linea.split('|').map((x) => x.trim()))
+        if (line.includes('|')) {
+            this.readRow(line.split('|').map((cell) => cell.trim()))
         }
     }
 
     /** Lo leído, con la descripción sin líneas vacías al principio ni al final. */
-    resultado(): Leido {
-        const d = this.descripcion
-        while (d[0] === '') {
-            d.shift()
+    result(): ParsedFile {
+        const description = this.description
+        while (description[0] === '') {
+            description.shift()
         }
-        while (d.at(-1) === '') {
-            d.pop()
+        while (description.at(-1) === '') {
+            description.pop()
         }
-        return { campos: this.campos, descripcion: d, secciones: this.secciones, sobreTotal: this.sobreTotal }
+        return { fields: this.fields, description, sections: this.sections, totalSurcharges: this.totalSurcharges }
     }
 
     /** Si la línea empieza una parte del archivo, cambia a ella y devuelve `true`. */
-    private marca(cruda: string): boolean {
-        if (cruda.startsWith('##')) {
+    private enterPart(raw: string): boolean {
+        if (raw.startsWith('##')) {
             // "## Impresión ------ subtotal 9,21 €" → "Impresión"
-            const titulo = cruda.trim().replace(/^#+/, '').replace(/\s-{3,}.*$/, '').trim()
-            this.actual = { titulo, lineas: [], recargos: [] }
-            this.secciones.push(this.actual)
-            this.orden = [...COLUMNAS]
-            this.enRecargos = false
-            this.parte = 'bloques'
+            const title = raw.trim().replace(/^#+/, '').replace(/\s-{3,}.*$/, '').trim()
+            this.currentSection = { title, lines: [], surcharges: [] }
+            this.sections.push(this.currentSection)
+            this.columns = [...LINE_COLUMNS]
+            this.inSurcharges = false
+            this.part = 'sections'
             return true
         }
-        if (/^(RESUMEN|INSTRUCCIONES)/.test(cruda)) {
-            this.parte = 'ignorar'
+        if (/^(RESUMEN|INSTRUCCIONES)/.test(raw)) {
+            this.part = 'ignored'
             return true
         }
-        if (/^DESCRIPCI[ÓO]N\s*$/.test(cruda)) {
-            this.parte = 'descripcion'
+        if (/^DESCRIPCI[ÓO]N\s*$/.test(raw)) {
+            this.part = 'description'
             return true
         }
-        if (/^SOBRE EL TOTAL/.test(cruda)) {
-            this.actual = undefined
-            this.orden = [...COLUMNAS_RECARGO]
-            this.parte = 'total'
+        if (/^SOBRE EL TOTAL/.test(raw)) {
+            this.currentSection = undefined
+            this.columns = [...SURCHARGE_COLUMNS]
+            this.part = 'totalSurcharges'
             return true
         }
         return false
     }
 
-    /** Lee un campo de la cabecera («Producto: …»); «Tags:» se acepta como «Categorías:». */
-    private campo(linea: string): void {
-        const m = linea.match(CAMPO)
-        if (m) {
-            const k = clave(m[1])
-            this.campos[k === 'categorias' ? 'tags' : k] = m[2].trim()
+    /** Lee un campo de la cabecera («Producto: …»). */
+    private readField(line: string): void {
+        const match = line.match(HEADER_FIELD)
+        if (match) {
+            this.fields[HEADER_FIELD_KEYS[normalizeKey(match[1])]] = match[2].trim()
         }
     }
 
     /** Lee una fila de una tabla: de títulos, línea de gasto o recargo. */
-    private fila(c: string[]): void {
-        if (clave(c[0]) === 'cuenta') {
+    private readRow(cells: string[]): void {
+        if (columnKey(cells[0]) === 'counts') {
             // Fila de títulos: fija el orden de las columnas.
-            this.orden = c.map(claveColumna)
+            this.columns = cells.map(columnKey)
             return
         }
-        const v: Valores = {}
-        this.orden.forEach((col, i) => {
-            if (!(c[i] ?? '').startsWith('=')) {
-                v[col] = c[i] ?? ''
+        const values: RowValues = {}
+        this.columns.forEach((column, i) => {
+            if (!(cells[i] ?? '').startsWith('=')) {
+                values[column] = cells[i] ?? ''
             }
         })
-        if (!this.actual) {
-            this.sobreTotal.push(recargoDe(v))
-        } else if (this.enRecargos) {
-            this.actual.recargos.push(recargoDe(v))
-        } else if ((v.unidad ?? '').trim() === '%') {
-            this.actual.recargos.push(recargoAntiguo(v))
+        if (!this.currentSection) {
+            this.totalSurcharges.push(parseSurcharge(values))
+        } else if (this.inSurcharges) {
+            this.currentSection.surcharges.push(parseSurcharge(values))
+        } else if ((values.unit ?? '').trim() === '%') {
+            this.currentSection.surcharges.push(parseLegacySurcharge(values))
         } else {
-            this.actual.lineas.push(lineaDe(v))
+            this.currentSection.lines.push(parseLine(values))
         }
     }
 }
 
-/** Lee un texto completo con un `Lector`. */
-function leer(texto: string): Leido {
-    const lector = new Lector()
-    for (const cruda of texto.split(/\r?\n/)) {
-        lector.leer(cruda)
+/** Lee un texto completo con un `Parser`. */
+function parse(text: string): ParsedFile {
+    const parser = new Parser()
+    for (const raw of text.split(/\r?\n/)) {
+        parser.readLine(raw)
     }
-    return lector.resultado()
+    return parser.result()
 }
 
-/** Lee un producto. Producto y fecha, si faltan, salen del nombre del archivo. */
-export function deTexto(texto: string, nombreArchivo = ''): Documento {
-    const { campos, descripcion, secciones, sobreTotal } = leer(texto)
-    const deNombre = deNombreDeArchivo(nombreArchivo)
+/** Lee un producto. Nombre y fecha, si faltan, salen del nombre del archivo. */
+export function parseProduct(text: string, sourceFileName = ''): Product {
+    const { fields, description, sections, totalSurcharges } = parse(text)
+    const fromFileName = parseFileName(sourceFileName)
     return {
-        producto: campos.producto || deNombre.producto || 'Sin nombre',
-        fecha: campos.fecha || deNombre.fecha || hoy(),
+        name: fields.name || fromFileName.name || 'Sin nombre',
+        date: fields.date || fromFileName.date || today(),
         // Sin DESCRIPCIÓN, se usa el campo de una línea «Notas:».
-        descripcion: descripcion.length ? descripcion.join('\n') : (campos.notas ?? ''),
+        description: description.length ? description.join('\n') : (fields.notes ?? ''),
         // Las de «Categorías:» más las que usan las líneas y recargos y faltan ahí.
-        tags: [...new Set([...listaDeTags(campos.tags ?? ''), ...usados(secciones, sobreTotal)])],
-        secciones,
-        sobreTotal,
+        tags: [...new Set([...parseTagList(fields.tags ?? ''), ...usedTags(sections, totalSurcharges)])],
+        sections,
+        totalSurcharges,
     }
 }
 
 /** Lee la plantilla: categorías, bloques por defecto, bloques y recargos sobre el total. */
-export function plantillaDeTexto(texto: string): Plantilla {
-    const { campos, secciones, sobreTotal } = leer(texto)
-    return { tags: listaDeTags(campos.tags ?? ''), porDefecto: listaDeTags(campos.pordefecto ?? ''), secciones, sobreTotal }
+export function parseTemplate(text: string): Template {
+    const { fields, sections, totalSurcharges } = parse(text)
+    return {
+        tags: parseTagList(fields.tags ?? ''),
+        defaultSectionTitles: parseTagList(fields.defaultSectionTitles ?? ''),
+        sections,
+        totalSurcharges,
+    }
 }

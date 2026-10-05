@@ -1,76 +1,84 @@
 /**
- * @file Cuentas de un documento: base y subtotal de cada bloque, recargos sobre el total y reparto por categoría.
+ * @file Cuentas de un producto: base y subtotal de cada bloque, recargos sobre el total y reparto por categoría.
  */
 
-import { SIN_TAG } from './categorias.ts'
-import { coste, recargo } from './lineas.ts'
-import type { Documento } from './modelo.ts'
+import { UNTAGGED } from './categorias.ts'
+import { lineCost, surchargeAmount } from './lineas.ts'
+import type { Product } from './modelo.ts'
 
-export interface Resumen {
+export interface Summary {
     /** Total con los recargos de «Sobre el total». */
     total: number
     /** Suma de los subtotales de los bloques. */
-    coste: number
-    porTag: Map<string, number>
+    cost: number
+    byTag: Map<string, number>
     /** Subtotal de cada bloque: su base más sus recargos. */
-    porSeccion: number[]
+    sectionSubtotals: number[]
     /** Base de cada bloque: la suma de sus líneas que cuentan. */
-    base: number[]
+    sectionBases: number[]
     /** Importe de cada recargo de «Sobre el total» y lo acumulado tras aplicarlo. */
-    sobreTotal: { importe: number; acumulado: number }[]
+    totalSurcharges: { amount: number; runningTotal: number }[]
     /** Suma de las líneas y recargos de los bloques que no cuentan. */
-    sinContar: number
+    excluded: number
 }
 
 /** Reparte los importes por categoría y aparta los que no cuentan. */
-class Reparto {
-    readonly porTag = new Map<string, number>()
-    sinContar = 0
+class TagBreakdown {
+    readonly byTag = new Map<string, number>()
+    excluded = 0
 
-    /** Suma `importe` a su categoría; sin categoría, a `SIN_TAG`. */
-    sumar(tag: string, importe: number): void {
-        const t = tag.trim() || SIN_TAG
-        this.porTag.set(t, (this.porTag.get(t) ?? 0) + importe)
+    /** Suma `amount` a su categoría; sin categoría, a `UNTAGGED`. */
+    add(tag: string, amount: number): void {
+        const t = tag.trim() || UNTAGGED
+        this.byTag.set(t, (this.byTag.get(t) ?? 0) + amount)
     }
 
     /**
-     * Suma a `inicial` el importe de los elementos que cuentan y los anota por categoría;
-     * el de los que no cuentan va a `sinContar`.
+     * Suma a `initial` el importe de los elementos que cuentan y los anota por categoría;
+     * el de los que no cuentan va a `excluded`.
      */
-    contar<T extends { cuenta: boolean; tag: string }>(elementos: T[], importe: (x: T) => number, inicial = 0): number {
-        let suma = inicial
-        for (const x of elementos) {
-            const c = importe(x)
-            if (x.cuenta) {
-                this.sumar(x.tag, c)
-                suma += c
+    sum<T extends { counts: boolean; tag: string }>(items: T[], amountOf: (item: T) => number, initial = 0): number {
+        let sum = initial
+        for (const item of items) {
+            const amount = amountOf(item)
+            if (item.counts) {
+                this.add(item.tag, amount)
+                sum += amount
             } else {
-                this.sinContar += c
+                this.excluded += amount
             }
         }
-        return suma
+        return sum
     }
 }
 
-/** Calcula las cuentas de un documento. */
-export function resumir(doc: Documento): Resumen {
-    const reparto = new Reparto()
-    const base: number[] = []
-    const porSeccion = doc.secciones.map((s) => {
-        const b = reparto.contar(s.lineas, coste)
-        base.push(b)
-        return reparto.contar(s.recargos, (r) => recargo(r, b), b)
+/** Calcula las cuentas de un producto. */
+export function summarize(product: Product): Summary {
+    const breakdown = new TagBreakdown()
+    const sectionBases: number[] = []
+    const sectionSubtotals = product.sections.map((section) => {
+        const base = breakdown.sum(section.lines, lineCost)
+        sectionBases.push(base)
+        return breakdown.sum(section.surcharges, (s) => surchargeAmount(s, base), base)
     })
-    const costeBloques = porSeccion.reduce((a, b) => a + b, 0)
-    // Los recargos sobre el total se aplican en orden sobre lo acumulado; los que no cuentan no van a `sinContar`.
-    let total = costeBloques
-    const sobreTotal = doc.sobreTotal.map((r) => {
-        const importe = recargo(r, total)
-        if (r.cuenta) {
-            reparto.sumar(r.tag, importe)
-            total += importe
+    const sectionsCost = sectionSubtotals.reduce((a, b) => a + b, 0)
+    // Los recargos sobre el total se aplican en orden sobre lo acumulado; los que no cuentan no van a `excluded`.
+    let total = sectionsCost
+    const totalSurcharges = product.totalSurcharges.map((s) => {
+        const amount = surchargeAmount(s, total)
+        if (s.counts) {
+            breakdown.add(s.tag, amount)
+            total += amount
         }
-        return { importe, acumulado: total }
+        return { amount, runningTotal: total }
     })
-    return { total, coste: costeBloques, porTag: reparto.porTag, porSeccion, base, sobreTotal, sinContar: reparto.sinContar }
+    return {
+        total,
+        cost: sectionsCost,
+        byTag: breakdown.byTag,
+        sectionSubtotals,
+        sectionBases,
+        totalSurcharges,
+        excluded: breakdown.excluded,
+    }
 }

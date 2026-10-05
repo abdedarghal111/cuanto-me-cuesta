@@ -5,66 +5,66 @@
 -->
 
 <script lang="ts">
-    import Acciones, { mover, quitar } from './Acciones.svelte'
-    import { documentos } from './documentos.client.svelte.ts'
+    import Acciones, { move, remove } from './Acciones.svelte'
+    import { store } from './documentos.client.svelte.ts'
     import {
-        TIPOS, UNIDADES_TIEMPO, aDuracion, coste, euros, lineaVacia, recargo, recargoVacio, unidadTiempo,
-        type Documento, type Linea, type Resumen, type Seccion, type Tipo,
+        LINE_TYPE_LABELS, TIME_UNIT_SECONDS, emptyLine, emptySurcharge, formatEuros, lineCost, normalizeDuration, surchargeAmount, timeUnit,
+        type Line, type LineType, type Product, type Section, type Summary,
     } from './formato.ts'
     import Icono from './Icono.svelte'
     import SelectorCategoria from './SelectorCategoria.svelte'
 
-    /** `s` es el bloque número `i` de `doc`. */
-    let { doc, resumen, s, i }: { doc: Documento; resumen: Resumen; s: Seccion; i: number } = $props()
+    /** `section` es el bloque número `index` de `product`. */
+    let { product, summary, section, index }: { product: Product; summary: Summary; section: Section; index: number } = $props()
 
-    const base = $derived(resumen.base[i] ?? 0)
+    const base = $derived(summary.sectionBases[index] ?? 0)
 
     /** Nombre de cada unidad de tiempo en el desplegable. */
-    const NOMBRES_TIEMPO: Record<string, string> = { d: 'días', h: 'horas', min: 'minutos' }
+    const TIME_UNIT_LABELS: Record<string, string> = { d: 'días', h: 'horas', min: 'minutos' }
 
-    /** Cambia el tipo de la línea: `fijo` pone Precio y Por a 1 y `tiempo` deja la unidad en d, h o min. */
-    function elegirTipo(l: Linea, tipo: Tipo) {
-        l.tipo = tipo
-        if (tipo === 'fijo') {
-            l.precio = '1'
-            l.por = '1'
-            l.unidad = l.unidad.trim() || '€'
+    /** Cambia el tipo de la línea: `fixed` pone Precio y Por a 1 y `time` deja la unidad en d, h o min. */
+    function setType(line: Line, type: LineType) {
+        line.type = type
+        if (type === 'fixed') {
+            line.price = '1'
+            line.per = '1'
+            line.unit = line.unit.trim() || '€'
         }
-        if (tipo === 'tiempo') {
-            l.unidad = unidadTiempo(l.unidad)
+        if (type === 'time') {
+            line.unit = timeUnit(line.unit)
         }
-        documentos.cambiado()
+        store.markChanged()
     }
 
     /** Añade una línea en blanco con la categoría de la última. */
-    function añadirLinea() {
-        s.lineas.push(lineaVacia(s.lineas.at(-1)?.tag ?? ''))
-        documentos.cambiado()
+    function addLine() {
+        section.lines.push(emptyLine(section.lines.at(-1)?.tag ?? ''))
+        store.markChanged()
     }
 
     /** Añade un recargo en blanco con la categoría de la última línea. */
-    function añadirRecargo() {
-        s.recargos.push(recargoVacio(s.lineas.at(-1)?.tag ?? ''))
-        documentos.cambiado()
+    function addSurcharge() {
+        section.surcharges.push(emptySurcharge(section.lines.at(-1)?.tag ?? ''))
+        store.markChanged()
     }
 </script>
 
-<div class="papel overflow-hidden">
+<div class="paper overflow-hidden">
     <div class="flex items-center justify-between gap-3 border-b-2 border-ink bg-[#E8EFF8] px-4 py-2">
         <input
-            class="titulo-editable min-w-0 flex-1 font-mano text-[32px] leading-none font-bold text-[#183F86]"
-            bind:value={s.titulo}
-            oninput={() => documentos.cambiado()}
+            class="editable-title min-w-0 flex-1 font-hand text-[32px] leading-none font-bold text-[#183F86]"
+            bind:value={section.title}
+            oninput={() => store.markChanged()}
             aria-label="Título del bloque"
         />
-        <strong class="font-mono text-lg">{euros(resumen.porSeccion[i] ?? 0)}</strong>
+        <strong class="font-mono text-lg">{formatEuros(summary.sectionSubtotals[index] ?? 0)}</strong>
         <span class="inline-flex">
-            <button class="mini" onclick={() => mover(doc.secciones, i, -1)} title="Subir bloque" aria-label="Subir bloque"><Icono nombre="arriba" /></button>
-            <button class="mini" onclick={() => mover(doc.secciones, i, 1)} title="Bajar bloque" aria-label="Bajar bloque"><Icono nombre="abajo" /></button>
-            <button class="mini" onclick={() => quitar(doc.secciones, i, `Quitar el bloque «${s.titulo}»`)} title="Quitar bloque" aria-label="Quitar bloque"><Icono nombre="quitar" /></button>
+            <button class="mini" onclick={() => move(product.sections, index, -1)} title="Subir bloque" aria-label="Subir bloque"><Icono name="up" /></button>
+            <button class="mini" onclick={() => move(product.sections, index, 1)} title="Bajar bloque" aria-label="Bajar bloque"><Icono name="down" /></button>
+            <button class="mini" onclick={() => remove(product.sections, index, `Quitar el bloque «${section.title}»`)} title="Quitar bloque" aria-label="Quitar bloque"><Icono name="remove" /></button>
         </span>
     </div>
-    <div class="overflow-x-auto" oninput={() => documentos.cambiado()} onchange={() => documentos.cambiado()}>
+    <div class="overflow-x-auto" oninput={() => store.markChanged()} onchange={() => store.markChanged()}>
         <table class="w-full border-collapse text-base whitespace-nowrap [&_td]:px-1 [&_td]:py-1.5 [&_th]:px-1 [&_th]:py-1.5 [&_td+td]:border-l [&_td+td]:border-[#E3E9F0] [&_th+th]:border-l [&_th+th]:border-[#E3E9F0]">
             <thead class="bg-[#F7F9FC] text-center font-mono text-xs text-[#3F4E5D]">
                 <tr>
@@ -82,82 +82,82 @@
                 </tr>
             </thead>
             <tbody>
-                {#each s.lineas as l, j (l)}
-                    <tr class="border-t border-[#D5DEE8] even:bg-[#F7F9FC] {l.cuenta ? '' : 'opacity-45'}">
-                        <td><input type="checkbox" class="size-5 accent-ink" bind:checked={l.cuenta} aria-label="Cuenta" /></td>
+                {#each section.lines as line, lineIndex (line)}
+                    <tr class="border-t border-[#D5DEE8] even:bg-[#F7F9FC] {line.counts ? '' : 'opacity-45'}">
+                        <td><input type="checkbox" class="size-5 accent-ink" bind:checked={line.counts} aria-label="Cuenta" /></td>
                         <td class="w-full">
-                            <input class="sin-caja w-full min-w-24 border-b border-[#C5D1DE] py-1" bind:value={l.concepto} placeholder="Ej. Filamento PLA" aria-label="Concepto" />
+                            <input class="borderless w-full min-w-24 border-b border-[#C5D1DE] py-1" bind:value={line.name} placeholder="Ej. Filamento PLA" aria-label="Concepto" />
                         </td>
                         <td>
-                            <select class="cursor-pointer font-mono text-sm" value={l.tipo} onchange={(e) => elegirTipo(l, e.currentTarget.value as Tipo)} aria-label="Tipo">
-                                {#each Object.entries(TIPOS) as [valor, nombre] (valor)}<option value={valor}>{nombre}</option>{/each}
+                            <select class="cursor-pointer font-mono text-sm" value={line.type} onchange={(e) => setType(line, e.currentTarget.value as LineType)} aria-label="Tipo">
+                                {#each Object.entries(LINE_TYPE_LABELS) as [value, label] (value)}<option {value}>{label}</option>{/each}
                             </select>
                         </td>
-                        {#if l.tipo === 'fijo'}
-                            <td><input class="numero w-20" value="1" disabled aria-label="Precio €" /></td>
-                            <td><input class="numero w-16" value="1" disabled aria-label="Por" /></td>
+                        {#if line.type === 'fixed'}
+                            <td><input class="numeric w-20" value="1" disabled aria-label="Precio €" /></td>
+                            <td><input class="numeric w-16" value="1" disabled aria-label="Por" /></td>
                         {:else}
-                            <td><input class="numero w-20" bind:value={l.precio} inputmode="decimal" placeholder="0" aria-label="Precio €" /></td>
-                            <td><input class="numero w-16" bind:value={l.por} inputmode="decimal" placeholder="1" aria-label="Por" /></td>
+                            <td><input class="numeric w-20" bind:value={line.price} inputmode="decimal" placeholder="0" aria-label="Precio €" /></td>
+                            <td><input class="numeric w-16" bind:value={line.per} inputmode="decimal" placeholder="1" aria-label="Por" /></td>
                         {/if}
                         <td>
-                            {#if l.tipo === 'tiempo'}
-                                <select class="w-24 cursor-pointer font-mono text-sm" bind:value={l.unidad} aria-label="Unidad">
-                                    {#each Object.keys(UNIDADES_TIEMPO) as u (u)}<option value={u}>{NOMBRES_TIEMPO[u]}</option>{/each}
+                            {#if line.type === 'time'}
+                                <select class="w-24 cursor-pointer font-mono text-sm" bind:value={line.unit} aria-label="Unidad">
+                                    {#each Object.keys(TIME_UNIT_SECONDS) as unit (unit)}<option value={unit}>{TIME_UNIT_LABELS[unit]}</option>{/each}
                                 </select>
                             {:else}
-                                <input class="w-24 font-mono text-sm" bind:value={l.unidad} placeholder="g, m…" aria-label="Unidad" />
+                                <input class="w-24 font-mono text-sm" bind:value={line.unit} placeholder="g, m…" aria-label="Unidad" />
                             {/if}
                         </td>
                         <td>
-                            {#if l.tipo === 'tiempo'}
+                            {#if line.type === 'time'}
                                 <input
-                                    class="numero usado w-24"
-                                    bind:value={l.consumo}
-                                    onchange={() => (l.consumo = aDuracion(l.consumo, l.unidad))}
+                                    class="numeric highlighted w-24"
+                                    bind:value={line.usage}
+                                    onchange={() => (line.usage = normalizeDuration(line.usage, line.unit))}
                                     placeholder="3d 5h 1m"
                                     title="Duración: 3d 5h 1m 3s, 15:08 (horas:minutos) o un número en la unidad"
                                     aria-label="Consumo"
                                 />
                             {:else}
-                                <input class="numero usado w-24" bind:value={l.consumo} inputmode="decimal" placeholder={l.tipo === 'fijo' ? '0,00 €' : '0'} aria-label="Consumo" />
+                                <input class="numeric highlighted w-24" bind:value={line.usage} inputmode="decimal" placeholder={line.type === 'fixed' ? '0,00 €' : '0'} aria-label="Consumo" />
                             {/if}
                         </td>
-                        <td><input class="numero w-12" bind:value={l.multiplicador} inputmode="decimal" placeholder="1" aria-label="Multiplicador" /></td>
-                        <td><SelectorCategoria {l} /></td>
-                        <td class="text-right font-mono font-semibold {l.cuenta ? '' : 'line-through'}">{euros(coste(l))}</td>
-                        <td><Acciones lista={s.lineas} i={j} /></td>
+                        <td><input class="numeric w-12" bind:value={line.multiplier} inputmode="decimal" placeholder="1" aria-label="Multiplicador" /></td>
+                        <td><SelectorCategoria item={line} /></td>
+                        <td class="text-right font-mono font-semibold {line.counts ? '' : 'line-through'}">{formatEuros(lineCost(line))}</td>
+                        <td><Acciones list={section.lines} index={lineIndex} /></td>
                     </tr>
                 {/each}
-                {#if s.recargos.length}
+                {#if section.surcharges.length}
                     <tr class="border-t-2 border-dashed border-[#AEBCCB] bg-[#E8EFF8]">
                         <td colspan="11" class="font-mono text-xs text-[#3F4E5D]">
-                            Recargos sobre el bloque · base {euros(base)}
+                            Recargos sobre el bloque · base {formatEuros(base)}
                         </td>
                     </tr>
                 {/if}
-                {#each s.recargos as r, j (r)}
-                    <tr class="border-t border-[#D5DEE8] even:bg-[#F7F9FC] {r.cuenta ? '' : 'opacity-45'}">
-                        <td><input type="checkbox" class="size-5 accent-ink" bind:checked={r.cuenta} aria-label="Cuenta" /></td>
+                {#each section.surcharges as surcharge, surchargeIndex (surcharge)}
+                    <tr class="border-t border-[#D5DEE8] even:bg-[#F7F9FC] {surcharge.counts ? '' : 'opacity-45'}">
+                        <td><input type="checkbox" class="size-5 accent-ink" bind:checked={surcharge.counts} aria-label="Cuenta" /></td>
                         <td class="w-full">
-                            <input class="sin-caja w-full min-w-24 border-b border-[#C5D1DE] py-1" bind:value={r.concepto} placeholder="Ej. Riesgo por fallos" aria-label="Concepto" />
+                            <input class="borderless w-full min-w-24 border-b border-[#C5D1DE] py-1" bind:value={surcharge.name} placeholder="Ej. Riesgo por fallos" aria-label="Concepto" />
                         </td>
                         <td colspan="6">
                             <span class="inline-flex items-center gap-1">
-                                <input class="numero usado w-18" bind:value={r.pct} inputmode="decimal" placeholder="0" aria-label="Porcentaje" />
+                                <input class="numeric highlighted w-18" bind:value={surcharge.percent} inputmode="decimal" placeholder="0" aria-label="Porcentaje" />
                                 <span class="font-mono text-[13px] text-[#3F4E5D]">% de la base</span>
                             </span>
                         </td>
-                        <td><SelectorCategoria l={r} /></td>
-                        <td class="text-right font-mono font-semibold {r.cuenta ? '' : 'line-through'}">{euros(recargo(r, base))}</td>
-                        <td><Acciones lista={s.recargos} i={j} /></td>
+                        <td><SelectorCategoria item={surcharge} /></td>
+                        <td class="text-right font-mono font-semibold {surcharge.counts ? '' : 'line-through'}">{formatEuros(surchargeAmount(surcharge, base))}</td>
+                        <td><Acciones list={section.surcharges} index={surchargeIndex} /></td>
                     </tr>
                 {/each}
             </tbody>
         </table>
     </div>
     <div class="flex gap-5 border-t border-dashed border-[#AEBCCB] px-4 py-2">
-        <button class="anadir" onclick={añadirLinea}>+ línea</button>
-        <button class="anadir" onclick={añadirRecargo}>+ recargo (% del bloque)</button>
+        <button class="add-link" onclick={addLine}>+ línea</button>
+        <button class="add-link" onclick={addSurcharge}>+ recargo (% del bloque)</button>
     </div>
 </div>

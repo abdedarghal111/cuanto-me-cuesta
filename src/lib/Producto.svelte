@@ -5,103 +5,103 @@
 -->
 
 <script lang="ts">
-    import { documentos } from './documentos.client.svelte.ts'
-    import { colorDe, suave } from './colores.ts'
-    import { preguntar } from './Dialogo.svelte'
-    import { euros, type Documento } from './formato.ts'
+    import { store } from './documentos.client.svelte.ts'
+    import { softColor, tagColor } from './colores.ts'
+    import { ask } from './Dialogo.svelte'
+    import { formatEuros, type Product } from './formato.ts'
     import Icono from './Icono.svelte'
-    import { pedirCategoria } from './SelectorCategoria.svelte'
+    import { askNewTag } from './SelectorCategoria.svelte'
 
-    let { doc }: { doc: Documento } = $props()
+    let { product }: { product: Product } = $props()
 
-    async function clonar() {
-        const producto = await preguntar({ titulo: 'Clonar producto', mensaje: '¿Cómo se llama?', valor: `${doc.producto} (copia)`, aceptar: 'Clonar' })
-        if (producto) {
-            documentos.crear(producto, doc)
+    async function duplicate() {
+        const name = await ask({ title: 'Clonar producto', message: '¿Cómo se llama?', value: `${product.name} (copia)`, confirmLabel: 'Clonar' })
+        if (name) {
+            store.create(name, product)
         }
     }
 
-    async function descartar() {
-        const si = await preguntar({
-            titulo: 'Descartar cambios',
-            mensaje: 'Se vuelve a lo que hay guardado en el archivo y se pierde lo que no has guardado.',
-            aceptar: 'Descartar',
-            peligro: true,
+    async function discard() {
+        const confirmed = await ask({
+            title: 'Descartar cambios',
+            message: 'Se vuelve a lo que hay guardado en el archivo y se pierde lo que no has guardado.',
+            confirmLabel: 'Descartar',
+            danger: true,
         })
-        if (si) {
-            await documentos.descartar()
+        if (confirmed) {
+            await store.discard()
         }
     }
 
-    async function borrar() {
-        const si = await preguntar({
-            titulo: `Borrar «${doc.producto}»`,
-            mensaje: `El archivo se queda como datos/${documentos.sel}.borrado, por si acaso.`,
-            aceptar: 'Borrar',
-            peligro: true,
+    async function deleteProduct() {
+        const confirmed = await ask({
+            title: `Borrar «${product.name}»`,
+            message: `El archivo se queda como datos/${store.selected}.borrado, por si acaso.`,
+            confirmLabel: 'Borrar',
+            danger: true,
         })
-        if (si) {
-            await documentos.borrar()
+        if (confirmed) {
+            await store.delete()
         }
     }
 
-    async function añadirTag() {
-        const t = await pedirCategoria()
-        if (!t) {
+    async function addTag() {
+        const tag = await askNewTag()
+        if (!tag) {
             return
         }
-        documentos.asegurarTag(t)
-        documentos.cambiado()
+        store.ensureTag(tag)
+        store.markChanged()
     }
 
     /** Líneas y recargos del producto que usan la categoría, y lo que suman. */
-    const usoTag = (tag: string) => {
-        const todas = [...doc.secciones.flatMap((s) => [...s.lineas, ...s.recargos]), ...doc.sobreTotal]
-        return { lineas: todas.filter((l) => l.tag.trim() === tag), coste: documentos.resumen?.porTag.get(tag) ?? 0 }
+    const tagUsage = (tag: string) => {
+        const items = [...product.sections.flatMap((s) => [...s.lines, ...s.surcharges]), ...product.totalSurcharges]
+        return { items: items.filter((item) => item.tag.trim() === tag), cost: store.summary?.byTag.get(tag) ?? 0 }
     }
 
-    async function quitarTag(tag: string) {
-        const { lineas } = usoTag(tag)
-        if (lineas.length) {
-            const si = await preguntar({
-                titulo: `Quitar la categoría «${tag}»`,
-                mensaje: `${lineas.length === 1 ? 'Una línea la usa y se quedará' : `${lineas.length} líneas la usan y se quedarán`} sin categoría.`,
-                aceptar: 'Quitar',
-                peligro: true,
+    async function removeTag(tag: string) {
+        const { items } = tagUsage(tag)
+        if (items.length) {
+            const confirmed = await ask({
+                title: `Quitar la categoría «${tag}»`,
+                message: `${items.length === 1 ? 'Una línea la usa y se quedará' : `${items.length} líneas la usan y se quedarán`} sin categoría.`,
+                confirmLabel: 'Quitar',
+                danger: true,
             })
-            if (!si) {
+            if (!confirmed) {
                 return
             }
-            lineas.forEach((l) => (l.tag = ''))
+            items.forEach((item) => (item.tag = ''))
         }
-        doc.tags = doc.tags.filter((t) => t !== tag)
-        documentos.cambiado()
+        product.tags = product.tags.filter((t) => t !== tag)
+        store.markChanged()
     }
 </script>
 
-<div class="papel grid gap-2.5 px-5 py-[18px]">
+<div class="paper grid gap-2.5 px-5 py-[18px]">
     <div class="flex flex-wrap items-end justify-between gap-3">
         <input
-            class="titulo-editable min-w-0 flex-[1_1_300px] font-mano text-[50px] leading-none font-bold"
-            bind:value={doc.producto}
-            oninput={() => documentos.cambiado()}
+            class="editable-title min-w-0 flex-[1_1_300px] font-hand text-[50px] leading-none font-bold"
+            bind:value={product.name}
+            oninput={() => store.markChanged()}
             aria-label="Nombre del producto"
         />
         <div class="flex flex-wrap items-center gap-4 text-base">
-            <input type="date" class="font-mono text-sm" bind:value={doc.fecha} onchange={() => documentos.cambiado()} aria-label="Fecha" />
-            <button class="enlace" class:font-bold={documentos.modoTexto} onclick={() => (documentos.modoTexto = true)}>ver texto</button>
-            <button class="enlace" onclick={clonar}>clonar</button>
-            {#if documentos.sucios[documentos.sel]}<button class="enlace" onclick={descartar}>descartar cambios</button>{/if}
-            <button class="enlace text-bad" onclick={borrar}>borrar</button>
+            <input type="date" class="font-mono text-sm" bind:value={product.date} onchange={() => store.markChanged()} aria-label="Fecha" />
+            <button class="link" class:font-bold={store.textMode} onclick={() => (store.textMode = true)}>ver texto</button>
+            <button class="link" onclick={duplicate}>clonar</button>
+            {#if store.unsaved[store.selected]}<button class="link" onclick={discard}>descartar cambios</button>{/if}
+            <button class="link text-bad" onclick={deleteProduct}>borrar</button>
         </div>
     </div>
-    <span class="font-mono text-xs text-muted">datos/{documentos.sel}</span>
+    <span class="font-mono text-xs text-muted">datos/{store.selected}</span>
     <label class="grid gap-1 font-bold">
         Descripción
         <textarea
             class="resize-y rounded border border-[#E6D77A] bg-[#FFFBE0] px-3 py-2 text-[17px] leading-normal font-normal"
-            bind:value={doc.descripcion}
-            oninput={() => documentos.cambiado()}
+            bind:value={product.description}
+            oninput={() => store.markChanged()}
             rows="3"
             placeholder="Anotaciones para todo el documento: para quién es, qué se reaprovechó, qué falta por saber…"
         ></textarea>
@@ -109,25 +109,25 @@
     <div class="grid gap-1.5">
         <span class="font-bold">Categorías de este documento</span>
         <div class="flex flex-wrap items-center gap-2">
-            {#each doc.tags as t (t)}
-                {@const color = colorDe(t, documentos.tags)}
-                {@const uso = usoTag(t)}
+            {#each product.tags as tag (tag)}
+                {@const color = tagColor(tag, store.tags)}
+                {@const usage = tagUsage(tag)}
                 <span
                     class="inline-flex items-center gap-1.5 rounded-[3px] border py-0.5 pr-1 pl-2.5 text-[15px]"
-                    style:background={suave(color)}
+                    style:background={softColor(color)}
                     style:border-color={color}
-                    title="{uso.lineas.length} líneas"
+                    title="{usage.items.length} líneas"
                 >
-                    {t}
-                    <span class="font-mono text-xs text-muted">{euros(uso.coste)}</span>
-                    <button class="mini px-0.5" onclick={() => quitarTag(t)} aria-label="Quitar la categoría {t}" title="Quitar categoría">
-                        <Icono nombre="quitar" tam={14} />
+                    {tag}
+                    <span class="font-mono text-xs text-muted">{formatEuros(usage.cost)}</span>
+                    <button class="mini px-0.5" onclick={() => removeTag(tag)} aria-label="Quitar la categoría {tag}" title="Quitar categoría">
+                        <Icono name="remove" size={14} />
                     </button>
                 </span>
             {:else}
                 <span class="text-muted">Ninguna todavía.</span>
             {/each}
-            <button class="enlace text-[15px]" onclick={añadirTag}>+ añadir categoría</button>
+            <button class="link text-[15px]" onclick={addTag}>+ añadir categoría</button>
         </div>
     </div>
 </div>
