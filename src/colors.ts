@@ -1,6 +1,6 @@
 /** @file Color de cada categoría según su posición, orden de la lista de categorías y segmentos de color para las barras. */
 
-import { UNTAGGED } from './format.ts'
+import { UNTAGGED } from './format/index.ts'
 
 /** Importe de una categoría con su color, para barras y rankings. */
 export type Segment = { label: string; value: number; color: string }

@@ -5,11 +5,11 @@
 -->
 
 <script lang="ts">
-    import { softColor, tagColor } from './colors.ts'
+    import { softColor, tagColor } from '../colors.ts'
     import { ask } from './Dialog.svelte'
-    import { formatEuros, type Product } from './format.ts'
+    import { formatEuros, type Product } from '../format/index.ts'
     import Icon from './Icon.svelte'
-    import { store } from './store.client.svelte.ts'
+    import { store } from '../store.client.svelte.ts'
     import { askNewTag } from './TagSelect.svelte'
 
     let { product }: { product: Product } = $props()

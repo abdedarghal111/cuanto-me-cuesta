@@ -1,16 +1,25 @@
 /**
  * @file Gestor de productos (navegador): lee los productos de `datos/` y la plantilla, lleva el producto
- * abierto y los cambios sin guardar, y los escribe en disco. Los componentes lo importan como `store`.
+ * abierto (y su URL) y los cambios sin guardar, y los escribe en disco. Los componentes lo importan como `store`.
  */
 
-import * as api from './api.client.ts'
 import { sortTags } from './colors.ts'
 import {
     cleanTag, fileName, parseProduct, parseTemplate, productToText, summarize, today, usedTags, type Product, type Template,
-} from './format.ts'
+} from './format/index.ts'
+import * as api from './routes/product/product.client.ts'
 
 /** Copia profunda de un valor reactivo, sin vínculo con el original. */
 export const clone = <T>(value: T): T => structuredClone($state.snapshot(value) as T)
+
+/** URL de cada vista: `/` es «Todo» y `/product/<archivo sin .txt>` es un producto. */
+const urlOf = (file: string) => (file ? `/product/${encodeURIComponent(file.replace(/\.txt$/, ''))}` : '/')
+
+/** Archivo que abre una URL; `''` es «Todo». */
+function fileOfUrl(pathname: string): string {
+    const match = pathname.match(/^\/product\/([^/]+)$/)
+    return match ? `${decodeURIComponent(match[1])}.txt` : ''
+}
 
 /** Productos, plantilla, producto abierto y cambios sin guardar. */
 class ProductStore {
@@ -50,10 +59,31 @@ class ProductStore {
         }
     }
 
-    /** Abre un producto, o la vista «Todo» con `''`. */
+    /** Abre un producto, o la vista «Todo» con `''`, y lo apunta en el historial del navegador. */
     select(name: string) {
         this.textMode = false
+        this.#navigate(name)
+    }
+
+    /** Abre la vista de la URL actual (al cargar o al ir atrás y adelante); si el producto no existe, «Todo». */
+    openUrl() {
+        const file = fileOfUrl(location.pathname)
+        this.textMode = false
+        this.#navigate(this.files.includes(file) ? file : '', true)
+    }
+
+    /** Cambia el archivo abierto y pone su URL; con `replace`, sin añadir una entrada al historial. */
+    #navigate(name: string, replace = false) {
         this.selected = name
+        const url = urlOf(name)
+        if (location.pathname === url) {
+            return
+        }
+        if (replace) {
+            history.replaceState(null, '', url)
+        } else {
+            history.pushState(null, '', url)
+        }
     }
 
     /** Nombre de archivo libre para el producto; `current` es el que ya tiene, si lo tiene. */
@@ -77,14 +107,14 @@ class ProductStore {
             delete this.products[name]
             this.files = this.files.map((f) => (f === name ? newName : f)).sort()
             if (this.selected === name) {
-                this.selected = newName
+                this.#navigate(newName, true)
             }
         }
         delete this.unsaved[name]
         const text = productToText($state.snapshot(product))
         this.#writeQueue = this.#writeQueue.then(async () => {
             try {
-                await api.writeFile(newName, text, name)
+                await api.saveProduct(newName, text, name)
                 if (name !== newName) {
                     delete this.#lastText[name]
                 }
@@ -110,12 +140,12 @@ class ProductStore {
     async reload() {
         await this.#writeQueue
         try {
-            const diskFiles = await api.listFiles()
+            const diskFiles = await api.listProducts()
             for (const name of diskFiles) {
                 if (this.unsaved[name]) {
                     continue
                 }
-                const text = await api.readFile(name)
+                const text = await api.readProduct(name)
                 if (text !== this.#lastText[name]) {
                     this.products[name] = parseProduct(text, name)
                     this.#lastText[name] = text
@@ -129,7 +159,7 @@ class ProductStore {
             }
             this.files = [...new Set([...diskFiles, ...Object.keys(this.unsaved)])].sort()
             if (this.selected && !this.files.includes(this.selected)) {
-                this.selected = ''
+                this.#navigate('', true)
             }
             this.template = parseTemplate(await api.readTemplate())
         } catch (e) {
@@ -172,13 +202,13 @@ class ProductStore {
         await this.#writeQueue
         // Un producto que nunca se ha guardado no tiene archivo.
         if (name in this.#lastText) {
-            await api.deleteFile(name)
+            await api.deleteProduct(name)
         }
         delete this.products[name]
         delete this.unsaved[name]
         delete this.#lastText[name]
         this.files = this.files.filter((f) => f !== name)
-        this.selected = ''
+        this.#navigate('')
         this.status = `Borrado «${name}»`
     }
 

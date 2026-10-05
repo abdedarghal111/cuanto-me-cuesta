@@ -5,8 +5,8 @@
 -->
 
 <script lang="ts">
-    import type { Segment } from './colors.ts'
-    import { formatEuros } from './format.ts'
+    import type { Segment } from '../colors.ts'
+    import { formatEuros } from '../format/index.ts'
 
     let {
         segments,

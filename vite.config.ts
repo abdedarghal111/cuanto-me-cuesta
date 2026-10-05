@@ -1,11 +1,11 @@
 /**
- * @file Configuración de Vite: Svelte, Tailwind y el servidor de la API de `src/lib/api.server.ts`.
+ * @file Configuración de Vite: Svelte, Tailwind y el servidor de la API de `src/main.server.ts`.
  */
 
 import { defineConfig } from 'vite'
 import { svelte } from '@sveltejs/vite-plugin-svelte'
 import tailwindcss from '@tailwindcss/vite'
-import { apiServer } from './src/lib/api.server.ts'
+import { apiServer } from './src/main.server.ts'
 
 export default defineConfig({
     // Sin `svelte.config.js`: la configuración por defecto basta y así no se busca.

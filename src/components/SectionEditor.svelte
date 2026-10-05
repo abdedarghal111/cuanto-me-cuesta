@@ -8,10 +8,10 @@
     import {
         LINE_TYPE_LABELS, TIME_UNIT_SECONDS, emptyLine, emptySurcharge, formatEuros, lineCost, normalizeDuration, surchargeAmount, timeUnit,
         type Line, type LineType, type Product, type Section, type Summary,
-    } from './format.ts'
+    } from '../format/index.ts'
     import Icon from './Icon.svelte'
     import RowActions, { move, remove } from './RowActions.svelte'
-    import { store } from './store.client.svelte.ts'
+    import { store } from '../store.client.svelte.ts'
     import TagSelect from './TagSelect.svelte'
 
     /** `section` es el bloque número `index` de `product`. */

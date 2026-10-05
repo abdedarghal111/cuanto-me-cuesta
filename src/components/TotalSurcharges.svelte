@@ -4,9 +4,9 @@
 -->
 
 <script lang="ts">
-    import { emptySurcharge, formatEuros, type Product, type Summary } from './format.ts'
+    import { emptySurcharge, formatEuros, type Product, type Summary } from '../format/index.ts'
     import RowActions from './RowActions.svelte'
-    import { store } from './store.client.svelte.ts'
+    import { store } from '../store.client.svelte.ts'
     import TagSelect from './TagSelect.svelte'
 
     let { product, summary }: { product: Product; summary: Summary } = $props()

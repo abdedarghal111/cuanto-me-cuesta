@@ -6,7 +6,7 @@
 
 <script lang="ts" module>
     import { ask } from './Dialog.svelte'
-    import { store } from './store.client.svelte.ts'
+    import { store } from '../store.client.svelte.ts'
 
     /** Cambia el elemento `index` de sitio con el de al lado. */
     export function move<T>(list: T[], index: number, step: -1 | 1) {
