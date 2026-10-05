@@ -3,12 +3,12 @@
  * Los costes, subtotales y el resumen se escriben para leerlos a mano; al cargar se recalculan.
  */
 
-import { ANCHO, CABECERA, CABECERA_RECARGO, CABECERA_TOTAL } from './columnas'
-import { INSTRUCCIONES } from './instrucciones'
-import { coste, normalizarLinea, recargo } from './lineas'
-import { TIPOS, type Documento, type Linea, type Recargo, type Seccion } from './modelo'
-import { euros, normalizar, pct } from './numeros'
-import { resumir, type Resumen } from './resumen'
+import { ANCHO, CABECERA, CABECERA_RECARGO, CABECERA_TOTAL } from './columnas.ts'
+import { INSTRUCCIONES } from './instrucciones.ts'
+import { coste, normalizarLinea, recargo } from './lineas.ts'
+import { TIPOS, type Documento, type Linea, type Recargo, type Seccion } from './modelo.ts'
+import { euros, normalizar, pct } from './numeros.ts'
+import { resumir, type Resumen } from './resumen.ts'
 
 /** Comienzo de una línea que se leería como el inicio de una parte del archivo. */
 const MARCA = /^(##|SOBRE EL TOTAL|RESUMEN|INSTRUCCIONES|DESCRIPCI)/

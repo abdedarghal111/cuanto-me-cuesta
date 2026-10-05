@@ -3,12 +3,12 @@
  * acepta los formatos anteriores, ignora lo que no entiende y nunca lanza errores.
  */
 
-import { deNombreDeArchivo, hoy } from './archivo'
-import { listaDeTags, usados } from './categorias'
-import { COLUMNAS, COLUMNAS_RECARGO, clave, claveColumna } from './columnas'
-import { normalizarLinea } from './lineas'
-import type { Documento, Linea, Plantilla, Recargo, Seccion, Tipo } from './modelo'
-import { aNumero, normalizar, numero } from './numeros'
+import { deNombreDeArchivo, hoy } from './archivo.ts'
+import { listaDeTags, usados } from './categorias.ts'
+import { COLUMNAS, COLUMNAS_RECARGO, clave, claveColumna } from './columnas.ts'
+import { normalizarLinea } from './lineas.ts'
+import type { Documento, Linea, Plantilla, Recargo, Seccion, Tipo } from './modelo.ts'
+import { aNumero, normalizar, numero } from './numeros.ts'
 
 /** Valores de una fila, por clave de columna; sin las columnas calculadas («= …»). */
 type Valores = Record<string, string>

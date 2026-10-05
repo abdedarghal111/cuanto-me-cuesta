@@ -2,7 +2,7 @@
  * @file Categorías (`tag` en el código): limpieza, listas y las que usa un documento.
  */
 
-import type { Recargo, Seccion } from './modelo'
+import type { Recargo, Seccion } from './modelo.ts'
 
 /** Categoría con la que se agrupan las líneas que no llevan ninguna. */
 export const SIN_TAG = 'Sin categoría'

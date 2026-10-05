@@ -5,7 +5,7 @@
 -->
 
 <script lang="ts">
-    import { euros } from './formato'
+    import { euros } from './formato.ts'
 
     let {
         segmentos,

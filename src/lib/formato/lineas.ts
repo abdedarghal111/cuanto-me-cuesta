@@ -2,8 +2,8 @@
  * @file Reglas de cada tipo de línea: cómo se normaliza y cuánto cuesta. Un tipo nuevo solo necesita su entrada en `REGLAS`.
  */
 
-import type { Linea, Recargo, Tipo } from './modelo'
-import { UNIDADES_TIEMPO, aDuracion, aNumero, normalizar, numero, segundos, unidadTiempo } from './numeros'
+import type { Linea, Recargo, Tipo } from './modelo.ts'
+import { UNIDADES_TIEMPO, aDuracion, aNumero, normalizar, numero, segundos, unidadTiempo } from './numeros.ts'
 
 /** Valores numéricos con los que se calcula el coste de una línea. */
 interface Valores {

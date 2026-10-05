@@ -2,9 +2,9 @@
  * @file Cuentas de un documento: base y subtotal de cada bloque, recargos sobre el total y reparto por categoría.
  */
 
-import { SIN_TAG } from './categorias'
-import { coste, recargo } from './lineas'
-import type { Documento } from './modelo'
+import { SIN_TAG } from './categorias.ts'
+import { coste, recargo } from './lineas.ts'
+import type { Documento } from './modelo.ts'
 
 export interface Resumen {
     /** Total con los recargos de «Sobre el total». */

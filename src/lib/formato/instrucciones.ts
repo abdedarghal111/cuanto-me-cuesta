@@ -2,7 +2,7 @@
  * @file Instrucciones que se escriben al final de los productos y de la plantilla para quien los edite a mano.
  */
 
-import { ANCHO } from './columnas'
+import { ANCHO } from './columnas.ts'
 
 /** Reglas de las líneas de gasto, comunes a los productos y a la plantilla. */
 const REGLAS_LINEAS = [
