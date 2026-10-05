@@ -4,3 +4,4 @@
  */
 
 export { TIPOS, lineaVacia, recargoVacio, type Documento, type Linea, type Plantilla, type Recargo, type Seccion, type Tipo } from './formato/modelo'
+export { UNIDADES_TIEMPO, aDuracion, aNumero, euros, numero, pct, segundos, unidadTiempo } from './formato/numeros'
