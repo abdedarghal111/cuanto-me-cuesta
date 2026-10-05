@@ -1,4 +1,9 @@
-/** @file Color de cada categoría según su posición, y orden de la lista de categorías. */
+/** @file Color de cada categoría según su posición, orden de la lista de categorías y segmentos de color para las barras. */
+
+import { SIN_TAG } from './formato.ts'
+
+/** Importe de una categoría con su color, para barras y rankings. */
+export type Segmento = { etiqueta: string; valor: number; color: string }
 
 const PALETA = ['--c1', '--c2', '--c3', '--c4', '--c5', '--c6', '--c7', '--c8', '--c9', '--c10']
 
@@ -13,3 +18,12 @@ export function ordenarTags(deSiempre: string[], usados: Iterable<string>): stri
     const otros = [...new Set(usados)].filter((t) => t && !deSiempre.includes(t)).sort((a, b) => a.localeCompare(b, 'es'))
     return [...deSiempre, ...otros]
 }
+
+/** Versión clara de un color, para el fondo de las categorías. */
+export const suave = (color: string) => `color-mix(in srgb, ${color} 22%, white)`
+
+/** Segmentos de un reparto por categoría, en el orden de `tags` y con «Sin categoría» al final. */
+export const segmentos = (porTag: Map<string, number>, tags: string[]): Segmento[] =>
+    [...tags, SIN_TAG]
+        .filter((t) => porTag.has(t))
+        .map((t) => ({ etiqueta: t, valor: porTag.get(t) ?? 0, color: colorDe(t, tags) }))
