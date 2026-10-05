@@ -1,6 +1,6 @@
 ---
 name: formato-datos
-description: Formato de los archivos de texto de «Cuánto me cuesta» (productos en datos/ y la plantilla src/res/template.txt), cálculo del coste, guardado y categorías. Úsala siempre que vayas a tocar src/lib/format.ts, src/lib/format/, src/lib/api.server.ts, src/lib/api.client.ts, src/lib/store.client.svelte.ts, la plantilla, el guardado o las categorías, o a leer o editar un .txt de datos/.
+description: Formato de los archivos de texto de «Cuánto me cuesta» (productos en datos/ y la plantilla src/res/template.txt), cálculo del coste, guardado y categorías. Úsala siempre que vayas a tocar src/format/, src/routes/product/product.server.ts, src/routes/product/product.client.ts, src/store.client.svelte.ts, la plantilla, el guardado o las categorías, o a leer o editar un .txt de datos/.
 ---
 
 # Formato de los datos
@@ -12,7 +12,8 @@ Los `.txt` son la fuente de verdad y se tienen que poder leer y editar a mano.
 - Cada producto es un archivo `datos/titulo_fecha.txt`; la app lo renombra al guardar si cambian el título o la fecha.
 - Borrar un producto lo renombra a `nombre.txt.borrado`.
 - La plantilla, `src/res/template.txt`, guarda los bloques que se copian al crear un bloque, las categorías de siempre, y los bloques y recargos sobre el total con los que empieza un producto nuevo. La app la usa directamente, sin copias. Cada vez que el servidor la lee, le reescribe al final `TEMPLATE_INSTRUCTIONS` de `format/instructions.ts` (para crear productos a partir de ella) si faltan o no coinciden.
-- El formato se implementa en `src/lib/format/`, un módulo por tarea (`model`, `numbers`, `lines`, `summary`, `tags`, `columns`, `instructions`, `parser`, `writer`, `files`); `src/lib/format.ts` reexporta la API pública. Un tipo de línea nuevo se añade en `LINE_TYPE_RULES` de `lines.ts` y en `LineType` y `LINE_TYPE_LABELS` de `model.ts`.
+- El formato se implementa en `src/format/`, un módulo por tarea (`model`, `numbers`, `lines`, `summary`, `tags`, `columns`, `instructions`, `parser`, `writer`, `files`); `src/format/index.ts` reexporta la API pública.
+- Los endpoints están en `src/routes/product/product.server.ts` (`/api/products` y `/api/template`), conectados en `src/main.server.ts`, y se llaman desde `product.client.ts`. Un tipo de línea nuevo se añade en `LINE_TYPE_RULES` de `lines.ts` y en `LineType` y `LINE_TYPE_LABELS` de `model.ts`.
 - El código va en inglés y el archivo en español: los títulos de columna y los campos de la cabecera se traducen a claves en inglés al leer (`COLUMN_KEYS` de `columns.ts` y `HEADER_FIELD_KEYS` de `parser.ts`).
 
 ## Estructura de un producto
@@ -36,7 +37,7 @@ En orden: cabecera (`Producto:`, `Fecha:`, `Categorías:`), `DESCRIPCIÓN`, bloq
 
 ## Guardado
 
-Se guarda solo con el botón Guardar o con Ctrl+S. Hasta entonces, los cambios viven en memoria (`unsaved`, en `src/lib/store.client.svelte.ts`) y `beforeunload` avisa al cerrar.
+Se guarda solo con el botón Guardar o con Ctrl+S. Hasta entonces, los cambios viven en memoria (`unsaved`, en `src/store.client.svelte.ts`) y `beforeunload` avisa al cerrar.
 
 ## Categorías
 

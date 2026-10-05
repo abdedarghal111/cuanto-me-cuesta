@@ -2,7 +2,12 @@
 
 App local para apuntar lo que cuesta cada cosa que hago y ver en qué se va el dinero.
 
-- Svelte 5 (runes) + TypeScript + Tailwind 4 + Vite; `src/lib/api.server.ts` sirve los `.txt`, montado en Vite como plugin, y `src/lib/api.client.ts` los pide desde el navegador.
+- Svelte 5 (runes) + TypeScript + Tailwind 4 + Vite. Una sola app: `main.client.ts` la monta y lleva la URL, y `main.server.ts` conecta los endpoints al servidor de Vite (`connect`), montado como plugin.
+- Organización de `src/`, por funcionalidad:
+  - `routes/<ruta>/`: una carpeta por URL, solo con su vista (`Product.svelte`) y sus llamadas al servidor (`product.server.ts`) y desde el navegador (`product.client.ts`). La portada «Todo» (`/`) es `App.svelte`.
+  - `components/`: el resto de piezas `.svelte`.
+  - `format/`: leer, escribir y hacer las cuentas de los `.txt`; `format/index.ts` reúne su API.
+  - `store.client.svelte.ts`: el estado de la app; `colors.ts`, `app.css` y `res/`.
 - Abrir: `abrir.ps1` o `npm run abrir`. Comprobar: `npm run check`.
 - Interfaz en español de España, con coma decimal.
 - Los datos se guardan en `.txt` para que una persona o una IA los pueda leer y editar con facilidad, y así se pueda automatizar sin problemas. Por eso cada archivo es redundante a propósito: lleva costes, subtotales, resumen e instrucciones que la app recalcula o ignora al leer.
@@ -18,8 +23,8 @@ App local para apuntar lo que cuesta cada cosa que hago y ver en qué se va el d
 - Todo `if`, `else`, `for` y `while` lleva llaves.
 - Indentación de 4 espacios.
 - Todo el código vive en `src/`, y el nombre de cada archivo dice dónde se ejecuta:
-  - `.server.ts`: solo en Node, dentro del servidor de Vite (p. ej. `api.server.ts`, que usa `node:fs`).
-  - `.client.ts` (o `.client.svelte.ts` si usa runes): solo en el navegador (p. ej. `main.client.ts`, `api.client.ts`, `store.client.svelte.ts`).
+  - `.server.ts`: solo en Node, dentro del servidor de Vite (p. ej. `main.server.ts` y `product.server.ts`, que usa `node:fs`).
+  - `.client.ts` (o `.client.svelte.ts` si usa runes): solo en el navegador (p. ej. `main.client.ts`, `product.client.ts`, `store.client.svelte.ts`).
   - Sin sufijo: de uso general, sirve en los dos lados porque no depende ni de Node ni del navegador (p. ej. `format/`, `colors.ts`). Un archivo así no importa nunca uno `.server` ni `.client`.
   - Los componentes `.svelte` son de navegador por naturaleza y no llevan sufijo.
 - Las importaciones relativas llevan la extensión del archivo (`.ts`, `.svelte.ts`, `.svelte`), como pide el cargador nativo de configuración de Vite.
