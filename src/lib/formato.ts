@@ -3,6 +3,7 @@
  * Reúne la API pública de los módulos de `formato/`, para importarla desde un solo sitio.
  */
 
+export { hoy, nombreDeArchivo } from './formato/archivo'
 export { SIN_TAG, limpiarTag, listaDeTags, usados } from './formato/categorias'
 export { aTexto } from './formato/escritura'
 export { INSTRUCCIONES_PLANTILLA } from './formato/instrucciones'
