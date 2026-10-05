@@ -1,0 +1,83 @@
+PLANTILLA · lo que se copia al crear un producto o un bloque nuevo.
+- Categorías: las de siempre; un documento nuevo empieza con ellas.
+- Por defecto: los bloques (por su título) con los que empieza un documento nuevo.
+- Mismo formato de líneas que los productos. Cambia precios o añade lo tuyo.
+- SOBRE EL TOTAL: los recargos sobre el total con los que empieza un documento nuevo.
+
+Categorías: Material, Impresora, Prototipo, Diseño, Mano de obra, Margen
+Por defecto: Impresión 3D, Prototipado 3D, Mis horas
+
+## Impresión 3D
+Cuenta | Concepto                     | Tipo   | Precio € | Por     | Unidad | Consumo | Multiplicador | Categoría
+sí     | Filamento PLA                | número | 11,21    | 1000    | g      |         | 1             | Material
+sí     | Gasto Luz 140 W a 0,20 €/kWh | tiempo | 0,028    | 1       | h      |         | 1             | Impresora
+sí     | Desgaste Impresora en 3000 h | tiempo | 300      | 3000    | h      |         | 1             | Impresora
+-- Recargos sobre el bloque --
+Cuenta | Concepto          | %  | Categoría
+sí     | Riesgo por fallos | 15 | Impresora
+
+## Prototipado 3D
+Cuenta | Concepto                     | Tipo   | Precio € | Por     | Unidad | Consumo | Multiplicador | Categoría
+sí     | Filamento prototipo          | número | 11,21    | 1000    | g      |         | 1             | Prototipo
+sí     | Gasto Luz 140 W a 0,20 €/kWh | tiempo | 0,028    | 1       | h      |         | 1             | Prototipo
+sí     | Desgaste Impresora en 3000 h | tiempo | 300      | 3000    | h      |         | 1             | Prototipo
+-- Recargos sobre el bloque --
+Cuenta | Concepto          | %  | Categoría
+sí     | Riesgo por fallos | 15 | Prototipo
+
+## Mis horas
+Cuenta | Concepto                     | Tipo   | Precio € | Por     | Unidad | Consumo | Multiplicador | Categoría
+sí     | Diseño                       | tiempo | 10       | 1       | h      |         | 1             | Diseño
+sí     | Posprocesado y montaje       | tiempo | 10       | 1       | h      |         | 1             | Mano de obra
+
+SOBRE EL TOTAL
+Cuenta | Concepto | %  | Categoría
+no     | Margen   | 30 | Margen
+
+INSTRUCCIONES (para quien use esta plantilla, persona o IA)
+------------------------------------------------------------------------------
+- Es la plantilla de «Cuánto me cuesta». La app solo lee Categorías, Por
+  defecto, los bloques y SOBRE EL TOTAL; desde INSTRUCCIONES se ignora.
+- Para crear un producto a partir de ella, escribe un archivo nuevo con:
+    Producto: nombre del producto
+    Fecha:    AAAA-MM-DD
+    Categorías: las de esta plantilla que uses, separadas por comas
+    DESCRIPCIÓN
+    texto libre de varias líneas: encargo, presupuesto, supuestos...
+    los bloques "## Título" que hagan falta, con su fila de títulos y sus líneas
+    SOBRE EL TOTAL, si hace falta
+  Copia los bloques, líneas y recargos que sirvan, rellena Consumo y Multiplicador,
+  cambia lo que haga falta y quita lo que sobre. El producto no lleva
+  "Por defecto:".
+- En la DESCRIPCIÓN, ninguna línea puede empezar por "##", "SOBRE EL TOTAL",
+  "RESUMEN" ni "INSTRUCCIONES".
+- Cada línea de un bloque:
+    Cuenta | Concepto | Tipo | Precio € | Por | Unidad | Consumo | Multiplicador | Categoría | = Coste
+  Coste = Precio / Por × Consumo × Multiplicador. Por y Multiplicador vacíos = 1.
+  Ej.: 11,21 € por 1000 g, consumo 228,4 g, multiplicador 2 → 5,12 €.
+  Multiplicador = cuántas veces se repite el consumo; admite decimales (0,5).
+  Unidad = texto libre para leerlo (g, m, l, uds…); solo cuenta en tiempo.
+- Tipo: cómo se escriben Por y Consumo.
+    número: números (228,4).
+    tiempo: Unidad d, h o min; Por es un número en esa unidad (300 € por
+            3000 h) y Consumo una duración: 3d 5h 1m 3s, 15:08 (horas:minutos)
+            o un número en la unidad.
+    fijo:   un importe en €. Precio y Por valen 1 y el importe va en Consumo.
+- La fila de títulos de cada bloque dice el orden de las columnas; sin ella se
+  usa el orden de arriba.
+- Cuenta: "sí" suma; "no" se ve pero no suma.
+- Solo números, con coma decimal y sin punto de miles (nada de fórmulas).
+- Recargos de un bloque: tras sus líneas, una línea "-- Recargos --" y debajo
+    Cuenta | Concepto | % | Categoría | = Coste
+  Cada uno es un % de la base del bloque (la suma de sus líneas que cuentan);
+  si hay varios, se suman. Ej.: base 8 € y 15 % → 1,20 €.
+- SOBRE EL TOTAL: tras los bloques, una línea "SOBRE EL TOTAL" y debajo
+    Cuenta | Concepto | % | Categoría | = Importe | = Acumulado
+  Se aplican en orden, cada uno sobre lo acumulado hasta él (p. ej. margen).
+- Cada línea lleva una categoría de la lista. No uses "|" dentro de un texto.
+- Si te dan un presupuesto, ajusta los consumos a él y anota en la
+  DESCRIPCIÓN el total que sale y lo que has supuesto.
+- No hace falta escribir lo que va tras "=", bases, subtotales ni resumen: la
+  app los calcula y al guardar añade sus propias instrucciones.
+- El archivo se llama titulo_fecha.txt (p. ej. paralelas-tomas_2026-10-04.txt)
+  y va en la carpeta datos/.
