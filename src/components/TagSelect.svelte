@@ -4,6 +4,11 @@
     o crear una nueva.
 -->
 
+<script lang="ts" module>
+    /** Valor de la opción que crea una categoría nueva. */
+    const NEW_TAG_OPTION = '__new_tag__'
+</script>
+
 <script lang="ts">
     import { softColor, tagColor } from '../colors.ts'
     import { askName } from './Dialog.svelte'
@@ -14,8 +19,6 @@
     /** `item` es una línea o un recargo de `product`. */
     let { product, item }: { product: CostSheet; item: LineItem } = $props()
 
-    /** Valor de la opción que crea una categoría nueva. */
-    const NEW_TAG_OPTION = '__new_tag__'
     const color = $derived(tagColor(item.category, store.tags))
 
     /**
