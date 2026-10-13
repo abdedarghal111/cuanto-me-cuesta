@@ -284,6 +284,21 @@ export class CostSheet implements Serializable, Observable {
     }
 
     /**
+     * Nombre de archivo de la hoja: "Paralelas Tomás" + "2026-10-04" → "paralelas-tomas_2026-10-04.txt".
+     * @param suffix Texto que se añade al nombre para no repetir archivo.
+     * @returns El nombre del archivo.
+     */
+    fileName(suffix = ''): string {
+        const base = `${this.#name} ${suffix}`
+            .normalize('NFD')
+            .replace(/[̀-ͯ]/g, '')
+            .toLowerCase()
+            .replace(/[^a-z0-9]+/g, '-')
+            .replace(/^-+|-+$/g, '')
+        return `${base || 'producto'}_${this.#date}.txt`
+    }
+
+    /**
      * Copia la hoja con copias de sus secciones y recargos, sin sus suscripciones.
      * @returns La copia.
      */

@@ -80,22 +80,6 @@ function today(): string {
     return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`
 }
 
-/**
- * Nombre de archivo de una hoja: "Paralelas Tomás" + "2026-10-04" → "paralelas-tomas_2026-10-04.txt".
- * @param sheet Hoja.
- * @param suffix Texto que se añade al nombre para no repetir archivo.
- * @returns El nombre del archivo.
- */
-function fileName(sheet: CostSheet, suffix = ''): string {
-    const base = `${sheet.name} ${suffix}`
-        .normalize('NFD')
-        .replace(/[̀-ͯ]/g, '')
-        .toLowerCase()
-        .replace(/[^a-z0-9]+/g, '-')
-        .replace(/^-+|-+$/g, '')
-    return `${base || 'producto'}_${sheet.date}.txt`
-}
-
 /** Hojas, plantilla, hoja abierta y cambios sin guardar. */
 class ProductStore {
     /** Hojas cargadas, por nombre de archivo, envueltas para que Svelte siga sus cambios. */
@@ -168,9 +152,9 @@ class ProductStore {
 
     /** Nombre de archivo libre para la hoja; `current` es el que ya tiene, si lo tiene. */
     #freeFileName(sheet: CostSheet, current = ''): string {
-        let name = fileName(sheet)
+        let name = sheet.fileName()
         for (let i = 2; name !== current && this.files.includes(name); i++) {
-            name = fileName(sheet, String(i))
+            name = sheet.fileName(String(i))
         }
         return name
     }
