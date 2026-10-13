@@ -100,9 +100,6 @@
 @utility paper-soft {
     @apply self-start rounded bg-white/85 px-3 py-1.5 text-base text-muted;
 }
-@utility note-card {
-    @apply flex flex-col gap-0.5 border-2 border-ink bg-[#FFF4A8] px-5 py-4 shadow-[4px_4px_0_var(--ink)];
-}
 @utility tab {
     @apply rounded-lg border-2 border-line bg-white px-4 py-1.5 text-ink;
     &.active {
