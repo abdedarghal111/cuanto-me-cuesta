@@ -10,7 +10,7 @@
     import { LINE_TYPE_LABELS } from '../model/LineType.ts'
     import type { Section } from '../model/Section.ts'
     import { Surcharge } from '../model/Surcharge.ts'
-    import { TIME_UNIT_SECONDS, formatEuros } from '../model/text/numbers.ts'
+    import { TIME_UNIT_LABELS, TIME_UNIT_SECONDS, formatEuros } from '../model/text/numbers.ts'
     import RowActions from './RowActions.svelte'
     import TagSelect from './TagSelect.svelte'
 
@@ -18,9 +18,6 @@
     let { product, section, index }: { product: CostSheet; section: Section; index: number } = $props()
 
     const base = $derived(section.base())
-
-    /** Nombre de cada unidad de tiempo en el desplegable. */
-    const TIME_UNIT_LABELS: Record<string, string> = { d: 'días', h: 'horas', min: 'minutos' }
 
     /** Añade una línea en blanco con la categoría de la última. */
     function addLine() {

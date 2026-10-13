@@ -5,6 +5,9 @@
 /** Unidades del tipo `time`, con sus segundos. */
 export const TIME_UNIT_SECONDS: Record<string, number> = { d: 86400, h: 3600, min: 60 }
 
+/** Nombre de cada unidad del tipo `time` en la pantalla. */
+export const TIME_UNIT_LABELS: Record<keyof typeof TIME_UNIT_SECONDS, string> = { d: 'días', h: 'horas', min: 'minutos' }
+
 /**
  * Unidad de tiempo válida.
  * @param unit Unidad escrita.
