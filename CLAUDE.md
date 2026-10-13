@@ -6,7 +6,7 @@ App local para apuntar lo que cuesta cada cosa que hago y ver en qué se va el d
 - Organización de `src/`, por funcionalidad:
   - `routes/<ruta>/`: una carpeta por URL, solo con su vista (`Product.svelte`) y sus llamadas al servidor (`product.server.ts`) y desde el navegador (`product.client.ts`). La portada «Todo» (`/`) es `App.svelte`.
   - `components/`: el resto de piezas `.svelte`.
-  - `format/`: leer, escribir y hacer las cuentas de los `.txt`; `format/index.ts` reúne su API.
+  - `model/`: las clases de una hoja de costes, que hacen sus cuentas y se leen y escriben como `.txt`; en `model/text/`, el lector y las piezas del texto.
   - `store.client.svelte.ts`: el estado de la app; `colors.ts`, `app.css` y `res/`.
 - Abrir: `abrir.ps1` o `npm run abrir`. Comprobar: `npm run check`.
 - Interfaz en español de España, con coma decimal.
@@ -25,7 +25,7 @@ App local para apuntar lo que cuesta cada cosa que hago y ver en qué se va el d
 - Todo el código vive en `src/`, y el nombre de cada archivo dice dónde se ejecuta:
   - `.server.ts`: solo en Node, dentro del servidor de Vite (p. ej. `main.server.ts` y `product.server.ts`, que usa `node:fs`).
   - `.client.ts` (o `.client.svelte.ts` si usa runes): solo en el navegador (p. ej. `main.client.ts`, `product.client.ts`, `store.client.svelte.ts`).
-  - Sin sufijo: de uso general, sirve en los dos lados porque no depende ni de Node ni del navegador (p. ej. `format/`, `colors.ts`). Un archivo así no importa nunca uno `.server` ni `.client`.
+  - Sin sufijo: de uso general, sirve en los dos lados porque no depende ni de Node ni del navegador (p. ej. `model/`, `colors.ts`). Un archivo así no importa nunca uno `.server` ni `.client`.
   - Los componentes `.svelte` son de navegador por naturaleza y no llevan sufijo.
 - Las importaciones relativas llevan la extensión del archivo (`.ts`, `.svelte.ts`, `.svelte`), como pide el cargador nativo de configuración de Vite.
 - Comentarios en español, formales, cortos, sobre lo que hace el código, y con el estándar de documentación oficial del lenguaje en funciones y tipos.
