@@ -70,8 +70,8 @@
         />
     </div>
     <div class="overflow-x-auto">
-        <table class="w-full border-collapse text-base whitespace-nowrap [&_td]:px-1 [&_td]:py-1.5 [&_th]:px-1 [&_th]:py-1.5 [&_td+td]:border-l [&_td+td]:border-[#E3E9F0] [&_th+th]:border-l [&_th+th]:border-[#E3E9F0]">
-            <thead class="bg-[#F7F9FC] text-center font-mono text-xs text-[#3F4E5D]">
+        <table class="cost-table">
+            <thead class="cost-thead">
                 <tr>
                     <th class="font-semibold" title="Si lo quitas, la línea se ve pero no suma">✓</th>
                     <th class="font-semibold">Concepto</th>
