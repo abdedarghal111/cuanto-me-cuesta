@@ -1,20 +1,49 @@
 <!--
     @component
-    Botones de subir, bajar y quitar un elemento de una lista del producto abierto (una línea o un recargo).
-    `move` y `remove` también se usan sueltos, por ejemplo con los bloques.
+    Botones de subir, bajar y quitar un elemento de una lista del producto abierto (una línea, un recargo
+    o un bloque), con confirmación opcional antes de quitar.
 -->
 
-<script lang="ts" module>
+<script lang="ts" generics="T">
     import { ask } from './Dialog.svelte'
+    import Icon from './Icon.svelte'
+
+    let {
+        list,
+        index,
+        reorder,
+        onremove,
+        confirm,
+        label,
+        size = 16,
+    }: {
+        /** Lista actual en la que está el elemento. */
+        list: T[]
+        /** Posición del elemento en `list`. */
+        index: number
+        /** Asigna la lista en el orden nuevo (el setter del modelo, que avisa del cambio). */
+        reorder: (list: T[]) => void
+        /** Quita el elemento (el `remove…` del modelo, que avisa del cambio). */
+        onremove: () => void
+        /** Si se indica, título del diálogo que pide confirmar antes de quitar. */
+        confirm?: string
+        /** Qué es el elemento, para el título de los botones («Subir bloque»). */
+        label?: string
+        /** Tamaño de los iconos. */
+        size?: number
+    } = $props()
+
+    /** Texto que se añade al título de cada botón. */
+    const suffix = $derived(label ? ` ${label}` : '')
+    /** Con el tamaño por defecto, los botones van más juntos. */
+    const padding = $derived(size === 16 ? 'px-0.5' : '')
 
     /**
-     * Cambia el elemento `index` de sitio con el de al lado.
-     * @param list Lista actual.
-     * @param index Posición del elemento.
+     * Cambia el elemento `index` de sitio con el de al lado y asigna la lista en el orden nuevo con `reorder`.
+     * En los extremos de la lista no hace nada.
      * @param step Hacia dónde se mueve: -1 sube y 1 baja.
-     * @param reorder Asigna la lista en el orden nuevo (el setter del modelo, que avisa del cambio).
      */
-    export function move<T>(list: T[], index: number, step: -1 | 1, reorder: (list: T[]) => void) {
+    function move(step: -1 | 1) {
         const other = index + step
         if (other < 0 || other >= list.length) {
             return
@@ -25,31 +54,19 @@
     }
 
     /**
-     * Quita un elemento; con `confirmTitle`, antes pide confirmarlo.
-     * @param removeItem Quita el elemento (el `remove…` del modelo, que avisa del cambio).
-     * @param confirmTitle Título del diálogo de confirmación.
+     * Quita el elemento con `onremove`; si hay `confirm`, antes pide confirmarlo con un diálogo con ese título
+     * y no hace nada si se cancela.
      */
-    export async function remove(removeItem: () => void, confirmTitle?: string) {
-        if (confirmTitle && !(await ask({ title: confirmTitle, confirmLabel: 'Quitar', danger: true }))) {
+    async function remove() {
+        if (confirm && !(await ask({ title: confirm, confirmLabel: 'Quitar', danger: true }))) {
             return
         }
-        removeItem()
+        onremove()
     }
 </script>
 
-<script lang="ts" generics="T">
-    import Icon from './Icon.svelte'
-
-    let {
-        list,
-        index,
-        reorder,
-        onremove,
-    }: { list: T[]; index: number; reorder: (list: T[]) => void; onremove: () => void } = $props()
-</script>
-
 <span class="inline-flex">
-    <button class="mini px-0.5" onclick={() => move(list, index, -1, reorder)} title="Subir" aria-label="Subir"><Icon name="up" size={16} /></button>
-    <button class="mini px-0.5" onclick={() => move(list, index, 1, reorder)} title="Bajar" aria-label="Bajar"><Icon name="down" size={16} /></button>
-    <button class="mini px-0.5" onclick={() => remove(onremove)} title="Quitar" aria-label="Quitar"><Icon name="remove" size={16} /></button>
+    <button class="mini {padding}" onclick={() => move(-1)} title="Subir{suffix}" aria-label="Subir{suffix}"><Icon name="up" {size} /></button>
+    <button class="mini {padding}" onclick={() => move(1)} title="Bajar{suffix}" aria-label="Bajar{suffix}"><Icon name="down" {size} /></button>
+    <button class="mini {padding}" onclick={remove} title="Quitar{suffix}" aria-label="Quitar{suffix}"><Icon name="remove" {size} /></button>
 </span>

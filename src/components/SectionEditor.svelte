@@ -12,8 +12,7 @@
     import type { Summary } from '../model/Summary.ts'
     import { Surcharge } from '../model/Surcharge.ts'
     import { TIME_UNIT_SECONDS, formatEuros, normalizeDuration, timeUnit } from '../model/text/numbers.ts'
-    import Icon from './Icon.svelte'
-    import RowActions, { move, remove } from './RowActions.svelte'
+    import RowActions from './RowActions.svelte'
     import TagSelect from './TagSelect.svelte'
 
     /** `section` es el bloque número `index` de `product`. */
@@ -36,9 +35,6 @@
             line.unit = timeUnit(line.unit)
         }
     }
-
-    /** Asigna los bloques del producto en el orden nuevo. */
-    const reorderSections = (sections: Section[]) => (product.sections = sections)
 
     /** Añade una línea en blanco con la categoría de la última. */
     function addLine() {
@@ -63,11 +59,15 @@
             aria-label="Título del bloque"
         />
         <strong class="font-mono text-lg">{formatEuros(summary.sectionSubtotals[index] ?? 0)}</strong>
-        <span class="inline-flex">
-            <button class="mini" onclick={() => move(product.sections, index, -1, reorderSections)} title="Subir bloque" aria-label="Subir bloque"><Icon name="up" /></button>
-            <button class="mini" onclick={() => move(product.sections, index, 1, reorderSections)} title="Bajar bloque" aria-label="Bajar bloque"><Icon name="down" /></button>
-            <button class="mini" onclick={() => remove(() => product.removeSection(section), `Quitar el bloque «${section.title}»`)} title="Quitar bloque" aria-label="Quitar bloque"><Icon name="remove" /></button>
-        </span>
+        <RowActions
+            list={product.sections}
+            {index}
+            reorder={(sections) => (product.sections = sections)}
+            onremove={() => product.removeSection(section)}
+            confirm={`Quitar el bloque «${section.title}»`}
+            label="bloque"
+            size={18}
+        />
     </div>
     <div class="overflow-x-auto">
         <table class="w-full border-collapse text-base whitespace-nowrap [&_td]:px-1 [&_td]:py-1.5 [&_th]:px-1 [&_th]:py-1.5 [&_td+td]:border-l [&_td+td]:border-[#E3E9F0] [&_th+th]:border-l [&_th+th]:border-[#E3E9F0]">
