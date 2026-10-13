@@ -4,7 +4,7 @@ App local para apuntar lo que cuesta cada cosa que hago y ver en qué se va el d
 
 - Svelte 5 (runes) + TypeScript + Tailwind 4 + Vite. Una sola app: `main.client.ts` la monta y lleva la URL, y `main.server.ts` conecta los endpoints al servidor de Vite (`connect`), montado como plugin.
 - Organización de `src/`, por funcionalidad:
-  - `routes/<ruta>/`: una carpeta por URL, solo con su vista (`Product.svelte`) y sus llamadas al servidor (`product.server.ts`) y desde el navegador (`product.client.ts`). La portada «Todo» (`/`) es `App.svelte`.
+  - `routes/<ruta>/`: una carpeta por URL, solo con su vista (`Product.svelte`) y sus llamadas al servidor (`product.server.ts`) y desde el navegador (`product.client.ts`). La portada «Todo» (`/`) es `routes/home/Home.svelte`; `App.svelte` monta la barra, el diálogo y la vista de la URL.
   - `components/`: el resto de piezas `.svelte`.
   - `model/`: las clases de una hoja de costes, que hacen sus cuentas y se leen y escriben como `.txt`; en `model/text/`, el lector y las piezas del texto.
   - `store.client.svelte.ts`: el estado de la app; `colors.ts`, `app.css` y `res/`.
