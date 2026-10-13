@@ -320,6 +320,20 @@ export class CostSheet implements Serializable, Observable {
     }
 
     /**
+     * Crea una hoja nueva a partir de otra: una copia con otro nombre y otra fecha.
+     * @param source Hoja de la que se parte (la plantilla u otra hoja).
+     * @param name Nombre de la hoja nueva.
+     * @param date Fecha de la hoja nueva, como AAAA-MM-DD.
+     * @returns La hoja nueva.
+     */
+    static copy(source: CostSheet, name: string, date: string): CostSheet {
+        const sheet = source.clone()
+        sheet.#name = name
+        sheet.#date = date
+        return sheet
+    }
+
+    /**
      * Escribe la hoja completa: cabecera, observaciones, secciones, recargos sobre el total, resumen e instrucciones.
      * @returns Líneas de texto; unidas con saltos de línea, el texto acaba en uno.
      */

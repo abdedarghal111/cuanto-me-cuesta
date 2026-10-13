@@ -246,9 +246,7 @@ class ProductStore {
 
     /** Crea una hoja sin guardar, copia de la plantilla o de `source`, con el nombre dado y la fecha de hoy, y la abre. */
     create(name: string, source?: CostSheet) {
-        const sheet = unwrap(source ?? this.template).clone()
-        sheet.name = name
-        sheet.date = today()
+        const sheet = CostSheet.copy(unwrap(source ?? this.template), name, today())
         const newName = this.#freeFileName(sheet)
         this.products[newName] = this.#watch(sheet)
         this.files = [...this.files, newName].sort()
