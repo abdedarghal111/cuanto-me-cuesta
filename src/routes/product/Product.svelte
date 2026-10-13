@@ -43,7 +43,7 @@
         <FileTextView {product} />
     {:else}
         {#each product.sections as section, index (section)}
-            <SectionEditor {product} {summary} {section} {index} />
+            <SectionEditor {product} {section} {index} />
         {/each}
 
         <select class="cursor-pointer self-start text-accent rounded-md border-2 border-dashed border-[#1F4FA8] bg-white px-4 py-2 font-hand text-[26px] font-bold" onchange={addSection} aria-label="Nuevo bloque">
@@ -70,9 +70,9 @@
     <TagRanking segments={tagSegments(summary.byCategory, store.tags)} total={summary.total} />
     <div class="paper grid gap-1 p-4">
         <h2 class="mb-1 font-hand text-[26px] leading-none">Por bloques</h2>
-        {#each product.sections as section, index (section)}
+        {#each product.sections as section (section)}
             <div class="flex justify-between gap-2 border-b border-[#EEF2F6] py-0.5">
-                <span class="truncate">{section.title}</span><span class="font-mono text-sm font-semibold">{formatEuros(summary.sectionSubtotals[index] ?? 0)}</span>
+                <span class="truncate">{section.title}</span><span class="font-mono text-sm font-semibold">{formatEuros(section.subtotal())}</span>
             </div>
         {/each}
     </div>

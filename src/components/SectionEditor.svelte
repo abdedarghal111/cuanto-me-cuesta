@@ -9,16 +9,15 @@
     import { Line } from '../model/Line.ts'
     import { LINE_TYPE_LABELS, type LineType } from '../model/LineType.ts'
     import type { Section } from '../model/Section.ts'
-    import type { Summary } from '../model/Summary.ts'
     import { Surcharge } from '../model/Surcharge.ts'
     import { TIME_UNIT_SECONDS, formatEuros, normalizeDuration, timeUnit } from '../model/text/numbers.ts'
     import RowActions from './RowActions.svelte'
     import TagSelect from './TagSelect.svelte'
 
     /** `section` es el bloque número `index` de `product`. */
-    let { product, summary, section, index }: { product: CostSheet; summary: Summary; section: Section; index: number } = $props()
+    let { product, section, index }: { product: CostSheet; section: Section; index: number } = $props()
 
-    const base = $derived(summary.sectionBases[index] ?? 0)
+    const base = $derived(section.base())
 
     /** Nombre de cada unidad de tiempo en el desplegable. */
     const TIME_UNIT_LABELS: Record<string, string> = { d: 'días', h: 'horas', min: 'minutos' }
@@ -58,7 +57,7 @@
             bind:value={section.title}
             aria-label="Título del bloque"
         />
-        <strong class="font-mono text-lg">{formatEuros(summary.sectionSubtotals[index] ?? 0)}</strong>
+        <strong class="font-mono text-lg">{formatEuros(section.subtotal())}</strong>
         <RowActions
             list={product.sections}
             {index}
