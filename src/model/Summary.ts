@@ -16,10 +16,6 @@ export class Summary {
     cost: number
     /** Importe de cada categoría. */
     byCategory: Map<string, number>
-    /** Subtotal de cada sección: su base más sus recargos. */
-    sectionSubtotals: number[]
-    /** Base de cada sección: la suma de sus líneas que cuentan. */
-    sectionBases: number[]
     /** Importe de cada recargo sobre el total y lo acumulado tras aplicarlo. */
     totalSurcharges: SurchargeTotal[]
     /** Suma de las líneas y recargos de las secciones que no cuentan. */
@@ -33,8 +29,6 @@ export class Summary {
         this.total = values.total
         this.cost = values.cost
         this.byCategory = values.byCategory
-        this.sectionSubtotals = values.sectionSubtotals
-        this.sectionBases = values.sectionBases
         this.totalSurcharges = values.totalSurcharges
         this.excluded = values.excluded
     }

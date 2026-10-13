@@ -278,8 +278,6 @@ export class CostSheet implements Serializable, Observable {
             total: this.total(),
             cost: this.cost(),
             byCategory: this.byCategory(),
-            sectionSubtotals: this.sections.map((section) => section.subtotal()),
-            sectionBases: this.sections.map((section) => section.base()),
             totalSurcharges: this.#totalSurchargeAmounts(),
             excluded: this.excluded(),
         })
