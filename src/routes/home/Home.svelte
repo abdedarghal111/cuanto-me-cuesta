@@ -9,24 +9,13 @@
     import TagBar from '../../components/TagBar.svelte'
     import TagRanking from '../../components/TagRanking.svelte'
     import { tagSegments } from '../../colors.ts'
+    import { Summary } from '../../model/Summary.ts'
     import { formatEuros } from '../../model/text/numbers.ts'
     import { store } from '../../store.client.svelte.ts'
 
     const summaries = $derived(Object.fromEntries(Object.entries(store.products).map(([file, product]) => [file, product.summarize()])))
     const maxTotal = $derived(Math.max(0, ...Object.values(summaries).map((s) => s.total)))
-    const combined = $derived.by(() => {
-        const byTag = new Map<string, number>()
-        let total = 0
-        let cost = 0
-        for (const summary of Object.values(summaries)) {
-            total += summary.total
-            cost += summary.cost
-            for (const [tag, amount] of summary.byCategory) {
-                byTag.set(tag, (byTag.get(tag) ?? 0) + amount)
-            }
-        }
-        return { total, cost, segments: tagSegments(byTag, store.tags) }
-    })
+    const combined = $derived(Summary.combine(Object.values(summaries)))
 </script>
 
 <section class="flex min-w-0 flex-[999_1_600px] flex-col gap-4">
@@ -34,7 +23,7 @@
     {#if store.files.length === 0}
         <p class="paper p-4">Todavía no hay nada. Dale a «+ nuevo» para empezar.</p>
     {:else}
-        <TagRanking segments={combined.segments} total={combined.total} />
+        <TagRanking segments={tagSegments(combined.byCategory, store.tags)} total={combined.total} />
         <h2 class="paper-soft font-hand text-[34px] leading-none font-bold text-[#183F86]">Por producto</h2>
         {#each store.files as file (file)}
             {@const product = store.products[file]}
