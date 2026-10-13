@@ -7,10 +7,10 @@
 <script lang="ts">
     import type { CostSheet } from '../model/CostSheet.ts'
     import { Line } from '../model/Line.ts'
-    import { LINE_TYPE_LABELS, type LineType } from '../model/LineType.ts'
+    import { LINE_TYPE_LABELS } from '../model/LineType.ts'
     import type { Section } from '../model/Section.ts'
     import { Surcharge } from '../model/Surcharge.ts'
-    import { TIME_UNIT_SECONDS, formatEuros, normalizeDuration, timeUnit } from '../model/text/numbers.ts'
+    import { TIME_UNIT_SECONDS, formatEuros, normalizeDuration } from '../model/text/numbers.ts'
     import RowActions from './RowActions.svelte'
     import TagSelect from './TagSelect.svelte'
 
@@ -21,19 +21,6 @@
 
     /** Nombre de cada unidad de tiempo en el desplegable. */
     const TIME_UNIT_LABELS: Record<string, string> = { d: 'días', h: 'horas', min: 'minutos' }
-
-    /** Cambia el tipo de la línea: `fixed` pone Precio y Por a 1 y `time` deja la unidad en d, h o min. */
-    function setType(line: Line, type: LineType) {
-        line.type = type
-        if (type === 'fixed') {
-            line.price = '1'
-            line.per = '1'
-            line.unit = line.unit.trim() || '€'
-        }
-        if (type === 'time') {
-            line.unit = timeUnit(line.unit)
-        }
-    }
 
     /** Añade una línea en blanco con la categoría de la última. */
     function addLine() {
@@ -93,7 +80,7 @@
                             <input class="borderless w-full min-w-24 border-b border-[#C5D1DE] py-1" bind:value={line.name} placeholder="Ej. Filamento PLA" aria-label="Concepto" />
                         </td>
                         <td>
-                            <select class="cursor-pointer font-mono text-sm" value={line.type} onchange={(e) => setType(line, e.currentTarget.value as LineType)} aria-label="Tipo">
+                            <select class="cursor-pointer font-mono text-sm" bind:value={line.type} aria-label="Tipo">
                                 {#each Object.entries(LINE_TYPE_LABELS) as [value, label] (value)}<option {value}>{label}</option>{/each}
                             </select>
                         </td>

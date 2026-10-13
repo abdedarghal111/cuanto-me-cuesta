@@ -32,6 +32,8 @@ interface LineTypeRules {
     normalize(line: Line): LineValues
     /** Precio, Por y Consumo como números, con sus valores por defecto. */
     costInputs(line: Line): CostInputs
+    /** Valores que cambian al elegir este tipo para una línea; los que no da se quedan igual. */
+    onSelect(line: Line): Partial<LineValues>
 }
 
 /** Reglas de cada tipo. Un tipo nuevo solo necesita su entrada aquí y en `LineType`. */
@@ -44,6 +46,7 @@ const LINE_TYPE_RULES: Record<LineType, LineTypeRules> = {
             usage: normalizeNumber(line.usage),
         }),
         costInputs: (line) => ({ price: parseNumber(line.price) ?? 0, per: parseNumber(line.per) ?? 1, usage: parseNumber(line.usage) ?? 0 }),
+        onSelect: () => ({}),
     },
     time: {
         normalize: (line) => {
@@ -63,10 +66,14 @@ const LINE_TYPE_RULES: Record<LineType, LineTypeRules> = {
             per: parseNumber(line.per, true) ?? 1,
             usage: (durationSeconds(line.usage, line.unit) ?? 0) / TIME_UNIT_SECONDS[timeUnit(line.unit)],
         }),
+        // La Unidad queda en d, h o min.
+        onSelect: (line) => ({ unit: timeUnit(line.unit) }),
     },
     fixed: {
         normalize: (line) => ({ price: '1', per: '1', unit: line.unit.trim(), usage: normalizeNumber(line.usage) }),
         costInputs: (line) => ({ price: 1, per: 1, usage: parseNumber(line.usage) ?? 0 }),
+        // Precio y Por pasan a 1, y una Unidad vacía pasa a €.
+        onSelect: (line) => ({ price: '1', per: '1', unit: line.unit.trim() || '€' }),
     },
 }
 
@@ -96,13 +103,25 @@ export class Line extends LineItem {
     #usage = ''
     #multiplier = '1'
 
-    /** Tipo: cómo se escriben Por y Consumo. */
+    /**
+     * Tipo: cómo se escriben Por y Consumo. Al cambiarlo se aplican las reglas del tipo nuevo: `fixed` pone Precio
+     * y Por a 1 y una Unidad vacía a €, y `time` deja la Unidad en d, h o min. Al leer un archivo no se aplican.
+     */
     get type(): LineType {
         return this.#type
     }
 
+    /**
+     * Cambia el tipo, aplica las reglas del tipo nuevo y avisa una sola vez.
+     * @param type Tipo nuevo.
+     */
     set type(type: LineType) {
         this.#type = type
+        const values = LINE_TYPE_RULES[type].onSelect(this)
+        this.#price = values.price ?? this.#price
+        this.#per = values.per ?? this.#per
+        this.#unit = values.unit ?? this.#unit
+        this.#usage = values.usage ?? this.#usage
         this.notify()
     }
 
