@@ -11,22 +11,27 @@
     import TagRanking from '../../components/TagRanking.svelte'
     import TotalSurcharges from '../../components/TotalSurcharges.svelte'
     import { tagSegments } from '../../colors.ts'
-    import { emptyLine, formatEuros, type Product, type Section, type Summary } from '../../format/index.ts'
-    import { clone, store } from '../../store.client.svelte.ts'
+    import type { CostSheet } from '../../model/CostSheet.ts'
+    import { Line } from '../../model/Line.ts'
+    import { Section } from '../../model/Section.ts'
+    import type { Summary } from '../../model/Summary.ts'
+    import { formatEuros } from '../../model/text/numbers.ts'
+    import { store } from '../../store.client.svelte.ts'
 
-    let { product, summary }: { product: Product; summary: Summary } = $props()
+    let { product, summary }: { product: CostSheet; summary: Summary } = $props()
 
     /** Añade un bloque en blanco o una copia del de la plantilla elegido (valor: índice del bloque). */
     function addSection(e: Event & { currentTarget: HTMLSelectElement }) {
         const value = e.currentTarget.value
         e.currentTarget.value = ''
         const templateSection = store.template.sections[Number(value)]
-        const section: Section = value === 'empty' || !templateSection
-            ? { title: 'Nuevo bloque', lines: [emptyLine()], surcharges: [] }
-            : clone(templateSection)
-        product.sections.push(section)
-        ;[...section.lines, ...section.surcharges].forEach((item) => store.ensureTag(item.tag))
-        store.markChanged()
+        if (value === 'empty' || !templateSection) {
+            const section = new Section('Nuevo bloque')
+            section.addLine(new Line())
+            product.addSection(section)
+        } else {
+            product.addSection(templateSection.clone())
+        }
     }
 </script>
 
@@ -63,7 +68,7 @@
         {#if summary.total !== summary.cost}<span class="font-bold">Con lo de sobre el total: {formatEuros(summary.total)}</span>{/if}
         {#if summary.excluded > 0}<span class="text-sm">+ {formatEuros(summary.excluded)} que no cuentan</span>{/if}
     </div>
-    <TagRanking segments={tagSegments(summary.byTag, store.tags)} total={summary.total} />
+    <TagRanking segments={tagSegments(summary.byCategory, store.tags)} total={summary.total} />
     <div class="paper grid gap-1 p-4">
         <h2 class="mb-1 font-hand text-[26px] leading-none">Por bloques</h2>
         {#each product.sections as section, index (section)}

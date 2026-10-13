@@ -12,7 +12,7 @@ const productUrl = (name: string) => `/api/products/${encodeURIComponent(name)}`
 
 export const listProducts = async (): Promise<string[]> => (await request('/api/products')).json()
 export const readProduct = async (name: string): Promise<string> => (await request(productUrl(name))).text()
-/** Lee la plantilla (`src/res/template.txt`); el servidor pone al día sus instrucciones. */
+/** Lee la plantilla (`src/res/template.txt`), una hoja normal. */
 export const readTemplate = async (): Promise<string> => (await request('/api/template')).text()
 /** Escribe el archivo. Con `previousName` distinto de `name`, elimina el anterior (cambio de nombre). */
 export const saveProduct = async (name: string, text: string, previousName?: string) => {

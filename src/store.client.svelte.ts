@@ -1,71 +1,135 @@
 /**
- * @file Gestor de productos (navegador): lee los productos de `datos/` y la plantilla, lleva el producto
- * abierto (y su URL) y los cambios sin guardar, y los escribe en disco. Los componentes lo importan como `store`.
+ * @file Gestor de hojas (navegador): lee las hojas de `datos/` y la plantilla, lleva la hoja abierta (y su URL)
+ * y los cambios sin guardar, y las escribe en disco. Los componentes lo importan como `store`.
  */
 
+import { createSubscriber } from 'svelte/reactivity'
 import { sortTags } from './colors.ts'
-import {
-    cleanTag, fileName, parseProduct, parseTemplate, productToText, summarize, today, usedTags, type Product, type Template,
-} from './format/index.ts'
+import { CostSheet } from './model/CostSheet.ts'
+import { DocumentReader } from './model/text/DocumentReader.ts'
 import * as api from './routes/product/product.client.ts'
 
-/** Copia profunda de un valor reactivo, sin vínculo con el original. */
-export const clone = <T>(value: T): T => structuredClone($state.snapshot(value) as T)
+/** Objeto del modelo envuelto para Svelte → el objeto original. */
+const originals = new WeakMap<object, object>()
+/** Objeto del modelo → su envoltorio, para que cada objeto tenga siempre el mismo. */
+const wrappers = new WeakMap<object, object>()
 
-/** URL de cada vista: `/` es «Todo» y `/product/<archivo sin .txt>` es un producto. */
+/**
+ * Da el objeto original de un envoltorio; los arrays, con sus elementos originales.
+ * @param value Valor, envuelto o no.
+ * @returns El valor sin envoltorio.
+ */
+function unwrap<T>(value: T): T {
+    if (Array.isArray(value)) {
+        return value.map(unwrap) as T
+    }
+    return (value && typeof value === 'object' ? (originals.get(value) ?? value) : value) as T
+}
+
+/**
+ * Envuelve un objeto de una hoja para que Svelte lo siga: cada lectura llama a `track` (el `createSubscriber` de su
+ * hoja), y lo que devuelve también va envuelto. Los métodos y setters trabajan sobre el objeto original.
+ * @param target Objeto del modelo (la hoja, una sección, una línea, un array…).
+ * @param track Función que suscribe a quien lee a los avisos de la hoja.
+ * @returns El envoltorio.
+ */
+function reactive<T extends object>(target: T, track: () => void): T {
+    const known = wrappers.get(target)
+    if (known) {
+        return known as T
+    }
+    const wrap = (value: unknown) => (value && typeof value === 'object' ? reactive(value, track) : value)
+    const wrapper = new Proxy(target, {
+        get(t, key) {
+            track()
+            const value = Reflect.get(t, key, t)
+            if (typeof value === 'function') {
+                return (...args: unknown[]) => wrap(value.apply(t, args.map(unwrap)))
+            }
+            return wrap(value)
+        },
+        set(t, key, value) {
+            return Reflect.set(t, key, unwrap(value), t)
+        },
+    })
+    wrappers.set(target, wrapper)
+    originals.set(wrapper, target)
+    return wrapper
+}
+
+/** URL de cada vista: `/` es «Todo» y `/product/<archivo sin .txt>` es una hoja. */
 const urlOf = (file: string) => (file ? `/product/${encodeURIComponent(file.replace(/\.txt$/, ''))}` : '/')
 
-/** Archivo que abre una URL; `''` es «Todo». */
+/**
+ * Archivo que abre una URL.
+ * @param pathname Ruta de la URL.
+ * @returns El archivo, o `''` para «Todo».
+ */
 function fileOfUrl(pathname: string): string {
     const match = pathname.match(/^\/product\/([^/]+)$/)
     return match ? `${decodeURIComponent(match[1])}.txt` : ''
 }
 
-/** Productos, plantilla, producto abierto y cambios sin guardar. */
+/**
+ * Fecha de hoy.
+ * @returns La fecha como AAAA-MM-DD.
+ */
+function today(): string {
+    const d = new Date()
+    const pad = (n: number) => String(n).padStart(2, '0')
+    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`
+}
+
+/**
+ * Nombre de archivo de una hoja: "Paralelas Tomás" + "2026-10-04" → "paralelas-tomas_2026-10-04.txt".
+ * @param sheet Hoja.
+ * @param suffix Texto que se añade al nombre para no repetir archivo.
+ * @returns El nombre del archivo.
+ */
+function fileName(sheet: CostSheet, suffix = ''): string {
+    const base = `${sheet.name} ${suffix}`
+        .normalize('NFD')
+        .replace(/[̀-ͯ]/g, '')
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-+|-+$/g, '')
+    return `${base || 'producto'}_${sheet.date}.txt`
+}
+
+/** Hojas, plantilla, hoja abierta y cambios sin guardar. */
 class ProductStore {
-    /** Productos cargados, por nombre de archivo. */
-    products = $state<Record<string, Product>>({})
+    /** Hojas cargadas, por nombre de archivo, envueltas para que Svelte siga sus cambios. */
+    products = $state<Record<string, CostSheet>>({})
     files = $state<string[]>([])
-    template = $state<Template>({ tags: [], defaultSectionTitles: [], sections: [], totalSurcharges: [] })
+    /** Plantilla: una hoja normal de la que salen las hojas nuevas y los bloques que se añaden. */
+    template = $state<CostSheet>(new CostSheet())
     /** Archivo abierto; `''` es la vista «Todo». */
     selected = $state('')
-    /** Si el producto abierto se muestra como texto del archivo. */
+    /** Si la hoja abierta se muestra como texto del archivo. */
     textMode = $state(false)
     /** Último aviso para la barra de arriba. */
     status = $state('')
-    /** Productos con cambios sin guardar; solo se escriben en disco al pulsar Guardar o Ctrl+S. */
+    /** Hojas con cambios sin guardar; solo se escriben en disco al pulsar Guardar o Ctrl+S. */
     unsaved = $state<Record<string, true>>({})
 
     hasUnsaved = $derived(Object.keys(this.unsaved).length > 0)
     product = $derived(this.selected ? this.products[this.selected] : undefined)
-    summary = $derived(this.product ? summarize(this.product) : undefined)
+    summary = $derived(this.product?.summarize())
     /** Todas las categorías, en el orden que fija su color. */
-    tags = $derived(
-        sortTags(this.template.tags, [
-            ...Object.values(this.products).flatMap((p) => [...p.tags, ...usedTags(p.sections, p.totalSurcharges)]),
-            ...usedTags(this.template.sections, this.template.totalSurcharges),
-        ]),
-    )
+    tags = $derived(sortTags(this.template.categories, Object.values(this.products).flatMap((p) => p.categories)))
 
     /** Último texto leído o escrito de cada archivo, para detectar cambios hechos fuera de la app. */
     #lastText: Record<string, string> = {}
     /** Cola de escrituras, que se hacen de una en una. */
     #writeQueue: Promise<void> = Promise.resolve()
 
-    /** Marca como sin guardar el producto abierto. */
-    markChanged() {
-        if (this.selected) {
-            this.unsaved[this.selected] = true
-        }
-    }
-
-    /** Abre un producto, o la vista «Todo» con `''`, y lo apunta en el historial del navegador. */
+    /** Abre una hoja, o la vista «Todo» con `''`, y la apunta en el historial del navegador. */
     select(name: string) {
         this.textMode = false
         this.#navigate(name)
     }
 
-    /** Abre la vista de la URL actual (al cargar o al ir atrás y adelante); si el producto no existe, «Todo». */
+    /** Abre la vista de la URL actual (al cargar o al ir atrás y adelante); si la hoja no existe, «Todo». */
     openUrl() {
         const file = fileOfUrl(location.pathname)
         this.textMode = false
@@ -86,24 +150,40 @@ class ProductStore {
         }
     }
 
-    /** Nombre de archivo libre para el producto; `current` es el que ya tiene, si lo tiene. */
-    #freeFileName(product: Product, current = ''): string {
-        let name = fileName(product)
+    /**
+     * Envuelve una hoja para Svelte y marca como sin guardar su archivo cada vez que avisa de un cambio.
+     * @param sheet Hoja recién leída o creada.
+     * @returns La hoja envuelta, que es la que se guarda en `products`.
+     */
+    #watch(sheet: CostSheet): CostSheet {
+        const view = reactive(sheet, createSubscriber((update) => sheet.subscribe(update)))
+        sheet.subscribe(() => {
+            const name = Object.keys(this.products).find((file) => this.products[file] === view)
+            if (name) {
+                this.unsaved[name] = true
+            }
+        })
+        return view
+    }
+
+    /** Nombre de archivo libre para la hoja; `current` es el que ya tiene, si lo tiene. */
+    #freeFileName(sheet: CostSheet, current = ''): string {
+        let name = fileName(sheet)
         for (let i = 2; name !== current && this.files.includes(name); i++) {
-            name = fileName(product, String(i))
+            name = fileName(sheet, String(i))
         }
         return name
     }
 
-    /** Guarda un producto. Si ha cambiado el nombre o la fecha, el archivo cambia de nombre. */
+    /** Guarda una hoja. Si ha cambiado el nombre o la fecha, el archivo cambia de nombre. */
     save(name: string): Promise<void> {
-        const product = this.products[name]
-        if (!product) {
+        const sheet = this.products[name]
+        if (!sheet) {
             return this.#writeQueue
         }
-        const newName = this.#freeFileName(product, name)
+        const newName = this.#freeFileName(sheet, name)
         if (newName !== name) {
-            this.products[newName] = product
+            this.products[newName] = sheet
             delete this.products[name]
             this.files = this.files.map((f) => (f === name ? newName : f)).sort()
             if (this.selected === name) {
@@ -111,7 +191,7 @@ class ProductStore {
             }
         }
         delete this.unsaved[name]
-        const text = productToText($state.snapshot(product))
+        const text = sheet.serialize().join('\n')
         this.#writeQueue = this.#writeQueue.then(async () => {
             try {
                 await api.saveProduct(newName, text, name)
@@ -128,7 +208,7 @@ class ProductStore {
         return this.#writeQueue
     }
 
-    /** Guarda todos los productos con cambios sin guardar. */
+    /** Guarda todas las hojas con cambios sin guardar. */
     saveAll(): Promise<void> {
         for (const name of Object.keys(this.unsaved)) {
             this.save(name)
@@ -136,22 +216,32 @@ class ProductStore {
         return this.#writeQueue
     }
 
-    /** Relee los archivos de disco sin sobrescribir los productos con cambios sin guardar. */
+    /**
+     * Relee los archivos de disco sin sobrescribir las hojas con cambios sin guardar. Un archivo que no se puede
+     * leer se queda sin cargar y su error va a `status`.
+     */
     async reload() {
         await this.#writeQueue
         try {
             const diskFiles = await api.listProducts()
+            const errors: string[] = []
             for (const name of diskFiles) {
                 if (this.unsaved[name]) {
                     continue
                 }
                 const text = await api.readProduct(name)
-                if (text !== this.#lastText[name]) {
-                    this.products[name] = parseProduct(text, name)
+                if (text === this.#lastText[name]) {
+                    continue
+                }
+                try {
+                    this.products[name] = this.#watch(DocumentReader.read(text))
                     this.#lastText[name] = text
+                } catch (e) {
+                    delete this.products[name]
+                    errors.push(`datos/${name}: ${e}`)
                 }
             }
-            // Se conservan los productos nuevos sin guardar, que aún no están en disco.
+            // Se conservan las hojas nuevas sin guardar, que aún no están en disco.
             for (const name of Object.keys(this.products)) {
                 if (!diskFiles.includes(name) && !this.unsaved[name]) {
                     delete this.products[name]
@@ -161,34 +251,28 @@ class ProductStore {
             if (this.selected && !this.files.includes(this.selected)) {
                 this.#navigate('', true)
             }
-            this.template = parseTemplate(await api.readTemplate())
+            this.template = DocumentReader.read(await api.readTemplate())
+            if (errors.length) {
+                this.status = `No se pudo leer ${errors.join(' · ')}`
+            }
         } catch (e) {
             this.status = `No se pudieron leer los archivos: ${e}`
         }
     }
 
-    /** Crea un producto sin guardar, en blanco o copia de `source`, y lo abre. */
-    create(name: string, source?: Product) {
-        const template = this.template
-        const product: Product = source
-            ? { ...clone(source), name, date: today() }
-            : {
-                name,
-                date: today(),
-                description: '',
-                tags: [...template.tags],
-                // Empieza con los bloques de «Por defecto:» de la plantilla.
-                sections: template.sections.filter((s) => template.defaultSectionTitles.includes(s.title)).map(clone),
-                totalSurcharges: clone(template.totalSurcharges),
-            }
-        const newName = this.#freeFileName(product)
-        this.products[newName] = product
+    /** Crea una hoja sin guardar, copia de la plantilla o de `source`, con el nombre dado y la fecha de hoy, y la abre. */
+    create(name: string, source?: CostSheet) {
+        const sheet = unwrap(source ?? this.template).clone()
+        sheet.name = name
+        sheet.date = today()
+        const newName = this.#freeFileName(sheet)
+        this.products[newName] = this.#watch(sheet)
         this.files = [...this.files, newName].sort()
         this.unsaved[newName] = true
         this.select(newName)
     }
 
-    /** Descarta los cambios sin guardar del producto abierto y vuelve a leer su archivo. */
+    /** Descarta los cambios sin guardar de la hoja abierta y vuelve a leer su archivo. */
     async discard() {
         delete this.unsaved[this.selected]
         delete this.#lastText[this.selected]
@@ -196,11 +280,11 @@ class ProductStore {
         await this.reload()
     }
 
-    /** Borra el producto abierto: su archivo se queda como `.txt.borrado`. */
+    /** Borra la hoja abierta: su archivo se queda como `.txt.borrado`. */
     async delete() {
         const name = this.selected
         await this.#writeQueue
-        // Un producto que nunca se ha guardado no tiene archivo.
+        // Una hoja que nunca se ha guardado no tiene archivo.
         if (name in this.#lastText) {
             await api.deleteProduct(name)
         }
@@ -212,19 +296,15 @@ class ProductStore {
         this.status = `Borrado «${name}»`
     }
 
-    /** Sustituye el producto abierto por el que se lee de `text`, como cambio sin guardar. */
+    /**
+     * Sustituye la hoja abierta por la que se lee de `text`, como cambio sin guardar.
+     * @param text Texto de la hoja.
+     * @throws {ParseError} Si el texto no es una hoja válida; la hoja abierta no cambia.
+     */
     loadText(text: string) {
-        this.products[this.selected] = parseProduct(text, this.selected)
+        this.products[this.selected] = this.#watch(DocumentReader.read(text))
+        this.unsaved[this.selected] = true
         this.textMode = false
-        this.markChanged()
-    }
-
-    /** Añade la categoría a las del producto abierto si aún no está. */
-    ensureTag(tag: string) {
-        const t = cleanTag(tag)
-        if (this.product && t && !this.product.tags.includes(t)) {
-            this.product.tags.push(t)
-        }
     }
 }
 

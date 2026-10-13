@@ -1,6 +1,6 @@
 /** @file Color de cada categoría según su posición, orden de la lista de categorías y segmentos de color para las barras. */
 
-import { UNTAGGED } from './format/index.ts'
+import { Category } from './model/Category.ts'
 
 /** Importe de una categoría con su color, para barras y rankings. */
 export type Segment = { label: string; value: number; color: string }
@@ -24,6 +24,6 @@ export const softColor = (color: string) => `color-mix(in srgb, ${color} 22%, wh
 
 /** Segmentos de un reparto por categoría, en el orden de `tags` y con «Sin categoría» al final. */
 export const tagSegments = (byTag: Map<string, number>, tags: string[]): Segment[] =>
-    [...tags, UNTAGGED]
+    [...tags, Category.UNTAGGED]
         .filter((t) => byTag.has(t))
         .map((t) => ({ label: t, value: byTag.get(t) ?? 0, color: tagColor(t, tags) }))

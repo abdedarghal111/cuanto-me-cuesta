@@ -7,12 +7,13 @@
 <script lang="ts">
     import { softColor, tagColor } from '../colors.ts'
     import { ask } from './Dialog.svelte'
-    import { formatEuros, type Product } from '../format/index.ts'
+    import type { CostSheet } from '../model/CostSheet.ts'
+    import { formatEuros } from '../model/text/numbers.ts'
     import Icon from './Icon.svelte'
     import { store } from '../store.client.svelte.ts'
     import { askNewTag } from './TagSelect.svelte'
 
-    let { product }: { product: Product } = $props()
+    let { product }: { product: CostSheet } = $props()
 
     async function duplicate() {
         const name = await ask({ title: 'Clonar producto', message: '¿Cómo se llama?', value: `${product.name} (copia)`, confirmLabel: 'Clonar' })
@@ -50,14 +51,13 @@
         if (!tag) {
             return
         }
-        store.ensureTag(tag)
-        store.markChanged()
+        product.addCategory(tag)
     }
 
     /** Líneas y recargos del producto que usan la categoría, y lo que suman. */
     const tagUsage = (tag: string) => {
         const items = [...product.sections.flatMap((s) => [...s.lines, ...s.surcharges]), ...product.totalSurcharges]
-        return { items: items.filter((item) => item.tag.trim() === tag), cost: store.summary?.byTag.get(tag) ?? 0 }
+        return { items: items.filter((item) => item.category === tag), cost: store.summary?.byCategory.get(tag) ?? 0 }
     }
 
     async function removeTag(tag: string) {
@@ -72,10 +72,8 @@
             if (!confirmed) {
                 return
             }
-            items.forEach((item) => (item.tag = ''))
         }
-        product.tags = product.tags.filter((t) => t !== tag)
-        store.markChanged()
+        product.removeCategory(tag)
     }
 </script>
 
@@ -84,11 +82,10 @@
         <input
             class="editable-title min-w-0 flex-[1_1_300px] font-hand text-[50px] leading-none font-bold"
             bind:value={product.name}
-            oninput={() => store.markChanged()}
             aria-label="Nombre del producto"
         />
         <div class="flex flex-wrap items-center gap-4 text-base">
-            <input type="date" class="font-mono text-sm" bind:value={product.date} onchange={() => store.markChanged()} aria-label="Fecha" />
+            <input type="date" class="font-mono text-sm" bind:value={product.date} aria-label="Fecha" />
             <button class="link" class:font-bold={store.textMode} onclick={() => (store.textMode = true)}>ver texto</button>
             <button class="link" onclick={duplicate}>clonar</button>
             {#if store.unsaved[store.selected]}<button class="link" onclick={discard}>descartar cambios</button>{/if}
@@ -101,7 +98,6 @@
         <textarea
             class="resize-y rounded border border-[#E6D77A] bg-[#FFFBE0] px-3 py-2 text-[17px] leading-normal font-normal"
             bind:value={product.description}
-            oninput={() => store.markChanged()}
             rows="3"
             placeholder="Anotaciones para todo el documento: para quién es, qué se reaprovechó, qué falta por saber…"
         ></textarea>
@@ -109,7 +105,7 @@
     <div class="grid gap-1.5">
         <span class="font-bold">Categorías de este documento</span>
         <div class="flex flex-wrap items-center gap-2">
-            {#each product.tags as tag (tag)}
+            {#each product.categories as tag (tag)}
                 {@const color = tagColor(tag, store.tags)}
                 {@const usage = tagUsage(tag)}
                 <span

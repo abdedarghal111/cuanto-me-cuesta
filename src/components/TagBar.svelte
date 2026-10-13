@@ -6,7 +6,7 @@
 
 <script lang="ts">
     import type { Segment } from '../colors.ts'
-    import { formatEuros } from '../format/index.ts'
+    import { formatEuros } from '../model/text/numbers.ts'
 
     let {
         segments,

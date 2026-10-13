@@ -4,16 +4,18 @@
 -->
 
 <script lang="ts">
-    import { emptySurcharge, formatEuros, type Product, type Summary } from '../format/index.ts'
+    import type { CostSheet } from '../model/CostSheet.ts'
+    import type { Summary } from '../model/Summary.ts'
+    import { Surcharge } from '../model/Surcharge.ts'
+    import { formatEuros } from '../model/text/numbers.ts'
     import RowActions from './RowActions.svelte'
-    import { store } from '../store.client.svelte.ts'
     import TagSelect from './TagSelect.svelte'
 
-    let { product, summary }: { product: Product; summary: Summary } = $props()
+    let { product, summary }: { product: CostSheet; summary: Summary } = $props()
 
+    /** Añade un recargo sobre el total en blanco y sin categoría. */
     function addSurcharge() {
-        product.totalSurcharges.push(emptySurcharge())
-        store.markChanged()
+        product.addTotalSurcharge(new Surcharge(true))
     }
 </script>
 
@@ -23,7 +25,7 @@
         <span class="font-mono text-sm">coste {formatEuros(summary.cost)} → <strong class="text-lg">{formatEuros(summary.total)}</strong></span>
     </div>
     {#if product.totalSurcharges.length}
-        <div class="overflow-x-auto" oninput={() => store.markChanged()} onchange={() => store.markChanged()}>
+        <div class="overflow-x-auto">
             <table class="w-full border-collapse text-base whitespace-nowrap [&_td]:px-1 [&_td]:py-1.5 [&_th]:px-1 [&_th]:py-1.5 [&_td+td]:border-l [&_td+td]:border-[#E3E9F0] [&_th+th]:border-l [&_th+th]:border-[#E3E9F0]">
                 <thead class="bg-[#F7F9FC] text-center font-mono text-xs text-[#3F4E5D]">
                     <tr>
@@ -47,7 +49,7 @@
                             <td><TagSelect item={surcharge} /></td>
                             <td class="text-right font-mono font-semibold {surcharge.counts ? '' : 'line-through'}">{formatEuros(summary.totalSurcharges[index]?.amount ?? 0)}</td>
                             <td class="text-right font-mono">{formatEuros(summary.totalSurcharges[index]?.runningTotal ?? 0)}</td>
-                            <td><RowActions list={product.totalSurcharges} {index} /></td>
+                            <td><RowActions list={product.totalSurcharges} {index} reorder={(surcharges) => (product.totalSurcharges = surcharges)} onremove={() => product.removeTotalSurcharge(surcharge)} /></td>
                         </tr>
                     {/each}
                 </tbody>

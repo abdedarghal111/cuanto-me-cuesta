@@ -11,11 +11,11 @@
     import TagBar from './components/TagBar.svelte'
     import TagRanking from './components/TagRanking.svelte'
     import { tagSegments } from './colors.ts'
-    import { formatEuros, summarize } from './format/index.ts'
+    import { formatEuros } from './model/text/numbers.ts'
     import Product from './routes/product/Product.svelte'
     import { store } from './store.client.svelte.ts'
 
-    const summaries = $derived(Object.fromEntries(Object.entries(store.products).map(([file, product]) => [file, summarize(product)])))
+    const summaries = $derived(Object.fromEntries(Object.entries(store.products).map(([file, product]) => [file, product.summarize()])))
     const maxTotal = $derived(Math.max(0, ...Object.values(summaries).map((s) => s.total)))
     const combined = $derived.by(() => {
         const byTag = new Map<string, number>()
@@ -24,7 +24,7 @@
         for (const summary of Object.values(summaries)) {
             total += summary.total
             cost += summary.cost
-            for (const [tag, amount] of summary.byTag) {
+            for (const [tag, amount] of summary.byCategory) {
                 byTag.set(tag, (byTag.get(tag) ?? 0) + amount)
             }
         }
@@ -55,7 +55,7 @@
                                 {product.name} <span class="text-[15px] font-normal text-muted">{product.date}</span>
                             </span>
                             <span class="font-mono font-semibold">{formatEuros(summary.total)}</span>
-                            <span class="col-span-2"><TagBar segments={tagSegments(summary.byTag, store.tags)} scale={maxTotal} height={12} /></span>
+                            <span class="col-span-2"><TagBar segments={tagSegments(summary.byCategory, store.tags)} scale={maxTotal} height={12} /></span>
                         </button>
                     {/if}
                 {/each}

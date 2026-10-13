@@ -6,28 +6,13 @@
 import type { Connect } from 'vite'
 import fs from 'node:fs'
 import path from 'node:path'
-import { TEMPLATE_INSTRUCTIONS } from '../../format/index.ts'
 
-/** Carpeta de datos: un `titulo_fecha.txt` por producto. */
+/** Carpeta de datos: un `titulo_fecha.txt` por hoja. */
 const DATA_DIR = path.resolve(import.meta.dirname, '../../../datos')
-/** Plantilla: lo que se ofrece al apuntar, las categorías de siempre y con qué empieza un producto nuevo. */
+/** Plantilla: una hoja normal de la que salen las hojas nuevas y los bloques que se añaden. */
 const TEMPLATE_PATH = path.resolve(import.meta.dirname, '../../res/template.txt')
 
 fs.mkdirSync(DATA_DIR, { recursive: true })
-
-/** Lee `TEMPLATE_PATH` y le reescribe al final `TEMPLATE_INSTRUCTIONS` cuando faltan o no coinciden con las del programa. */
-function readTemplate(): string {
-    const text = fs.readFileSync(TEMPLATE_PATH, 'utf8')
-    const start = text.search(/^INSTRUCCIONES/m)
-    const instructions = start < 0 ? '' : text.slice(start).replace(/\r\n/g, '\n').trimEnd()
-    if (instructions === TEMPLATE_INSTRUCTIONS) {
-        return text
-    }
-    const body = (start < 0 ? text : text.slice(0, start)).trimEnd()
-    const updated = `${body}\n\n${TEMPLATE_INSTRUCTIONS}\n`
-    fs.writeFileSync(TEMPLATE_PATH, updated, 'utf8')
-    return updated
-}
 
 /** Ruta dentro de `datos/` para un nombre `.txt` simple (sin rutas), o `null` si no es válido. */
 function safeDataPath(name: string | null): string | null {
@@ -88,11 +73,11 @@ export const productsEndpoint: Connect.NextHandleFunction = async (req, res, nex
     next()
 }
 
-/** `GET /api/template`: la plantilla, con sus instrucciones al día. */
+/** `GET /api/template`: el texto de la plantilla. */
 export const templateEndpoint: Connect.NextHandleFunction = (req, res, next) => {
     if (req.method !== 'GET' || req.url !== '/') {
         return next()
     }
     res.setHeader('Content-Type', 'text/plain; charset=utf-8')
-    res.end(readTemplate())
+    res.end(fs.readFileSync(TEMPLATE_PATH, 'utf8'))
 }

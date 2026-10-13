@@ -5,13 +5,23 @@
 
 <script lang="ts">
     import { untrack } from 'svelte'
-    import { productToText, type Product } from '../format/index.ts'
+    import { ask } from './Dialog.svelte'
+    import type { CostSheet } from '../model/CostSheet.ts'
     import { store } from '../store.client.svelte.ts'
 
-    let { product }: { product: Product } = $props()
+    let { product }: { product: CostSheet } = $props()
 
     // Se toma el texto al abrir; lo que se escriba después no cambia el producto hasta cargarlo.
-    let text = $state(untrack(() => productToText($state.snapshot(product))))
+    let text = $state(untrack(() => product.serialize().join('\n')))
+
+    /** Carga el texto como el producto abierto; si no es válido, dice dónde falla y se queda como está. */
+    async function load() {
+        try {
+            store.loadText(text)
+        } catch (e) {
+            await ask({ title: 'No se puede cargar', message: String(e), confirmLabel: 'Vale' })
+        }
+    }
 </script>
 
 <div class="paper grid gap-3 p-4">
@@ -19,7 +29,7 @@
         <h2 class="font-hand text-4xl leading-none font-bold">Así queda el archivo</h2>
         <div class="flex items-center gap-3">
             <button class="link" onclick={() => (store.textMode = false)}>volver sin cargar</button>
-            <button class="button-yellow" onclick={() => store.loadText(text)}>Cargar este texto</button>
+            <button class="button-yellow" onclick={load}>Cargar este texto</button>
         </div>
     </div>
     <p class="text-muted">Puedes cambiarlo o pegar otro texto. Al cargarlo queda como cambio sin guardar.</p>
