@@ -7,7 +7,6 @@
 <script lang="ts">
     import { softColor, tagColor } from '../colors.ts'
     import { ask, askName } from './Dialog.svelte'
-    import { Category } from '../model/Category.ts'
     import type { CostSheet } from '../model/CostSheet.ts'
     import { formatEuros } from '../model/text/numbers.ts'
     import Icon from './Icon.svelte'
@@ -46,12 +45,12 @@
         }
     }
 
+    /**
+     * Pide el nombre de una categoría y la declara en el producto; un nombre vacío no declara nada.
+     * @returns Promesa que se cumple al cerrar el diálogo.
+     */
     async function addTag() {
-        const tag = Category.clean((await askName('Nueva categoría')) ?? '')
-        if (!tag) {
-            return
-        }
-        product.addCategory(tag)
+        product.addCategory((await askName('Nueva categoría')) ?? '')
     }
 
     /**

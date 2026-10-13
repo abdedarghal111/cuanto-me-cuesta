@@ -7,7 +7,6 @@
 <script lang="ts">
     import { softColor, tagColor } from '../colors.ts'
     import { askName } from './Dialog.svelte'
-    import { Category } from '../model/Category.ts'
     import type { CostSheet } from '../model/CostSheet.ts'
     import type { LineItem } from '../model/LineItem.ts'
     import { store } from '../store.client.svelte.ts'
@@ -19,6 +18,11 @@
     const NEW_TAG_OPTION = '__new_tag__'
     const color = $derived(tagColor(item.category, store.tags))
 
+    /**
+     * Pone la categoría elegida a `item`; con «+ nueva categoría…», pide el nombre, la declara y se la pone.
+     * @param e Cambio del desplegable.
+     * @returns Promesa que se cumple al poner la categoría o al cerrar el diálogo.
+     */
     async function onChange(e: Event & { currentTarget: HTMLSelectElement }) {
         const select = e.currentTarget
         if (select.value !== NEW_TAG_OPTION) {
@@ -27,12 +31,10 @@
         }
         // Mientras se escribe el nombre, el desplegable sigue mostrando la categoría anterior.
         select.value = item.category
-        const tag = Category.clean((await askName('Nueva categoría')) ?? '')
-        if (!tag) {
-            return
+        const tag = product.addCategory((await askName('Nueva categoría')) ?? '')
+        if (tag !== null) {
+            product.assignCategory(item, tag)
         }
-        product.addCategory(tag)
-        product.assignCategory(item, tag)
     }
 </script>
 

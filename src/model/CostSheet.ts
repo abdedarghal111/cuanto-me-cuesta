@@ -156,18 +156,20 @@ export class CostSheet implements Serializable, Observable {
 
     /**
      * Declara una categoría, limpia, si aún no está.
-     * @param category Categoría nueva.
-     * @throws {Error} Si queda vacía.
+     * @param category Categoría nueva, tal cual se escribe.
+     * @returns El nombre limpio con el que queda declarada, también si ya estaba, o `null` si queda vacía y no se
+     * declara.
      */
-    addCategory(category: string): void {
+    addCategory(category: string): string | null {
         const clean = Category.clean(category)
         if (!clean) {
-            throw new Error('La categoría no puede estar vacía.')
+            return null
         }
         if (!this.#categories.includes(clean)) {
             this.#categories = [...this.#categories, clean]
             this.notify()
         }
+        return clean
     }
 
     /**
