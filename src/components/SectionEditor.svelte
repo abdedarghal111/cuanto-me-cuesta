@@ -10,7 +10,7 @@
     import { LINE_TYPE_LABELS } from '../model/LineType.ts'
     import type { Section } from '../model/Section.ts'
     import { Surcharge } from '../model/Surcharge.ts'
-    import { TIME_UNIT_SECONDS, formatEuros, normalizeDuration } from '../model/text/numbers.ts'
+    import { TIME_UNIT_SECONDS, formatEuros } from '../model/text/numbers.ts'
     import RowActions from './RowActions.svelte'
     import TagSelect from './TagSelect.svelte'
 
@@ -105,7 +105,7 @@
                                 <input
                                     class="numeric highlighted w-24"
                                     bind:value={line.usage}
-                                    onchange={() => (line.usage = normalizeDuration(line.usage, line.unit))}
+                                    onchange={() => line.normalizeUsage()}
                                     placeholder="3d 5h 1m"
                                     title="Duración: 3d 5h 1m 3s, 15:08 (horas:minutos) o un número en la unidad"
                                     aria-label="Consumo"

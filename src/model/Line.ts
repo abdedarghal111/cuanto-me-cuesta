@@ -196,6 +196,12 @@ export class Line extends LineItem {
         this.notify()
     }
 
+    /** Normaliza solo el Consumo según el tipo (en `time`, una duración como "3d 5h 1m"), y avisa del cambio. */
+    normalizeUsage(): void {
+        this.#usage = LINE_TYPE_RULES[this.#type].normalize(this).usage
+        this.notify()
+    }
+
     /**
      * Da las celdas de datos de la fila, normalizadas sin cambiar la línea.
      * @returns Las celdas, en el orden de `COLUMNS` sin «= Coste».
