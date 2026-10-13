@@ -5,6 +5,7 @@
 -->
 
 <script lang="ts">
+    import AmountCard from '../../components/AmountCard.svelte'
     import TagBar from '../../components/TagBar.svelte'
     import TagRanking from '../../components/TagRanking.svelte'
     import { tagSegments } from '../../colors.ts'
@@ -51,9 +52,7 @@
     {/if}
 </section>
 <aside class="flex flex-[1_1_280px] flex-col gap-[18px] max-w-[340px]">
-    <div class="note-card">
-        <span class="font-hand text-[26px] font-bold">Llevo gastado</span>
-        <span class="font-hand text-[72px] leading-none font-bold text-[#B4161D]">{formatEuros(combined.cost)}</span>
+    <AmountCard label="Llevo gastado" amount={combined.cost}>
         <span>en {store.files.length} {store.files.length === 1 ? 'producto' : 'productos'}</span>
-    </div>
+    </AmountCard>
 </aside>

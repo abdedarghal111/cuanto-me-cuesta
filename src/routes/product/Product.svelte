@@ -5,6 +5,7 @@
 -->
 
 <script lang="ts">
+    import AmountCard from '../../components/AmountCard.svelte'
     import FileTextView from '../../components/FileTextView.svelte'
     import ProductHeader from '../../components/ProductHeader.svelte'
     import SectionEditor from '../../components/SectionEditor.svelte'
@@ -62,12 +63,10 @@
 </section>
 
 <aside class="sticky top-[90px] flex flex-[1_1_300px] flex-col gap-[18px] max-w-[360px]">
-    <div class="note-card">
-        <span class="font-hand text-[26px] font-bold">Me ha costado</span>
-        <span class="font-hand text-[72px] leading-none font-bold text-[#B4161D]">{formatEuros(summary.cost)}</span>
+    <AmountCard label="Me ha costado" amount={summary.cost}>
         {#if summary.total !== summary.cost}<span class="font-bold">Con lo de sobre el total: {formatEuros(summary.total)}</span>{/if}
         {#if summary.excluded > 0}<span class="text-sm">+ {formatEuros(summary.excluded)} que no cuentan</span>{/if}
-    </div>
+    </AmountCard>
     <TagRanking segments={tagSegments(summary.byCategory, store.tags)} total={summary.total} />
     <div class="paper grid gap-1 p-4">
         <h2 class="mb-1 font-hand text-[26px] leading-none">Por bloques</h2>
