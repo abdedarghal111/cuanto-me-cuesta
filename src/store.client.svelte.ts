@@ -4,7 +4,7 @@
  */
 
 import { createSubscriber } from 'svelte/reactivity'
-import { sortTags } from './colors.ts'
+import { Category } from './model/Category.ts'
 import { CostSheet } from './model/CostSheet.ts'
 import { DocumentReader } from './model/text/DocumentReader.ts'
 import * as api from './routes/product/product.client.ts'
@@ -100,7 +100,7 @@ class ProductStore {
     product = $derived(this.selected ? this.products[this.selected] : undefined)
     summary = $derived(this.product?.summarize())
     /** Todas las categorías, en el orden que fija su color. */
-    tags = $derived(sortTags(this.template.categories, Object.values(this.products).flatMap((p) => p.categories)))
+    tags = $derived(Category.sort(this.template.categories, Object.values(this.products).flatMap((p) => p.categories)))
 
     /** Último texto leído o escrito de cada archivo, para detectar cambios hechos fuera de la app. */
     #lastText: Record<string, string> = {}

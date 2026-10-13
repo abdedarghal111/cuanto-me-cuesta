@@ -1,5 +1,5 @@
 /**
- * @file Categorías: el nombre de «Sin categoría», limpiarlas y leer y escribir la lista de «Categorías:».
+ * @file Categorías: el nombre de «Sin categoría», limpiarlas, ordenarlas y leer y escribir la lista de «Categorías:».
  */
 
 import { Table } from './text/Table.ts'
@@ -18,6 +18,19 @@ export class Category {
      */
     static clean(text: string): string {
         return text.replace(/\s+/g, ' ').trim()
+    }
+
+    /**
+     * Ordena todas las categorías: las de la plantilla en su orden, seguidas de las demás por orden alfabético.
+     * @param templateCategories Categorías de la plantilla, en su orden.
+     * @param used Categorías usadas en las hojas; se ignoran las vacías y las repetidas.
+     * @returns Las categorías en ese orden, sin repetir.
+     */
+    static sort(templateCategories: string[], used: Iterable<string>): string[] {
+        const others = [...new Set(used)]
+            .filter((category) => category && !templateCategories.includes(category))
+            .sort((a, b) => a.localeCompare(b, 'es'))
+        return [...templateCategories, ...others]
     }
 
     /**
