@@ -13,7 +13,6 @@
     import TotalSurcharges from '../../components/TotalSurcharges.svelte'
     import { tagSegments } from '../../colors.ts'
     import type { CostSheet } from '../../model/CostSheet.ts'
-    import { Line } from '../../model/Line.ts'
     import { Section } from '../../model/Section.ts'
     import type { Summary } from '../../model/Summary.ts'
     import { formatEuros } from '../../model/text/numbers.ts'
@@ -27,9 +26,7 @@
         e.currentTarget.value = ''
         const templateSection = store.template.sections[Number(value)]
         if (value === 'empty' || !templateSection) {
-            const section = new Section('Nuevo bloque')
-            section.addLine(new Line())
-            product.addSection(section)
+            product.addSection(Section.blank('Nuevo bloque'))
         } else {
             product.addSection(templateSection.clone())
         }

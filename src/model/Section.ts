@@ -239,6 +239,17 @@ export class Section implements Serializable, Observable {
     }
 
     /**
+     * Crea una sección con una línea en blanco, lista para rellenar.
+     * @param title Título de la sección.
+     * @returns La sección nueva.
+     */
+    static blank(title: string): Section {
+        const section = new Section(title)
+        section.addLine(new Line())
+        return section
+    }
+
+    /**
      * Lee una sección: `## Título`, su tabla de líneas y, si la hay, `### Recargos` con su tabla.
      * @param reader Lector de la hoja, situado en el título.
      * @returns La sección.
