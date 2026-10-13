@@ -41,3 +41,12 @@
         </div>
     </div>
 </header>
+
+<style lang="postcss">
+    @reference '../app.css';
+
+    /* Botón Guardar: oscuro y grande, con su icono. */
+    .save-button {
+        @apply inline-flex min-h-12 items-center gap-2.5 rounded-lg border-2 border-ink bg-ink px-5 text-lg font-bold text-white;
+    }
+</style>

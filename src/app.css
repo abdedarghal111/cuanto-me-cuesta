@@ -106,9 +106,6 @@
         @apply border-ink bg-[#FFF4A8] font-bold;
     }
 }
-@utility save-button {
-    @apply inline-flex min-h-12 items-center gap-2.5 rounded-lg border-2 border-ink bg-ink px-5 text-lg font-bold text-white;
-}
 @utility button-yellow {
     @apply min-h-11 rounded-lg border-2 border-ink bg-[#FFF4A8] px-4 font-bold;
 }
