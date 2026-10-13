@@ -78,7 +78,8 @@
     select {
         @apply rounded border border-[#AEBCCB] bg-white px-1.5 py-1 text-ink;
     }
-    button {
+    button,
+    select {
         @apply cursor-pointer;
     }
     button:disabled {

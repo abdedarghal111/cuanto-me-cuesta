@@ -42,7 +42,7 @@
 </script>
 
 <select
-    class="w-28 cursor-pointer rounded-[3px] border px-1.5 py-0.5 text-sm"
+    class="w-28 rounded-[3px] border px-1.5 py-0.5 text-sm"
     style:background={softColor(color)}
     style:border-color={color}
     value={item.category}

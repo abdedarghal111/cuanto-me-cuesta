@@ -77,7 +77,7 @@
                             <input class="borderless w-full min-w-24 border-b border-[#C5D1DE] py-1" bind:value={line.name} placeholder="Ej. Filamento PLA" aria-label="Concepto" />
                         </td>
                         <td>
-                            <select class="cursor-pointer font-mono text-sm" bind:value={line.type} aria-label="Tipo">
+                            <select class="font-mono text-sm" bind:value={line.type} aria-label="Tipo">
                                 {#each Object.entries(LINE_TYPE_LABELS) as [value, label] (value)}<option {value}>{label}</option>{/each}
                             </select>
                         </td>
@@ -90,7 +90,7 @@
                         {/if}
                         <td>
                             {#if line.type === 'time'}
-                                <select class="w-24 cursor-pointer font-mono text-sm" bind:value={line.unit} aria-label="Unidad">
+                                <select class="w-24 font-mono text-sm" bind:value={line.unit} aria-label="Unidad">
                                     {#each Object.entries(TIME_UNIT_LABELS) as [value, label] (value)}<option {value}>{label}</option>{/each}
                                 </select>
                             {:else}
