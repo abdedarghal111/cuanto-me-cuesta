@@ -190,3 +190,7 @@
 @utility add-block {
     @apply rounded-md border-2 border-dashed border-accent bg-white px-4 py-2 font-hand text-[26px] font-bold text-accent;
 }
+/* Casilla de «Cuenta» de una fila. */
+@utility check {
+    @apply size-5 accent-ink;
+}

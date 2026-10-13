@@ -41,7 +41,7 @@
                 <tbody>
                     {#each product.totalSurcharges as surcharge, index (surcharge)}
                         <tr class="cost-row {surcharge.counts ? '' : 'opacity-45'}">
-                            <td><input type="checkbox" class="size-5 accent-ink" bind:checked={surcharge.counts} aria-label="Cuenta" /></td>
+                            <td><input type="checkbox" class="check" bind:checked={surcharge.counts} aria-label="Cuenta" /></td>
                             <td class="w-full">
                                 <input class="concept-input" bind:value={surcharge.name} placeholder="Ej. Margen" aria-label="Concepto" />
                             </td>

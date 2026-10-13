@@ -72,7 +72,7 @@
             <tbody>
                 {#each section.lines as line, lineIndex (line)}
                     <tr class="cost-row {line.counts ? '' : 'opacity-45'}">
-                        <td><input type="checkbox" class="size-5 accent-ink" bind:checked={line.counts} aria-label="Cuenta" /></td>
+                        <td><input type="checkbox" class="check" bind:checked={line.counts} aria-label="Cuenta" /></td>
                         <td class="w-full">
                             <input class="concept-input" bind:value={line.name} placeholder="Ej. Filamento PLA" aria-label="Concepto" />
                         </td>
@@ -126,7 +126,7 @@
                 {/if}
                 {#each section.surcharges as surcharge, surchargeIndex (surcharge)}
                     <tr class="cost-row {surcharge.counts ? '' : 'opacity-45'}">
-                        <td><input type="checkbox" class="size-5 accent-ink" bind:checked={surcharge.counts} aria-label="Cuenta" /></td>
+                        <td><input type="checkbox" class="check" bind:checked={surcharge.counts} aria-label="Cuenta" /></td>
                         <td class="w-full">
                             <input class="concept-input" bind:value={surcharge.name} placeholder="Ej. Riesgo por fallos" aria-label="Concepto" />
                         </td>
