@@ -74,3 +74,12 @@
         {/each}
     </div>
 </aside>
+
+<style lang="postcss">
+    @reference '../../app.css';
+
+    /* Desplegable «+ nuevo bloque…»: un recuadro discontinuo en azul con letra a mano. */
+    .add-block {
+        @apply rounded-md border-2 border-dashed border-accent bg-white px-4 py-2 font-hand text-[26px] font-bold text-accent;
+    }
+</style>
