@@ -4,13 +4,22 @@
     y de sus recargos sobre el bloque.
 -->
 
+<script lang="ts" module>
+    import { LINE_TYPE_LABELS } from '../model/LineType.ts'
+    import { TIME_UNIT_LABELS } from '../model/text/numbers.ts'
+
+    /** Opciones del desplegable «Tipo»: el valor de cada tipo y su nombre. */
+    const LINE_TYPE_OPTIONS = Object.entries(LINE_TYPE_LABELS)
+    /** Opciones del desplegable «Unidad» del tipo `time`: el valor de cada unidad y su nombre. */
+    const TIME_UNIT_OPTIONS = Object.entries(TIME_UNIT_LABELS)
+</script>
+
 <script lang="ts">
     import type { CostSheet } from '../model/CostSheet.ts'
     import { Line } from '../model/Line.ts'
-    import { LINE_TYPE_LABELS } from '../model/LineType.ts'
     import type { Section } from '../model/Section.ts'
     import { Surcharge } from '../model/Surcharge.ts'
-    import { TIME_UNIT_LABELS, formatEuros } from '../model/text/numbers.ts'
+    import { formatEuros } from '../model/text/numbers.ts'
     import RowActions from './RowActions.svelte'
     import TagSelect from './TagSelect.svelte'
 
@@ -78,7 +87,7 @@
                         </td>
                         <td>
                             <select class="font-mono text-sm" bind:value={line.type} aria-label="Tipo">
-                                {#each Object.entries(LINE_TYPE_LABELS) as [value, label] (value)}<option {value}>{label}</option>{/each}
+                                {#each LINE_TYPE_OPTIONS as [value, label] (value)}<option {value}>{label}</option>{/each}
                             </select>
                         </td>
                         {#if line.type === 'fixed'}
@@ -91,7 +100,7 @@
                         <td>
                             {#if line.type === 'time'}
                                 <select class="w-24 font-mono text-sm" bind:value={line.unit} aria-label="Unidad">
-                                    {#each Object.entries(TIME_UNIT_LABELS) as [value, label] (value)}<option {value}>{label}</option>{/each}
+                                    {#each TIME_UNIT_OPTIONS as [value, label] (value)}<option {value}>{label}</option>{/each}
                                 </select>
                             {:else}
                                 <input class="w-24 font-mono text-sm" bind:value={line.unit} placeholder="g, m…" aria-label="Unidad" />
