@@ -143,5 +143,5 @@
     @apply w-full border-collapse text-base whitespace-nowrap [&_td]:px-1 [&_td]:py-1.5 [&_th]:px-1 [&_th]:py-1.5 [&_td+td]:border-l [&_td+td]:border-[#E3E9F0] [&_th+th]:border-l [&_th+th]:border-[#E3E9F0];
 }
 @utility cost-thead {
-    @apply bg-[#F7F9FC] text-center font-mono text-xs text-[#3F4E5D];
+    @apply bg-[#F7F9FC] text-center font-mono text-xs text-[#3F4E5D] [&_th]:font-semibold;
 }

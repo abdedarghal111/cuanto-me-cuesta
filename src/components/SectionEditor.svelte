@@ -56,16 +56,16 @@
         <table class="cost-table">
             <thead class="cost-thead">
                 <tr>
-                    <th class="font-semibold" title="Si lo quitas, la línea se ve pero no suma">✓</th>
-                    <th class="font-semibold">Concepto</th>
-                    <th class="font-semibold" title="Cómo se escriben «por» y «consumo»: número, tiempo (una duración como 3d 5h 1m) o fijo (un importe en €)">Tipo</th>
-                    <th class="font-semibold">Precio €</th>
-                    <th class="font-semibold">por</th>
-                    <th class="font-semibold" title="Texto libre para leerlo: g, m, l, uds…">Unidad</th>
-                    <th class="font-semibold">Consumo</th>
-                    <th class="font-semibold" title="Multiplicador: cuántas veces se repite el consumo (admite 0,5)">×</th>
-                    <th class="font-semibold">Categoría</th>
-                    <th class="font-semibold">Coste</th>
+                    <th title="Si lo quitas, la línea se ve pero no suma">✓</th>
+                    <th>Concepto</th>
+                    <th title="Cómo se escriben «por» y «consumo»: número, tiempo (una duración como 3d 5h 1m) o fijo (un importe en €)">Tipo</th>
+                    <th>Precio €</th>
+                    <th>por</th>
+                    <th title="Texto libre para leerlo: g, m, l, uds…">Unidad</th>
+                    <th>Consumo</th>
+                    <th title="Multiplicador: cuántas veces se repite el consumo (admite 0,5)">×</th>
+                    <th>Categoría</th>
+                    <th>Coste</th>
                     <th></th>
                 </tr>
             </thead>

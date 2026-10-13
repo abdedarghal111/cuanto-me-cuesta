@@ -29,12 +29,12 @@
             <table class="cost-table">
                 <thead class="cost-thead">
                     <tr>
-                        <th class="font-semibold" title="Si lo quitas, el recargo se ve pero no suma">✓</th>
-                        <th class="font-semibold">Concepto</th>
-                        <th class="font-semibold" title="Porcentaje de lo acumulado hasta esta línea">%</th>
-                        <th class="font-semibold">Categoría</th>
-                        <th class="font-semibold">Importe</th>
-                        <th class="font-semibold">Acumulado</th>
+                        <th title="Si lo quitas, el recargo se ve pero no suma">✓</th>
+                        <th>Concepto</th>
+                        <th title="Porcentaje de lo acumulado hasta esta línea">%</th>
+                        <th>Categoría</th>
+                        <th>Importe</th>
+                        <th>Acumulado</th>
                         <th></th>
                     </tr>
                 </thead>
