@@ -128,7 +128,7 @@
                             {/if}
                         </td>
                         <td><input class="numeric w-12" bind:value={line.multiplier} inputmode="decimal" placeholder="1" aria-label="Multiplicador" /></td>
-                        <td><TagSelect item={line} /></td>
+                        <td><TagSelect {product} item={line} /></td>
                         <td class="text-right font-mono font-semibold {line.counts ? '' : 'line-through'}">{formatEuros(line.cost())}</td>
                         <td><RowActions list={section.lines} index={lineIndex} reorder={(lines) => (section.lines = lines)} onremove={() => section.removeLine(line)} /></td>
                     </tr>
@@ -152,7 +152,7 @@
                                 <span class="font-mono text-[13px] text-[#3F4E5D]">% de la base</span>
                             </span>
                         </td>
-                        <td><TagSelect item={surcharge} /></td>
+                        <td><TagSelect {product} item={surcharge} /></td>
                         <td class="text-right font-mono font-semibold {surcharge.counts ? '' : 'line-through'}">{formatEuros(surcharge.amount(base))}</td>
                         <td><RowActions list={section.surcharges} index={surchargeIndex} reorder={(surcharges) => (section.surcharges = surcharges)} onremove={() => section.removeSurcharge(surcharge)} /></td>
                     </tr>

@@ -1,6 +1,6 @@
 <!--
     @component
-    Desplegable para elegir la categoría de una línea o un recargo entre las del producto abierto,
+    Desplegable para elegir la categoría de una línea o un recargo entre las del producto,
     o crear una nueva.
 -->
 
@@ -8,10 +8,12 @@
     import { softColor, tagColor } from '../colors.ts'
     import { askName } from './Dialog.svelte'
     import { Category } from '../model/Category.ts'
+    import type { CostSheet } from '../model/CostSheet.ts'
     import type { LineItem } from '../model/LineItem.ts'
     import { store } from '../store.client.svelte.ts'
 
-    let { item }: { item: LineItem } = $props()
+    /** `item` es una línea o un recargo de `product`. */
+    let { product, item }: { product: CostSheet; item: LineItem } = $props()
 
     /** Valor de la opción que crea una categoría nueva. */
     const NEW_TAG_OPTION = '__new_tag__'
@@ -20,7 +22,7 @@
     async function onChange(e: Event & { currentTarget: HTMLSelectElement }) {
         const select = e.currentTarget
         if (select.value !== NEW_TAG_OPTION) {
-            store.product?.assignCategory(item, select.value)
+            product.assignCategory(item, select.value)
             return
         }
         // Mientras se escribe el nombre, el desplegable sigue mostrando la categoría anterior.
@@ -29,8 +31,8 @@
         if (!tag) {
             return
         }
-        store.product?.addCategory(tag)
-        store.product?.assignCategory(item, tag)
+        product.addCategory(tag)
+        product.assignCategory(item, tag)
     }
 </script>
 
@@ -42,8 +44,8 @@
     onchange={onChange}
     aria-label="Categoría"
 >
-    {#if !store.product?.categories.includes(item.category)}<option value={item.category} style:background="white">{item.category || '— sin categoría —'}</option>{/if}
-    {#each store.product?.categories ?? [] as tag (tag)}
+    {#if !product.categories.includes(item.category)}<option value={item.category} style:background="white">{item.category || '— sin categoría —'}</option>{/if}
+    {#each product.categories as tag (tag)}
         <option value={tag} style:background={softColor(tagColor(tag, store.tags))} style:color="var(--ink)">{tag}</option>
     {/each}
     <option value={NEW_TAG_OPTION} style:background="white" style:color="var(--accent)">+ nueva categoría…</option>
