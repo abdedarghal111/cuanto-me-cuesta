@@ -176,12 +176,22 @@ export class CostSheet implements Serializable, Observable {
      */
     removeCategory(category: string): void {
         this.#categories = this.#categories.filter((c) => c !== category)
-        for (const item of this.#items()) {
-            if (item.category === category) {
-                item.setCategory('')
-            }
+        for (const item of this.itemsInCategory(category)) {
+            item.setCategory('')
         }
         this.notify()
+    }
+
+    /**
+     * Líneas y recargos que usan una categoría: los de las secciones y los recargos sobre el total.
+     * @param category Categoría, tal cual la lleva cada línea o recargo.
+     * @returns Las líneas y recargos, en orden de aparición.
+     */
+    itemsInCategory(category: string): LineItem[] {
+        return [
+            ...this.#sections.flatMap((section) => [...section.lines, ...section.surcharges]),
+            ...this.#totalSurcharges,
+        ].filter((item) => item.category === category)
     }
 
     /**
@@ -397,11 +407,6 @@ export class CostSheet implements Serializable, Observable {
             reader.fail('«## Título», «# Sobre el total» o «# Resumen»')
         }
         return sheet
-    }
-
-    /** Todas las líneas y recargos de la hoja. */
-    #items(): LineItem[] {
-        return [...this.#sections.flatMap((section) => [...section.lines, ...section.surcharges]), ...this.#totalSurcharges]
     }
 
     /**

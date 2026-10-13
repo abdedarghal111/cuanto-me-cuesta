@@ -54,11 +54,12 @@
         product.addCategory(tag)
     }
 
-    /** Líneas y recargos del producto que usan la categoría, y lo que suman. */
-    const tagUsage = (tag: string) => {
-        const items = [...product.sections.flatMap((s) => [...s.lines, ...s.surcharges]), ...product.totalSurcharges]
-        return { items: items.filter((item) => item.category === tag), cost: store.summary?.byCategory.get(tag) ?? 0 }
-    }
+    /**
+     * Líneas y recargos del producto que usan la categoría, y lo que suman.
+     * @param tag Categoría del producto.
+     * @returns Las líneas y recargos (`items`) y su importe (`cost`).
+     */
+    const tagUsage = (tag: string) => ({ items: product.itemsInCategory(tag), cost: store.summary?.byCategory.get(tag) ?? 0 })
 
     async function removeTag(tag: string) {
         const { items } = tagUsage(tag)
