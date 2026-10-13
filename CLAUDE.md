@@ -30,6 +30,15 @@ App local para apuntar lo que cuesta cada cosa que hago y ver en qué se va el d
 - Las importaciones relativas llevan la extensión del archivo (`.ts`, `.svelte.ts`, `.svelte`), como pide el cargador nativo de configuración de Vite.
 - Comentarios en español, formales, cortos, sobre lo que hace el código, y con el estándar de documentación oficial del lenguaje en funciones y tipos.
 - Cada archivo empieza con un comentario formal que describe su función, según el estándar de documentación oficial del lenguaje.
+- La lógica de los datos vive en el modelo (`model/`), y los componentes y el store la llaman:
+  - Lo que trabaja con un objeto concreto es un método de su clase (p. ej. `section.subtotal()`).
+  - Lo que no depende de ningún objeto es un método estático (p. ej. `Summary.combine()`).
+
+## Interfaz
+
+- Cada vista de `routes/` se compone de componentes, y `App.svelte` monta las vistas y las piezas comunes.
+- El estilo fijo de una pieza va en `app.css` como `@utility` (p. ej. `paper`, `cost-table`), y el componente solo añade lo que cambia: clases condicionales, tamaños por prop y colores calculados.
+- Lo que es igual para todas las instancias de un componente (constantes, tablas de etiquetas, funciones que no usan sus props ni su estado, o algo que debe existir una sola vez) va en su `<script lang="ts" module>` (p. ej. `Dialog.svelte` e `Icon.svelte`).
 
 ## Commits
 
