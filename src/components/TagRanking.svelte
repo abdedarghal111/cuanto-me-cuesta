@@ -19,7 +19,7 @@
 </script>
 
 <div class="paper grid gap-1 p-4 font-mono text-sm">
-    <h2 class="mb-1 font-hand text-[26px] leading-none">¿Dónde se va?</h2>
+    <h2 class="panel-title">¿Dónde se va?</h2>
     {#each ranking as s (s.label)}
         <div class="grid grid-cols-[minmax(0,7rem)_1fr_4.8rem] items-center gap-2 border-b border-[#EEF2F6] py-0.5">
             <span class="truncate">{s.label}</span>

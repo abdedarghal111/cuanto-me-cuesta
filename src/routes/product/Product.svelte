@@ -69,7 +69,7 @@
     </AmountCard>
     <TagRanking segments={tagSegments(summary.byCategory, store.tags)} total={summary.total} />
     <div class="paper grid gap-1 p-4">
-        <h2 class="mb-1 font-hand text-[26px] leading-none">Por bloques</h2>
+        <h2 class="panel-title">Por bloques</h2>
         {#each product.sections as section (section)}
             <div class="flex justify-between gap-2 border-b border-[#EEF2F6] py-0.5">
                 <span class="truncate">{section.title}</span><span class="font-mono text-sm font-semibold">{formatEuros(section.subtotal())}</span>

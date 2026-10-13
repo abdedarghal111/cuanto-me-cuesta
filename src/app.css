@@ -174,3 +174,7 @@
 @utility block-title {
     @apply hand-title text-[32px] text-[#183F86];
 }
+/* Título de una tarjeta del panel lateral. */
+@utility panel-title {
+    @apply mb-1 font-hand text-[26px] leading-none;
+}
