@@ -175,6 +175,14 @@ export class Section implements Serializable, Observable {
     }
 
     /**
+     * Categoría de la última línea, la que llevan las líneas y recargos que se añaden detrás.
+     * @returns La categoría de la última línea, o `''` si la sección no tiene líneas.
+     */
+    lastCategory(): string {
+        return this.#lines.at(-1)?.category ?? ''
+    }
+
+    /**
      * Escribe la sección: su título con el subtotal, la tabla de líneas y, si hay recargos, su tabla.
      * @returns Líneas de texto, terminadas en una línea en blanco.
      */

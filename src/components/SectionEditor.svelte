@@ -22,14 +22,14 @@
     /** Añade una línea en blanco con la categoría de la última. */
     function addLine() {
         const line = new Line()
-        product.assignCategory(line, section.lines.at(-1)?.category ?? '')
+        product.assignCategory(line, section.lastCategory())
         section.addLine(line)
     }
 
     /** Añade un recargo en blanco con la categoría de la última línea. */
     function addSurcharge() {
         const surcharge = new Surcharge(false)
-        product.assignCategory(surcharge, section.lines.at(-1)?.category ?? '')
+        product.assignCategory(surcharge, section.lastCategory())
         section.addSurcharge(surcharge)
     }
 </script>
