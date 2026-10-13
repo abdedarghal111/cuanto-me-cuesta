@@ -4,19 +4,10 @@
     o crear una nueva.
 -->
 
-<script lang="ts" module>
-    import { ask } from './Dialog.svelte'
-    import { Category } from '../model/Category.ts'
-
-    /** Pide el nombre de una categoría nueva; `null` si se cancela o queda vacío. */
-    export async function askNewTag(): Promise<string | null> {
-        const tag = await ask({ title: 'Nueva categoría', message: '¿Cómo se llama?', value: '', confirmLabel: 'Crear' })
-        return tag ? Category.clean(tag) || null : null
-    }
-</script>
-
 <script lang="ts">
     import { softColor, tagColor } from '../colors.ts'
+    import { askName } from './Dialog.svelte'
+    import { Category } from '../model/Category.ts'
     import type { LineItem } from '../model/LineItem.ts'
     import { store } from '../store.client.svelte.ts'
 
@@ -34,7 +25,7 @@
         }
         // Mientras se escribe el nombre, el desplegable sigue mostrando la categoría anterior.
         select.value = item.category
-        const tag = await askNewTag()
+        const tag = Category.clean((await askName('Nueva categoría')) ?? '')
         if (!tag) {
             return
         }

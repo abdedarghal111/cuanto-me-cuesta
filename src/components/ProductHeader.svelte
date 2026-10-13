@@ -6,17 +6,17 @@
 
 <script lang="ts">
     import { softColor, tagColor } from '../colors.ts'
-    import { ask } from './Dialog.svelte'
+    import { ask, askName } from './Dialog.svelte'
+    import { Category } from '../model/Category.ts'
     import type { CostSheet } from '../model/CostSheet.ts'
     import { formatEuros } from '../model/text/numbers.ts'
     import Icon from './Icon.svelte'
     import { store } from '../store.client.svelte.ts'
-    import { askNewTag } from './TagSelect.svelte'
 
     let { product }: { product: CostSheet } = $props()
 
     async function duplicate() {
-        const name = await ask({ title: 'Clonar producto', message: '¿Cómo se llama?', value: `${product.name} (copia)`, confirmLabel: 'Clonar' })
+        const name = await askName('Clonar producto', `${product.name} (copia)`, 'Clonar')
         if (name) {
             store.create(name, product)
         }
@@ -47,7 +47,7 @@
     }
 
     async function addTag() {
-        const tag = await askNewTag()
+        const tag = Category.clean((await askName('Nueva categoría')) ?? '')
         if (!tag) {
             return
         }

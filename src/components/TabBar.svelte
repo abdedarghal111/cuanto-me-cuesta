@@ -5,12 +5,12 @@
 -->
 
 <script lang="ts">
-    import { ask } from './Dialog.svelte'
+    import { askName } from './Dialog.svelte'
     import Icon from './Icon.svelte'
     import { store } from '../store.client.svelte.ts'
 
     async function createProduct() {
-        const name = await ask({ title: 'Nuevo producto', message: '¿Cómo se llama?', value: '', confirmLabel: 'Crear' })
+        const name = await askName('Nuevo producto')
         if (name) {
             store.create(name)
         }

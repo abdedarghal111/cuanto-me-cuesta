@@ -2,7 +2,7 @@
     @component
     Diálogo modal de la app para confirmar acciones o pedir un texto, en lugar de `prompt`,
     `confirm` y `alert` del navegador. La app lo monta una vez y cualquier componente lo abre con
-    `await ask({ … })`.
+    `await ask({ … })`, o `await askName(…)` para pedir un nombre.
 -->
 
 <script lang="ts" module>
@@ -23,6 +23,17 @@
     /** Abre el diálogo. Devuelve el texto escrito (con campo), `'yes'` (sin campo) o `null` si se cancela. */
     export function ask(options: DialogOptions): Promise<string | null> {
         return open ? open(options) : Promise.resolve(null)
+    }
+
+    /**
+     * Pide un nombre con el diálogo.
+     * @param title Título del diálogo.
+     * @param value Valor inicial del campo.
+     * @param confirmLabel Texto del botón de aceptar.
+     * @returns El nombre escrito, o `null` si se cancela.
+     */
+    export function askName(title: string, value = '', confirmLabel = 'Crear'): Promise<string | null> {
+        return ask({ title, message: '¿Cómo se llama?', value, confirmLabel })
     }
 </script>
 
