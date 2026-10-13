@@ -3,6 +3,11 @@
     Ranking «¿Dónde se va?»: el gasto por categoría de mayor a menor, con barras de bloques en su color.
 -->
 
+<script lang="ts" module>
+    /** Bloques que ocupa la barra de la categoría que más gasta; las demás, en proporción. */
+    const BAR_BLOCKS = 16
+</script>
+
 <script lang="ts">
     import type { Segment } from '../colors.ts'
     import { formatEuros } from '../model/text/numbers.ts'
@@ -14,7 +19,7 @@
         const max = Math.max(0, ...segments.map((s) => s.value))
         return [...segments]
             .sort((a, b) => b.value - a.value)
-            .map((s) => ({ ...s, bar: '█'.repeat(max > 0 ? Math.max(1, Math.round((s.value / max) * 16)) : 0) }))
+            .map((s) => ({ ...s, bar: '█'.repeat(max > 0 ? Math.max(1, Math.round((s.value / max) * BAR_BLOCKS)) : 0) }))
     })
 </script>
 
