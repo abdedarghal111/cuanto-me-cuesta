@@ -80,7 +80,7 @@
 <div class="paper grid gap-2.5 px-5 py-[18px]">
     <div class="flex flex-wrap items-end justify-between gap-3">
         <input
-            class="editable-title min-w-0 flex-[1_1_300px] font-hand text-[50px] leading-none font-bold"
+            class="editable-title hand-title min-w-0 flex-[1_1_300px] text-[50px]"
             bind:value={product.name}
             aria-label="Nombre del producto"
         />

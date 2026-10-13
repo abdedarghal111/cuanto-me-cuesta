@@ -166,3 +166,11 @@
 @utility card-footer {
     @apply border-t border-dashed border-[#AEBCCB] px-4 py-2;
 }
+/* Título a mano; el tamaño lo pone cada uso. */
+@utility hand-title {
+    @apply font-hand leading-none font-bold;
+}
+/* Título de una tarjeta de bloque, en azul. */
+@utility block-title {
+    @apply hand-title text-[32px] text-[#183F86];
+}

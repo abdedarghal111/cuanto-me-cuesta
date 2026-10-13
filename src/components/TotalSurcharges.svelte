@@ -21,7 +21,7 @@
 
 <div class="paper overflow-hidden">
     <div class="card-header">
-        <h2 class="font-hand text-[32px] leading-none font-bold text-[#183F86]">Sobre el total</h2>
+        <h2 class="block-title">Sobre el total</h2>
         <span class="font-mono text-sm">coste {formatEuros(summary.cost)} → <strong class="text-lg">{formatEuros(summary.total)}</strong></span>
     </div>
     {#if product.totalSurcharges.length}

@@ -37,7 +37,7 @@
 <div class="paper overflow-hidden">
     <div class="card-header">
         <input
-            class="editable-title min-w-0 flex-1 font-hand text-[32px] leading-none font-bold text-[#183F86]"
+            class="editable-title block-title min-w-0 flex-1"
             bind:value={section.title}
             aria-label="Título del bloque"
         />

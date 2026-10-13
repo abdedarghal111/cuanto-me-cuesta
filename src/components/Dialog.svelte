@@ -73,7 +73,7 @@
     class="paper m-auto w-[min(92vw,480px)] p-0 shadow-[6px_6px_0_var(--ink)] backdrop:bg-ink/40"
 >
     <form class="grid gap-4 p-6" onsubmit={submit}>
-        <h2 class="font-hand text-[40px] leading-none font-bold">{options.title}</h2>
+        <h2 class="hand-title text-[40px]">{options.title}</h2>
         {#if options.message}<p class="whitespace-pre-line">{options.message}</p>{/if}
         {#if options.value !== undefined}
             <input bind:this={input} bind:value={text} class="borderless border-b-2 border-ink py-1 text-2xl" aria-label={options.title} />

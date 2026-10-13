@@ -19,12 +19,12 @@
 </script>
 
 <section class="flex min-w-0 flex-[999_1_600px] flex-col gap-4">
-    <h1 class="paper px-5 py-3 font-hand text-[54px] leading-none font-bold">¿En qué se me va el dinero?</h1>
+    <h1 class="paper px-5 py-3 hand-title text-[54px]">¿En qué se me va el dinero?</h1>
     {#if store.files.length === 0}
         <p class="paper p-4">Todavía no hay nada. Dale a «+ nuevo» para empezar.</p>
     {:else}
         <TagRanking segments={tagSegments(combined.byCategory, store.tags)} total={combined.total} />
-        <h2 class="paper-soft font-hand text-[34px] leading-none font-bold text-[#183F86]">Por producto</h2>
+        <h2 class="paper-soft hand-title text-[34px] text-[#183F86]">Por producto</h2>
         {#each store.files as file (file)}
             {@const product = store.products[file]}
             {@const summary = summaries[file]}

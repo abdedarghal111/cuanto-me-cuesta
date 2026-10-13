@@ -12,6 +12,6 @@
 
 <div class="note-card">
     <span class="font-hand text-[26px] font-bold">{label}</span>
-    <span class="font-hand text-[72px] leading-none font-bold text-[#B4161D]">{formatEuros(amount)}</span>
+    <span class="hand-title text-[72px] text-[#B4161D]">{formatEuros(amount)}</span>
     {@render children?.()}
 </div>
