@@ -146,3 +146,23 @@
 @utility cost-thead {
     @apply bg-[#F7F9FC] text-center font-mono text-xs text-[#3F4E5D] [&_th]:font-semibold;
 }
+/* Fila de la tabla de líneas y recargos, con una raya arriba y las filas pares en gris. */
+@utility cost-row {
+    @apply border-t border-[#D5DEE8] even:bg-[#F7F9FC];
+}
+/* Campo «Concepto» de una fila: solo una raya abajo, a todo el ancho de su celda. */
+@utility concept-input {
+    @apply borderless w-full min-w-24 border-b border-[#C5D1DE] py-1;
+}
+/* Celda con el importe de una fila. */
+@utility amount-cell {
+    @apply text-right font-mono font-semibold;
+}
+/* Cabecera azul de una tarjeta de bloque, con el título a un lado y las cifras y acciones al otro. */
+@utility card-header {
+    @apply flex items-center justify-between gap-3 border-b-2 border-ink bg-[#E8EFF8] px-4 py-2;
+}
+/* Pie de una tarjeta de bloque, con los enlaces para añadir filas. */
+@utility card-footer {
+    @apply border-t border-dashed border-[#AEBCCB] px-4 py-2;
+}

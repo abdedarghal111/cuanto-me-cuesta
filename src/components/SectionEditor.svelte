@@ -35,7 +35,7 @@
 </script>
 
 <div class="paper overflow-hidden">
-    <div class="flex items-center justify-between gap-3 border-b-2 border-ink bg-[#E8EFF8] px-4 py-2">
+    <div class="card-header">
         <input
             class="editable-title min-w-0 flex-1 font-hand text-[32px] leading-none font-bold text-[#183F86]"
             bind:value={section.title}
@@ -71,10 +71,10 @@
             </thead>
             <tbody>
                 {#each section.lines as line, lineIndex (line)}
-                    <tr class="border-t border-[#D5DEE8] even:bg-[#F7F9FC] {line.counts ? '' : 'opacity-45'}">
+                    <tr class="cost-row {line.counts ? '' : 'opacity-45'}">
                         <td><input type="checkbox" class="size-5 accent-ink" bind:checked={line.counts} aria-label="Cuenta" /></td>
                         <td class="w-full">
-                            <input class="borderless w-full min-w-24 border-b border-[#C5D1DE] py-1" bind:value={line.name} placeholder="Ej. Filamento PLA" aria-label="Concepto" />
+                            <input class="concept-input" bind:value={line.name} placeholder="Ej. Filamento PLA" aria-label="Concepto" />
                         </td>
                         <td>
                             <select class="font-mono text-sm" bind:value={line.type} aria-label="Tipo">
@@ -113,7 +113,7 @@
                         </td>
                         <td><input class="numeric w-12" bind:value={line.multiplier} inputmode="decimal" placeholder="1" aria-label="Multiplicador" /></td>
                         <td><TagSelect {product} item={line} /></td>
-                        <td class="text-right font-mono font-semibold {line.counts ? '' : 'line-through'}">{formatEuros(line.cost())}</td>
+                        <td class="amount-cell {line.counts ? '' : 'line-through'}">{formatEuros(line.cost())}</td>
                         <td><RowActions list={section.lines} index={lineIndex} reorder={(lines) => (section.lines = lines)} onremove={() => section.removeLine(line)} /></td>
                     </tr>
                 {/each}
@@ -125,10 +125,10 @@
                     </tr>
                 {/if}
                 {#each section.surcharges as surcharge, surchargeIndex (surcharge)}
-                    <tr class="border-t border-[#D5DEE8] even:bg-[#F7F9FC] {surcharge.counts ? '' : 'opacity-45'}">
+                    <tr class="cost-row {surcharge.counts ? '' : 'opacity-45'}">
                         <td><input type="checkbox" class="size-5 accent-ink" bind:checked={surcharge.counts} aria-label="Cuenta" /></td>
                         <td class="w-full">
-                            <input class="borderless w-full min-w-24 border-b border-[#C5D1DE] py-1" bind:value={surcharge.name} placeholder="Ej. Riesgo por fallos" aria-label="Concepto" />
+                            <input class="concept-input" bind:value={surcharge.name} placeholder="Ej. Riesgo por fallos" aria-label="Concepto" />
                         </td>
                         <td colspan="6">
                             <span class="inline-flex items-center gap-1">
@@ -137,14 +137,14 @@
                             </span>
                         </td>
                         <td><TagSelect {product} item={surcharge} /></td>
-                        <td class="text-right font-mono font-semibold {surcharge.counts ? '' : 'line-through'}">{formatEuros(surcharge.amount(base))}</td>
+                        <td class="amount-cell {surcharge.counts ? '' : 'line-through'}">{formatEuros(surcharge.amount(base))}</td>
                         <td><RowActions list={section.surcharges} index={surchargeIndex} reorder={(surcharges) => (section.surcharges = surcharges)} onremove={() => section.removeSurcharge(surcharge)} /></td>
                     </tr>
                 {/each}
             </tbody>
         </table>
     </div>
-    <div class="flex gap-5 border-t border-dashed border-[#AEBCCB] px-4 py-2">
+    <div class="card-footer flex gap-5">
         <button class="add-link" onclick={addLine}>+ línea</button>
         <button class="add-link" onclick={addSurcharge}>+ recargo (% del bloque)</button>
     </div>
