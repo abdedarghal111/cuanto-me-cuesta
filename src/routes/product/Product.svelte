@@ -46,7 +46,7 @@
             <SectionEditor {product} {section} {index} />
         {/each}
 
-        <select class="self-start text-accent rounded-md border-2 border-dashed border-[#1F4FA8] bg-white px-4 py-2 font-hand text-[26px] font-bold" onchange={addSection} aria-label="Nuevo bloque">
+        <select class="add-block self-start" onchange={addSection} aria-label="Nuevo bloque">
             <option value="" selected disabled>+ nuevo bloque…</option>
             <option value="empty">Bloque en blanco</option>
             {#each store.template.sections as templateSection, i (i)}<option value={i}>{templateSection.title}</option>{/each}
