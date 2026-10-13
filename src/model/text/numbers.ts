@@ -2,18 +2,31 @@
  * @file Números, importes, porcentajes y duraciones: de texto a número y de número a texto, con coma decimal.
  */
 
+/** Unidad del tipo `time`: días, horas o minutos. */
+export type TimeUnit = 'd' | 'h' | 'min'
+
 /** Unidades del tipo `time`, con sus segundos. */
-export const TIME_UNIT_SECONDS: Record<string, number> = { d: 86400, h: 3600, min: 60 }
+export const TIME_UNIT_SECONDS: Record<TimeUnit, number> = { d: 86400, h: 3600, min: 60 }
 
 /** Nombre de cada unidad del tipo `time` en la pantalla. */
-export const TIME_UNIT_LABELS: Record<keyof typeof TIME_UNIT_SECONDS, string> = { d: 'días', h: 'horas', min: 'minutos' }
+export const TIME_UNIT_LABELS: Record<TimeUnit, string> = { d: 'días', h: 'horas', min: 'minutos' }
+
+/**
+ * Si un texto es una unidad del tipo `time`.
+ * @param text Texto sin espacios en los extremos.
+ * @returns `true` si es d, h o min.
+ */
+const isTimeUnit = (text: string): text is TimeUnit => Object.hasOwn(TIME_UNIT_SECONDS, text)
 
 /**
  * Unidad de tiempo válida.
  * @param unit Unidad escrita.
  * @returns La unidad si es d, h o min; si no, h.
  */
-export const timeUnit = (unit: string) => (unit.trim() in TIME_UNIT_SECONDS ? unit.trim() : 'h')
+export function timeUnit(unit: string): TimeUnit {
+    const trimmed = unit.trim()
+    return isTimeUnit(trimmed) ? trimmed : 'h'
+}
 
 /**
  * Convierte un texto en número, con coma o punto decimal ("11,21").

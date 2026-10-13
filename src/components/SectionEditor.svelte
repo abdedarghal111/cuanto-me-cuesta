@@ -10,7 +10,7 @@
     import { LINE_TYPE_LABELS } from '../model/LineType.ts'
     import type { Section } from '../model/Section.ts'
     import { Surcharge } from '../model/Surcharge.ts'
-    import { TIME_UNIT_LABELS, TIME_UNIT_SECONDS, formatEuros } from '../model/text/numbers.ts'
+    import { TIME_UNIT_LABELS, formatEuros } from '../model/text/numbers.ts'
     import RowActions from './RowActions.svelte'
     import TagSelect from './TagSelect.svelte'
 
@@ -91,7 +91,7 @@
                         <td>
                             {#if line.type === 'time'}
                                 <select class="w-24 cursor-pointer font-mono text-sm" bind:value={line.unit} aria-label="Unidad">
-                                    {#each Object.keys(TIME_UNIT_SECONDS) as unit (unit)}<option value={unit}>{TIME_UNIT_LABELS[unit]}</option>{/each}
+                                    {#each Object.entries(TIME_UNIT_LABELS) as [value, label] (value)}<option {value}>{label}</option>{/each}
                                 </select>
                             {:else}
                                 <input class="w-24 font-mono text-sm" bind:value={line.unit} placeholder="g, m…" aria-label="Unidad" />
