@@ -68,10 +68,10 @@
         {#if summary.excluded > 0}<span class="text-sm">+ {formatEuros(summary.excluded)} que no cuentan</span>{/if}
     </AmountCard>
     <TagRanking segments={tagSegments(summary.byCategory, store.tags)} total={summary.total} />
-    <div class="paper grid gap-1 p-4">
+    <div class="panel">
         <h2 class="panel-title">Por bloques</h2>
         {#each product.sections as section (section)}
-            <div class="flex justify-between gap-2 border-b border-[#EEF2F6] py-0.5">
+            <div class="panel-row flex justify-between gap-2">
                 <span class="truncate">{section.title}</span><span class="font-mono text-sm font-semibold">{formatEuros(section.subtotal())}</span>
             </div>
         {/each}

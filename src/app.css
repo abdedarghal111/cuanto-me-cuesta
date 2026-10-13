@@ -178,3 +178,11 @@
 @utility panel-title {
     @apply mb-1 font-hand text-[26px] leading-none;
 }
+/* Tarjeta del panel lateral, con su título y una fila debajo de otra. */
+@utility panel {
+    @apply paper grid gap-1 p-4;
+}
+/* Fila de una tarjeta del panel lateral, separada de la siguiente por una raya fina. */
+@utility panel-row {
+    @apply border-b border-[#EEF2F6] py-0.5;
+}
