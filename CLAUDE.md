@@ -37,7 +37,10 @@ App local para apuntar lo que cuesta cada cosa que hago y ver en qué se va el d
 ## Interfaz
 
 - Cada vista de `routes/` se compone de componentes, y `App.svelte` monta las vistas y las piezas comunes.
-- El estilo fijo de una pieza va en `app.css` como `@utility` (p. ej. `paper`, `cost-table`), y el componente solo añade lo que cambia: clases condicionales, tamaños por prop y colores calculados.
+- Los estilos se escriben con clases de Tailwind en el marcado.
+- `app.css` guarda solo lo global de la aplicación: el tema (colores y fuentes), los estilos por defecto de toda la app (p. ej. el fondo, los campos, los botones y el foco) y las `@utility` que comparten muchas piezas (p. ej. `paper`, `cost-table`).
+- El estilo fijo y largo de una pieza que solo usa un componente va en su bloque `<style lang="postcss">`, como una clase que agrupa sus clases de Tailwind con `@apply` (con un `@reference` a `app.css` para que las conozca). Esa clase gana a las de Tailwind del marcado, así que el marcado no repite propiedades suyas.
+- Lo que cambia (clases condicionales, tamaños por prop y colores calculados) se queda en el marcado.
 - Lo que es igual para todas las instancias de un componente (constantes, tablas de etiquetas, funciones que no usan sus props ni su estado, o algo que debe existir una sola vez) va en su `<script lang="ts" module>` (p. ej. `Dialog.svelte` e `Icon.svelte`).
 
 ## Commits
