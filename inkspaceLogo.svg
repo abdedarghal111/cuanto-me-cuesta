@@ -1,0 +1,218 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Icono de «Cuánto me cuesta»: una hoja de costes con billetes y monedas a la izquierda y, a la derecha, el emoji de la duda pensando interrogaciones en un bocadillo, al estilo cuaderno de taller. -->
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape" width="512" height="512" viewBox="0 0 512 512">
+    <defs>
+        <pattern id="grid" width="32" height="32" patternUnits="userSpaceOnUse">
+            <path d="M 32 0 H 0 V 32" fill="none" stroke="#d9e3ef" stroke-width="3" />
+        </pattern>
+
+        <!-- Billete del logo de cash-manager, centrado en el origen, con los colores y el contorno de la app. -->
+        <clipPath id="recorte-billete">
+            <rect x="44.427" y="36.463" width="33.012" height="16.81" rx="2.7" />
+        </clipPath>
+        <g id="billete-base" transform="translate(-60.93285 -44.868206)">
+            <rect x="44.427" y="36.463" width="33.012" height="16.81" rx="2.7" fill="#8fd19e" />
+            <circle style="fill:#c8ebcf;fill-rule:evenodd;stroke:#1b2733;stroke-width:1" cx="60.93285" cy="44.868206" r="6.2072082" />
+            <path style="fill:#3f8a4f;fill-rule:evenodd;stroke:none" d="m 60.688083,49.80909 v -1.281695 c -0.613126,-0.05219 -1.0958,-0.247861 -1.448022,-0.587036 -0.3457,-0.3457 -0.525069,-0.799019 -0.538116,-1.359966 h 0.880554 c 0,0.319607 0.09457,0.580513 0.283734,0.782715 0.195678,0.202199 0.469628,0.326131 0.82185,0.371789 v -2.563389 l -0.264166,-0.07828 c -0.489197,-0.150023 -0.867507,-0.401142 -1.134936,-0.753363 -0.260903,-0.352222 -0.391357,-0.766409 -0.391357,-1.242559 0,-0.521811 0.159806,-0.952304 0.479412,-1.291478 0.326133,-0.339176 0.763147,-0.534855 1.311047,-0.587036 v -1.291479 h 0.587036 v 1.281691 c 0.541379,0.05219 0.97513,0.247861 1.301262,0.587036 0.326133,0.339175 0.492458,0.776193 0.49898,1.311046 h -0.880553 c 0,-0.306563 -0.08154,-0.554422 -0.244598,-0.743578 -0.156543,-0.195679 -0.381574,-0.316348 -0.675091,-0.362006 v 2.426415 l 0.391357,0.127191 c 0.476149,0.150022 0.844679,0.404403 1.105584,0.763146 0.260903,0.358743 0.391357,0.779452 0.391357,1.262127 0,0.534854 -0.172848,0.978393 -0.518548,1.330614 -0.339177,0.352222 -0.795762,0.557684 -1.36975,0.616388 v 1.281695 z m 0.587036,-2.074193 c 0.319606,-0.05219 0.567467,-0.176111 0.743578,-0.371789 0.176111,-0.195679 0.264166,-0.450061 0.264166,-0.763147 0,-0.286997 -0.07827,-0.538116 -0.234814,-0.753362 -0.150022,-0.215247 -0.368526,-0.365269 -0.655523,-0.450061 l -0.117407,-0.03914 z m -0.584648,-3.446667 -0.0024,-2.286715 c -0.286996,0.04565 -0.512028,0.156542 -0.675092,0.332653 -0.156542,0.176111 -0.234814,0.404404 -0.234814,0.684875 0,0.339176 0.104361,0.626172 0.313086,0.860986 0.208724,0.228292 0.235435,0.250958 0.580212,0.396849 z" />
+            <g clip-path="url(#recorte-billete)">
+            <path style="fill:#3f8a4f;fill-rule:evenodd;stroke:none" d="m 45.426685,36.463407 c -0.554,0 -0.999939,0.445939 -0.999939,0.999939 v 5.474602 a 6.3100462,6.3099394 0 0 0 0.09922,5.16e-4 6.3100462,6.3099394 0 0 0 6.31021,-6.309692 6.3100462,6.3099394 0 0 0 -0.0021,-0.165365 z" />
+            <path style="fill:#3f8a4f;fill-rule:evenodd;stroke:none" d="m 70.80033,36.463407 a 6.3099394,6.3099394 0 0 0 -0.0021,0.165365 6.3099394,6.3099394 0 0 0 6.309692,6.309692 6.3099394,6.3099394 0 0 0 0.330729,-0.0088 v -5.466333 c 0,-0.554 -0.445939,-0.999939 -0.999939,-0.999939 z" />
+            <path style="fill:#3f8a4f;fill-rule:evenodd;stroke:none" d="m 77.107955,46.632296 a 6.3099394,6.3099394 0 0 0 -6.309692,6.310209 6.3099394,6.3099394 0 0 0 0.0088,0.330729 h 5.631697 c 0.554,0 0.999939,-0.445939 0.999939,-0.999939 v -5.632214 a 6.3099394,6.3099394 0 0 0 -0.330729,-0.0088 z" />
+            <path style="fill:#3f8a4f;fill-rule:evenodd;stroke:none" d="m 44.525964,46.632296 a 6.3099394,6.3099394 0 0 0 -0.09922,0.001 v 5.639966 c 0,0.554 0.445939,0.999939 0.999939,0.999939 h 5.400704 a 6.3099394,6.3099394 0 0 0 0.0088,-0.330729 6.3099394,6.3099394 0 0 0 -6.31021,-6.310209 z" />
+            </g>
+            <rect x="44.427" y="36.463" width="33.012" height="16.81" rx="2.7" fill="none" stroke="#1b2733" stroke-width="2.7" />
+        </g>
+
+        <!-- Moneda del logo de cash-manager, centrada en el origen, con los colores y el contorno de la app. -->
+        <g id="moneda-base" transform="translate(-51.760887 -42.049046)">
+            <circle style="fill:#f6d55c;fill-rule:evenodd;stroke:#1b2733;stroke-width:1.6" cx="51.760887" cy="42.049046" r="4.735364" />
+            <path style="fill:#8a6a2c;fill-rule:evenodd;stroke:none" d="m 51.579069,38.559772 v 0.529056 c -0.252362,0.02351 -0.478208,0.08571 -0.67637,0.188913 -0.256593,0.128298 -0.457155,0.309996 -0.601488,0.545208 -0.138986,0.229865 -0.20849,0.502412 -0.20849,0.817809 0,0.390236 0.107228,0.729802 0.321055,1.01847 0.219174,0.288668 0.528957,0.494687 0.929885,0.617639 l 0.793829,0.248622 c 0.23521,0.0695 0.414425,0.19212 0.537376,0.368529 0.1283,0.176407 0.192339,0.382428 0.192339,0.61764 0,0.294012 -0.09631,0.523867 -0.288754,0.689583 -0.187099,0.165716 -0.448729,0.248622 -0.785508,0.248622 -0.358162,0 -0.639144,-0.08588 -0.842281,-0.256942 -0.19779,-0.171064 -0.296584,-0.403402 -0.296584,-0.697414 h -0.721395 c 0.0053,0.331433 0.08279,0.617385 0.232471,0.857941 0.149679,0.240557 0.360671,0.42523 0.633301,0.553528 0.225124,0.103906 0.485366,0.165733 0.780614,0.185487 v 0.445856 l 0.481094,-0.0049 v -0.447782 c 0.248551,-0.02555 0.472532,-0.08773 0.670985,-0.186956 0.272631,-0.133642 0.483621,-0.320801 0.633301,-0.561358 0.149681,-0.240556 0.224641,-0.52105 0.224641,-0.841791 0,-0.395583 -0.107228,-0.740608 -0.321055,-1.03462 -0.213829,-0.294013 -0.515667,-0.502029 -0.905904,-0.624981 l -0.801659,-0.256942 c -0.240557,-0.07484 -0.425231,-0.20044 -0.553527,-0.376848 -0.1283,-0.176409 -0.19234,-0.384914 -0.19234,-0.625471 0,-0.267286 0.08539,-0.475791 0.256453,-0.62547 0.176408,-0.149682 0.419665,-0.224152 0.729715,-0.224152 0.315397,0 0.558654,0.08241 0.729716,0.248133 0.176412,0.160371 0.264773,0.385254 0.264773,0.673922 h 0.721395 c -0.0053,-0.475767 -0.162723,-0.855542 -0.472774,-1.138865 -0.257684,-0.239913 -0.585723,-0.379885 -0.98372,-0.420406 v -0.530035 z" />
+        </g>
+
+        <!-- Signo de interrogación dibujado con trazos, sin fuente. -->
+        <g id="interrogacion-base" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M -24 -26 A 24 24 0 1 1 12 -4 Q 0 4 0 22" fill="none" stroke-width="15" />
+            <circle cx="0" cy="50" r="9" stroke="none" />
+        </g>
+    </defs>
+
+    <g id="fondo" inkscape:label="Fondo" inkscape:groupmode="layer">
+        <rect x="24" y="24" width="464" height="464" rx="96" fill="#eef3f9" />
+        <rect x="24" y="24" width="464" height="464" rx="96" fill="url(#grid)" />
+        <rect x="24" y="24" width="464" height="464" rx="96" fill="none" stroke="#1b2733" stroke-width="12" />
+    </g>
+
+    <g id="hoja" inkscape:label="Hoja" inkscape:groupmode="layer" transform="translate(150 280) rotate(-4) scale(0.9) translate(-182 -200) rotate(-8 180 200)" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="75" y="65" width="228" height="290" rx="20" fill="#1b2733" />
+        <rect x="66" y="56" width="228" height="290" rx="20" fill="#ffffff" stroke="#1b2733" stroke-width="10" />
+        <path d="M 92 102 q 12 -12 24 0 t 24 0 t 24 0 t 24 0" fill="none" stroke="#1f4fa8" stroke-width="7" />
+        <path d="M 90 140 H 270 M 90 175 H 270 M 90 210 H 270 M 90 245 H 270 M 90 280 H 270 M 210 125 V 295" fill="none" stroke="#c5d1de" stroke-width="5" />
+        <path d="M 98 158 H 170 M 98 193 H 150 M 98 228 H 165 M 98 263 H 140" fill="none" stroke="#4a5a6b" stroke-width="6" />
+        <path d="M 225 158 H 258 M 230 193 H 258 M 222 228 H 258 M 234 263 H 258" fill="none" stroke="#1b2733" stroke-width="6" />
+        <path d="M 200 306 H 266 M 200 316 H 266" fill="none" stroke="#1b2733" stroke-width="5" />
+    </g>
+
+    <g id="dinero" inkscape:label="Dinero" inkscape:groupmode="layer">
+        <g id="billetes" inkscape:label="Billetes">
+            <g transform="translate(115 390) rotate(-24) scale(3)">
+                <rect x="-15.18" y="-7.08" width="35.71" height="19.51" rx="4.05" fill="#1b2733" />
+                <use xlink:href="#billete-base" />
+            </g>
+            <g transform="translate(130 400) rotate(-8) scale(3)">
+                <rect x="-15.18" y="-7.08" width="35.71" height="19.51" rx="4.05" fill="#1b2733" />
+                <use xlink:href="#billete-base" />
+            </g>
+        </g>
+    </g>
+
+    <!-- El emoji, la mano y el movimiento están dibujados a tamaño grande; este grupo los coloca abajo a la derecha. -->
+    <g id="personaje" inkscape:label="Personaje" inkscape:groupmode="layer" transform="translate(340 347) scale(0.78) translate(-319 -279)">
+    <g id="emoji" inkscape:label="Emoji" inkscape:groupmode="layer" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="300" cy="310" r="127" fill="#1b2733" />
+        <circle cx="290" cy="300" r="127" fill="#ffd23f" stroke="#1b2733" stroke-width="12" />
+
+        <g id="cejas" inkscape:label="Cejas" fill="none" stroke="#6b3410" stroke-width="6">
+            <path d="M 239 224 Q 244 199 263 198" />
+            <path d="M 303 218 Q 309 237 330 228" />
+        </g>
+
+        <g id="ojo-izquierdo" inkscape:label="Ojo izquierdo" transform="rotate(10 251 286)">
+            <clipPath id="recorte-ojo-izquierdo">
+                <ellipse cx="251" cy="286" rx="31" ry="42" />
+            </clipPath>
+            <ellipse cx="251" cy="286" rx="31" ry="42" fill="#ffffff" />
+            <g clip-path="url(#recorte-ojo-izquierdo)">
+                <circle cx="263" cy="287" r="21" fill="#5a86d6" stroke="#2c4f9e" stroke-width="5" />
+                <circle cx="267" cy="287" r="11" fill="#1b2733" />
+                <circle cx="260" cy="279" r="7" fill="#ffffff" />
+                <circle cx="271" cy="298" r="2.7" fill="#ffffff" />
+            </g>
+            <ellipse cx="251" cy="286" rx="31" ry="42" fill="none" stroke="#1b2733" stroke-width="6" />
+            <path d="M 222 280 A 31 42 0 0 1 281 278" fill="none" stroke="#1b2733" stroke-width="10" />
+        </g>
+
+        <g id="ojo-derecho" inkscape:label="Ojo derecho" transform="rotate(-8 321 282)">
+            <clipPath id="recorte-ojo-derecho">
+                <ellipse cx="321" cy="282" rx="31" ry="41" />
+            </clipPath>
+            <ellipse cx="321" cy="282" rx="31" ry="41" fill="#ffffff" />
+            <g clip-path="url(#recorte-ojo-derecho)">
+                <circle cx="313" cy="285" r="21" fill="#5a86d6" stroke="#2c4f9e" stroke-width="5" />
+                <circle cx="311" cy="285" r="12" fill="#1b2733" />
+                <circle cx="303" cy="276" r="7" fill="#ffffff" />
+                <circle cx="318" cy="292" r="2.7" fill="#ffffff" />
+            </g>
+            <ellipse cx="321" cy="282" rx="31" ry="41" fill="none" stroke="#1b2733" stroke-width="6" />
+            <path d="M 292 274 A 31 41 0 0 1 350 276" fill="none" stroke="#1b2733" stroke-width="10" />
+        </g>
+
+        <ellipse cx="195" cy="319" rx="27" ry="13" fill="#f59a8c" opacity="0.7" />
+        <ellipse cx="376" cy="313" rx="27" ry="13" fill="#f59a8c" opacity="0.7" />
+
+        <g id="boca" inkscape:label="Boca">
+            <ellipse cx="294" cy="391" rx="9" ry="12" fill="#4a1f0f" stroke="#1b2733" stroke-width="3" />
+            <path d="M 284 405 Q 294 416 305 406" fill="none" stroke="#1b2733" stroke-width="5" />
+        </g>
+    </g>
+
+    <!-- Calcada de la mano del emoji: las coordenadas son las de su recorte, escaladas al icono. -->
+    <g id="mano" inkscape:label="Mano" inkscape:groupmode="layer" transform="translate(347 154) scale(0.19)" stroke="#1b2733" stroke-width="40" stroke-linecap="round" stroke-linejoin="round">
+        <g id="mano-sombra" inkscape:label="Sombra" transform="translate(54 54)" fill="#1b2733" stroke="none">
+            <path d="M 400 215 C 420 185 560 180 625 205 C 660 225 658 330 652 420 C 645 520 600 605 525 642 C 470 668 412 660 395 625 C 372 580 340 500 325 430 C 322 400 350 380 400 380 Z" />
+        </g>
+        <g id="indice" inkscape:label="Índice" fill="none">
+            <path d="M 125 290 C 100 230 105 160 165 135 C 230 108 325 115 375 165 L 395 200" stroke-width="165" />
+            <path d="M 125 290 C 100 230 105 160 165 135 C 230 108 325 115 375 165 L 395 200" stroke="#ffd23f" stroke-width="85" />
+        </g>
+        <ellipse id="nudillo" inkscape:label="Nudillo" cx="285" cy="350" rx="55" ry="62" fill="#ffd23f" />
+        <path id="puno" inkscape:label="Puño" d="M 400 215 C 420 185 560 180 625 205 C 660 225 658 330 652 420 C 645 520 600 605 525 642 C 470 668 412 660 395 625 C 372 580 340 500 325 430 C 322 400 350 380 400 380 Z" fill="#ffd23f" />
+        <path id="dedo-doblado" inkscape:label="Dedo doblado" d="M 290 185 C 300 150 380 140 440 155 C 480 165 500 185 495 215 L 470 385 C 430 405 375 405 352 388 C 330 372 335 330 322 300 C 305 260 282 220 290 185 Z" fill="#ffd23f" />
+        <g id="pulgar" inkscape:label="Pulgar">
+            <path d="M 402 212 L 556 206 L 548 340 C 548 400 520 440 470 445 C 430 448 405 430 402 400 Z" fill="#ffd23f" stroke="none" />
+            <path d="M 402 222 L 402 400 C 405 430 430 448 470 445 C 520 440 548 400 548 340" fill="none" stroke-width="30" />
+        </g>
+    </g>
+
+    <g id="movimiento" inkscape:label="Movimiento" inkscape:groupmode="layer" fill="none" stroke="#1b2733" stroke-width="6" stroke-linecap="round">
+        <path d="M 402 152 Q 417 156 429 173" />
+        <path d="M 414 131 Q 431 142 436 165" />
+    </g>
+    </g>
+
+    <!-- Encima de los billetes y del emoji. -->
+    <g id="pila" inkscape:label="Pila de monedas" inkscape:groupmode="layer">
+        <!-- Las sombras van todas debajo, para que no oscurezcan las monedas de abajo. -->
+        <g id="pila-sombra" inkscape:label="Sombra" fill="#1b2733">
+            <circle cx="213" cy="426" r="25.5" />
+            <circle cx="213" cy="412" r="25.5" />
+            <circle cx="213" cy="398" r="25.5" />
+            <circle cx="213" cy="384" r="25.5" />
+            <circle cx="213" cy="370" r="25.5" />
+        </g>
+        <use xlink:href="#moneda-base" transform="translate(205 418) scale(4.6)" />
+        <use xlink:href="#moneda-base" transform="translate(205 404) scale(4.6)" />
+        <use xlink:href="#moneda-base" transform="translate(205 390) scale(4.6)" />
+        <use xlink:href="#moneda-base" transform="translate(205 376) scale(4.6)" />
+        <use xlink:href="#moneda-base" transform="translate(205 362) scale(4.6)" />
+    </g>
+
+    <!-- Nube de bultos: sombra, contorno y relleno de las mismas piezas, para que solo se vea el borde exterior. -->
+    <g id="bocadillo" inkscape:label="Bocadillo" inkscape:groupmode="layer">
+        <g id="nube-sombra" inkscape:label="Sombra" fill="#1b2733" transform="translate(8 8)">
+            <ellipse cx="340" cy="120" rx="92" ry="52" />
+            <circle cx="432" cy="120" r="30" />
+            <circle cx="414.4" cy="150.6" r="30" />
+            <circle cx="368.4" cy="169.5" r="30" />
+            <circle cx="311.6" cy="169.5" r="30" />
+            <circle cx="265.6" cy="150.6" r="30" />
+            <circle cx="248" cy="120" r="30" />
+            <circle cx="265.6" cy="89.4" r="30" />
+            <circle cx="311.6" cy="70.5" r="30" />
+            <circle cx="368.4" cy="70.5" r="30" />
+            <circle cx="414.4" cy="89.4" r="30" />
+        </g>
+        <g id="nube-contorno" inkscape:label="Contorno" fill="#ffffff" stroke="#1b2733" stroke-width="18">
+            <ellipse cx="340" cy="120" rx="92" ry="52" />
+            <circle cx="432" cy="120" r="30" />
+            <circle cx="414.4" cy="150.6" r="30" />
+            <circle cx="368.4" cy="169.5" r="30" />
+            <circle cx="311.6" cy="169.5" r="30" />
+            <circle cx="265.6" cy="150.6" r="30" />
+            <circle cx="248" cy="120" r="30" />
+            <circle cx="265.6" cy="89.4" r="30" />
+            <circle cx="311.6" cy="70.5" r="30" />
+            <circle cx="368.4" cy="70.5" r="30" />
+            <circle cx="414.4" cy="89.4" r="30" />
+        </g>
+        <g id="nube-relleno" inkscape:label="Relleno" fill="#ffffff">
+            <ellipse cx="340" cy="120" rx="92" ry="52" />
+            <circle cx="432" cy="120" r="30" />
+            <circle cx="414.4" cy="150.6" r="30" />
+            <circle cx="368.4" cy="169.5" r="30" />
+            <circle cx="311.6" cy="169.5" r="30" />
+            <circle cx="265.6" cy="150.6" r="30" />
+            <circle cx="248" cy="120" r="30" />
+            <circle cx="265.6" cy="89.4" r="30" />
+            <circle cx="311.6" cy="70.5" r="30" />
+            <circle cx="368.4" cy="70.5" r="30" />
+            <circle cx="414.4" cy="89.4" r="30" />
+        </g>
+        <g id="burbujas" inkscape:label="Burbujas" stroke-width="6">
+            <circle cx="308" cy="230" r="13" fill="#1b2733" />
+            <circle cx="304" cy="226" r="13" fill="#ffffff" stroke="#1b2733" />
+            <circle cx="296" cy="251" r="8" fill="#1b2733" />
+            <circle cx="292" cy="247" r="8" fill="#ffffff" stroke="#1b2733" />
+            <circle cx="291" cy="266" r="4.5" fill="#1b2733" />
+            <circle cx="287" cy="262" r="4.5" fill="#ffffff" stroke="#1b2733" />
+        </g>
+    </g>
+
+    <g id="interrogaciones" inkscape:label="Interrogaciones" inkscape:groupmode="layer">
+        <use xlink:href="#interrogacion-base" transform="translate(292 89.9) scale(0.33) rotate(2.1)" stroke="#7a55a8" fill="#7a55a8" />
+        <use xlink:href="#interrogacion-base" transform="translate(347.3 161.2) scale(0.38) rotate(-25)" stroke="#3f8a4f" fill="#3f8a4f" />
+        <use xlink:href="#interrogacion-base" transform="translate(349.3 103.1) scale(0.39) rotate(7.9)" stroke="#0e7c7b" fill="#0e7c7b" />
+        <use xlink:href="#interrogacion-base" transform="translate(383.5 150.9) scale(0.43) rotate(-36.3)" stroke="#1f4fa8" fill="#1f4fa8" />
+        <use xlink:href="#interrogacion-base" transform="translate(413.5 115.4) scale(0.48) rotate(10.2)" stroke="#3f8a4f" fill="#3f8a4f" />
+        <use xlink:href="#interrogacion-base" transform="translate(291.6 132.3) scale(0.57) rotate(31.9)" stroke="#7a55a8" fill="#7a55a8" />
+    </g>
+</svg>
