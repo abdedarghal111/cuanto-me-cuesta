@@ -1,0 +1,72 @@
+<!doctype html>
+<!-- Borrador donde se planifican los diagramas UML de la aplicación en Mermaid. Se abre directamente en el navegador. -->
+<html lang="es">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>UML · Cuánto me cuesta</title>
+    <style>
+        body { margin: 0; font-family: system-ui, sans-serif; background: #eef3f9; color: #1b2733; }
+        nav { position: sticky; top: 0; z-index: 1; display: flex; flex-wrap: wrap; gap: 8px; padding: 10px 16px; background: #fff; border-bottom: 2px solid #1b2733; }
+        nav a { padding: 4px 12px; border: 2px solid #c5d1de; border-radius: 6px; color: #1b2733; text-decoration: none; }
+        nav a:hover { border-color: #1b2733; }
+        main { display: grid; gap: 24px; padding: 24px 16px 64px; }
+        section { background: #fff; border: 2px solid #1b2733; border-radius: 6px; padding: 16px; scroll-margin-top: 64px; }
+        h2 { margin: 0 0 4px; }
+        .path { margin: 0 0 12px; font-family: ui-monospace, monospace; font-size: 13px; color: #4a5a6b; }
+        .diagram { height: 78vh; overflow: hidden; border: 1px solid #c5d1de; border-radius: 4px; background: #fafcfe; cursor: grab; }
+        .diagram:active { cursor: grabbing; }
+        .diagram pre { margin: 0; height: 100%; }
+        .diagram svg { display: block; width: 100%; height: 100%; max-width: none !important; }
+        .legend li { margin: 2px 0; }
+        code { font-family: ui-monospace, monospace; }
+    </style>
+</head>
+<body>
+<nav>
+    <a href="#leyenda">Leyenda</a>
+    <!-- Un enlace por diagrama: <a href="#id-del-diagrama">1 · Nombre</a> -->
+</nav>
+<main>
+    <section id="leyenda" class="legend">
+        <h2>Leyenda</h2>
+        <ul>
+            <li><code>+</code> público · <code>-</code> privado · <code>#</code> protegido · <code>~</code> paquete: interno del archivo, sin exportar</li>
+            <li><u>subrayado</u> = estático · <i>cursiva</i> = abstracto · <code>/</code> delante = derivado (se calcula)</li>
+            <li><code>«interface»</code>, <code>«abstract»</code>, <code>«enumeration»</code>, <code>«module»</code> (un archivo <code>.ts</code> sin clase) y <code>«component»</code> (un <code>.svelte</code>)</li>
+            <li>Triángulo = herencia (continua) o realización (discontinua) · rombo relleno = composición · rombo vacío = agregación · flecha continua = asociación · flecha discontinua = dependencia</li>
+            <li>Mermaid no admite llaves dentro de un miembro: los objetos literales salen como <code>object</code> y su forma va en una nota.</li>
+        </ul>
+        <p>Navegar: rueda para ampliar o reducir · arrastrar para moverse · doble clic para acercar · botones <code>+</code>, <code>−</code> y <code>reset</code> abajo a la derecha de cada diagrama.</p>
+    </section>
+
+    <!-- Plantilla de un diagrama: copia este bloque, cambia el id, el título y la ruta, y añade su enlace en <nav>.
+    <section id="id-del-diagrama">
+        <h2>1 · Nombre del diagrama</h2>
+        <p class="path">src/carpeta/ · src/archivo.ts</p>
+        <div class="diagram">
+<pre class="mermaid">
+classDiagram
+    direction TB
+    class Ejemplo
+</pre>
+        </div>
+    </section>
+    -->
+</main>
+<script src="https://cdn.jsdelivr.net/npm/svg-pan-zoom@3.6.2/dist/svg-pan-zoom.min.js"></script>
+<script type="module">
+    import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs'
+    mermaid.initialize({ startOnLoad: false, class: { useMaxWidth: false } })
+    await mermaid.run({ querySelector: '.mermaid' })
+
+    // Zoom con la rueda y arrastre en cada diagrama, ajustado al recuadro al empezar.
+    const panZooms = [...document.querySelectorAll('.diagram svg')].map((svg) => {
+        svg.removeAttribute('width')
+        svg.removeAttribute('height')
+        return svgPanZoom(svg, { controlIconsEnabled: true, fit: true, center: true, minZoom: 0.1, maxZoom: 20, zoomScaleSensitivity: 0.3 })
+    })
+    window.addEventListener('resize', () => panZooms.forEach((p) => { p.resize(); p.fit(); p.center() }))
+</script>
+</body>
+</html>

@@ -95,7 +95,7 @@ Valida con el parser real de Mermaid, instalado en una carpeta temporal:
 T=<carpeta temporal>/mermaid-check
 mkdir -p "$T" && cp .claude/skills/mermaid/validate.mjs "$T"/
 (cd "$T" && echo '{"private":true}' > package.json && npm i mermaid@11 jsdom)
-node "$T"/validate.mjs draft.html   # .html, .md o .mmd
+node "$T"/validate.mjs draftDiagrams.html   # .html, .md o .mmd
 ```
 
 Corrige y repite hasta que cada diagrama dé `OK`.
