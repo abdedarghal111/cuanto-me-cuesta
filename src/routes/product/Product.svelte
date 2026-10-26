@@ -25,15 +25,15 @@
     /** Recetas abiertas en el estante. */
     const open = new SvelteSet<Section>()
 
-    /** Añade una sección en blanco o una copia de la de la plantilla elegida (valor: índice de la sección). */
-    function addSection(e: Event & { currentTarget: HTMLSelectElement }) {
-        const value = e.currentTarget.value
-        e.currentTarget.value = ''
-        const templateSection = store.template.sections[Number(value)]
-        if (value === 'empty' || !templateSection) {
-            product.addSection(Section.blank('Nueva sección'))
-        } else {
-            product.addSection(templateSection.clone())
+    /**
+     * Añade una sección en blanco con el nombre escrito en su hueco y vacía el hueco; sin nombre no añade nada.
+     * @param input Hueco «Nueva sección…».
+     */
+    function addSection(input: HTMLInputElement) {
+        const title = input.value.trim()
+        input.value = ''
+        if (title) {
+            product.addSection(Section.blank(title))
         }
     }
 </script>
@@ -56,13 +56,13 @@
             <SectionEditor {product} {section} />
         {/each}
 
-        <select class="add-section self-start" onchange={addSection} aria-label="Nueva sección">
-            <option value="" selected disabled>+ nueva sección…</option>
-            <option value="empty">Sección en blanco</option>
-            {#each store.template.sections as templateSection, i (i)}
-                {#if !templateSection.isFunction}<option value={i}>{templateSection.title}</option>{/if}
-            {/each}
-        </select>
+        <input
+            class="add-section self-start"
+            placeholder="Nueva sección…"
+            onchange={(e) => addSection(e.currentTarget)}
+            onkeydown={(e) => e.key === 'Enter' && e.currentTarget.blur()}
+            aria-label="Nueva sección"
+        />
 
         <TotalSurcharges {product} {summary} />
 
@@ -70,7 +70,7 @@
             Coste = precio de una unidad × cantidad. Solo números con coma (<code>0,5</code>). El tipo dice cómo se escribe el precio: fijo (<code>6,5 €</code>), lote (lo que costó y lo que trae: <code>4,2 € por 20 ud</code>), horas (<code>12 €/h</code>) o luz (<code>140 W a 0,20 €/kWh</code>). En horas, en luz y en un lote por d, h o min, la cantidad es una duración: <code>3d 5h 1m 3s</code>.
             Una receta no suma por sí sola: sus líneas usan sus datos como cantidad, y una línea que la elige como tipo rellena esos datos y cuesta lo que la receta, por su cantidad.
             Los recargos de una sección son un % de la suma de sus líneas y se suman entre sí; los de «Sobre el total» se aplican en orden, cada uno sobre lo acumulado.
-            Las secciones de «+ nueva sección» y las de un producto nuevo salen de la plantilla, <code>src/res/template.txt</code>.
+            Un producto nuevo sale de la plantilla, <code>src/res/template.txt</code>.
         </p>
     {/if}
 </section>
@@ -94,8 +94,8 @@
 <style lang="postcss">
     @reference '../../app.css';
 
-    /* Desplegable «+ nueva sección…»: un recuadro discontinuo en azul con letra a mano. */
+    /* Hueco «Nueva sección…»: un recuadro discontinuo con letra a mano, como el título de una sección. */
     .add-section {
-        @apply rounded-md border-2 border-dashed border-accent bg-white px-4 py-2 font-hand text-[26px] font-bold text-accent;
+        @apply w-80 rounded-md border-2 border-dashed border-accent bg-white px-4 py-2 font-hand text-[26px] font-bold text-[#183F86] placeholder:text-[#9AA9B8];
     }
 </style>

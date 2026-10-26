@@ -46,11 +46,12 @@
     }
 
     /**
-     * Pide el nombre de una categoría y la declara en el producto; un nombre vacío no declara nada.
-     * @returns Promesa que se cumple al cerrar el diálogo.
+     * Declara en el producto la categoría escrita en su hueco y vacía el hueco; un nombre vacío no declara nada.
+     * @param input Hueco «Nueva categoría…».
      */
-    async function addTag() {
-        product.addCategory((await askName('Nueva categoría')) ?? '')
+    function addTag(input: HTMLInputElement) {
+        product.addCategory(input.value)
+        input.value = ''
     }
 
     /**
@@ -120,10 +121,23 @@
                         <Icon name="remove" size={14} />
                     </button>
                 </span>
-            {:else}
-                <span class="text-muted">Ninguna todavía.</span>
             {/each}
-            <button class="link text-[15px]" onclick={addTag}>+ añadir categoría</button>
+            <input
+                class="tag-ghost"
+                placeholder="Nueva categoría…"
+                onchange={(e) => addTag(e.currentTarget)}
+                onkeydown={(e) => e.key === 'Enter' && e.currentTarget.blur()}
+                aria-label="Nueva categoría"
+            />
         </div>
     </div>
 </div>
+
+<style lang="postcss">
+    @reference '../app.css';
+
+    /* Hueco para escribir una categoría nueva, como una etiqueta más con el borde discontinuo. */
+    .tag-ghost {
+        @apply w-40 rounded-[3px] border border-dashed border-[#AEBCCB] bg-white px-2.5 py-0.5 text-[15px] italic placeholder:text-[#9AA9B8];
+    }
+</style>

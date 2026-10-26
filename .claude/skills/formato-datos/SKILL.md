@@ -11,7 +11,7 @@ Los `.txt` son la fuente de verdad: una persona o una IA los lee y los edita a m
 
 - Cada hoja de costes es un archivo `datos/titulo_fecha.txt`; la app lo renombra al guardar si cambian el nombre o la fecha.
 - Borrar una hoja la renombra a `nombre.txt.borrado`.
-- La plantilla, `src/res/template.txt`, es una hoja normal con el mismo formato. Una hoja nueva es una copia de ella con su nombre y la fecha de hoy, y «+ nueva sección» copia una de sus secciones (con la receta a la que llamen sus líneas, si la hoja no la tiene).
+- La plantilla, `src/res/template.txt`, es una hoja normal con el mismo formato. Una hoja nueva es una copia de ella con su nombre y la fecha de hoy.
 
 ## Estructura de una hoja
 

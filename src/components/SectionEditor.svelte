@@ -291,6 +291,11 @@
             <strong class="font-mono text-lg">{formatEuros(section.subtotal())}</strong>
         {/if}
         <span class="card-controls inline-flex">
+            {#if !section.isFunction}
+                <button class="mini" onclick={() => product.cloneSection(section)} title="Clonar sección" aria-label="Clonar sección">
+                    <Icon name="clone" size={18} />
+                </button>
+            {/if}
             <RowActions
                 list={siblings}
                 index={siblings.indexOf(section)}

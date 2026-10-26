@@ -35,7 +35,7 @@ Lo peculiar de esta app es que cada hoja es un texto plano que se explica solo, 
 - **Recargos y margen:** un % sobre una sección (por ejemplo, el riesgo de fallos) o sobre el total (el margen).
 - **Categorías:** cada línea lleva la suya, con su color, y el ranking «¿Dónde se va?» las compara.
 - **Portada «Todo»:** el gasto de todos los productos juntos.
-- **Plantilla:** un producto nuevo parte de la plantilla, y sus secciones se añaden con un clic.
+- **Plantilla:** un producto nuevo parte de la plantilla. Las secciones nuevas se crean escribiendo su nombre, y las que ya hay se clonan.
 - **Guardado a mano:** nada se escribe hasta que pulsas «Guardar» o Ctrl+S, y si cambias un archivo por fuera, la app lo recarga.
 - **Lectura estricta:** si un archivo no encaja, la app dice en qué línea falla y qué esperaba.
 
