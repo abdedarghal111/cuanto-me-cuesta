@@ -40,6 +40,10 @@
     --line: #c5d1de;
     --accent: #1f4fa8;
     --bad: #b42318;
+    /* Recetas: borde marrón, texto marrón oscuro y fondo pósit. */
+    --recipe: #8a6a2c;
+    --recipe-ink: #5c4612;
+    --recipe-soft: #fff4a8;
     /* Colores de las categorías, en el orden de «Categorías:» de la plantilla. */
     --c1: #0e7c7b;
     --c2: #b98a00;
@@ -59,6 +63,9 @@
     --color-line: var(--line);
     --color-accent: var(--accent);
     --color-bad: var(--bad);
+    --color-recipe: var(--recipe);
+    --color-recipe-ink: var(--recipe-ink);
+    --color-recipe-soft: var(--recipe-soft);
     --font-hand: 'Caveat', cursive;
     --font-notebook: 'Kalam', cursive;
     --font-mono: 'IBM Plex Mono', ui-monospace, Consolas, monospace;

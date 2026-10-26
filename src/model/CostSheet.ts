@@ -102,14 +102,28 @@ export class CostSheet implements Serializable, Observable {
         this.notify()
     }
 
-    /** Secciones que suman: las que no son grupos función. */
+    /**
+     * Secciones que suman: las que no son recetas. Asignar el array solo cambia su orden entre ellas: tiene que
+     * llevar las mismas secciones.
+     */
     get groups(): Section[] {
         return this.#sections.filter((section) => !section.isFunction)
     }
 
-    /** Grupos función, que no suman por sí solos. */
+    set groups(groups: Section[]) {
+        this.#reorderKind(groups, false)
+    }
+
+    /**
+     * Recetas (grupos función), que no suman por sí solas. Asignar el array solo cambia su orden entre ellas: tiene
+     * que llevar las mismas recetas.
+     */
     get functions(): Section[] {
         return this.#sections.filter((section) => section.isFunction)
+    }
+
+    set functions(functions: Section[]) {
+        this.#reorderKind(functions, true)
     }
 
     /**
@@ -545,6 +559,19 @@ export class CostSheet implements Serializable, Observable {
         list.splice(index, 1)
         this.#unsubscribers.get(item)?.()
         this.#unsubscribers.delete(item)
+        this.notify()
+    }
+
+    /**
+     * Cambia el orden de las recetas o de las demás secciones entre ellas, sin moverlas de los huecos que ocupan.
+     * @param sections Las secciones de esa clase en el orden nuevo.
+     * @param isFunction Si son las recetas.
+     * @throws {Error} Si no son las mismas secciones.
+     */
+    #reorderKind(sections: Section[], isFunction: boolean): void {
+        assertReorder(this.#sections.filter((section) => section.isFunction === isFunction), sections)
+        const queue = [...sections]
+        this.#sections = this.#sections.map((section) => (section.isFunction === isFunction ? queue.shift()! : section))
         this.notify()
     }
 
