@@ -2,7 +2,7 @@
     @component
     Una sección del producto abierto: título editable con su subtotal y la tabla de sus líneas de gasto
     y de sus recargos sobre la sección. Si es una receta, va en marrón, sus filas no se activan ni se desactivan
-    y lleva sus datos de entrada y su fórmula en vez del subtotal.
+    y lleva en vez del subtotal sus datos de entrada, que se arrastran a la Cantidad de sus líneas.
 -->
 
 <script lang="ts" module>
@@ -12,6 +12,8 @@
     const LINE_TYPE_OPTIONS = Object.entries(LINE_TYPE_LABELS)
     /** Prefijo del valor de las opciones de «Tipo» que llaman a una receta, seguido de su posición. */
     const FUNCTION_OPTION = 'ƒ'
+    /** Tipo de los datos que se arrastran: el nombre de un dato de receta. */
+    const PARAM_TYPE = 'application/x-recipe-param'
 </script>
 
 <script lang="ts">
@@ -19,7 +21,7 @@
     import type { CostSheet } from '../model/CostSheet.ts'
     import { Line } from '../model/Line.ts'
     import type { BasicLineType } from '../model/LineType.ts'
-    import type { Section } from '../model/Section.ts'
+    import { Section } from '../model/Section.ts'
     import { Surcharge } from '../model/Surcharge.ts'
     import { formatEuros, formatNumber } from '../model/text/numbers.ts'
     import RowActions from './RowActions.svelte'
@@ -28,8 +30,6 @@
     /** `section` es una sección o una receta de `product`. */
     let { product, section }: { product: CostSheet; section: Section } = $props()
 
-    /** Identificador único de la tarjeta, para la lista de datos de la Cantidad. */
-    const uid = $props.id()
     const base = $derived(section.base())
     /** Recetas a las que pueden llamar sus líneas; desde una receta, ninguna. */
     const functions = $derived(section.isFunction ? [] : product.functions)
@@ -40,6 +40,8 @@
 
     /** Tarjeta de la sección, para pasar el foco a la fila que se crea. */
     let card: HTMLDivElement
+    /** Línea sobre cuya Cantidad se arrastra un dato, para resaltarla. */
+    let dropTarget: Line | null = $state(null)
 
     /**
      * Crea una línea o un recargo con lo que se ha escrito en su fila fantasma, con la categoría de la última
@@ -98,6 +100,51 @@
     }
 
     /**
+     * Añade a la receta el dato escrito en su hueco y vacía el hueco.
+     * @param input Hueco «dato…».
+     */
+    function addParam(input: HTMLInputElement) {
+        product.addParam(section, input.value)
+        input.value = ''
+    }
+
+    /**
+     * Empieza a arrastrar un dato de la receta, con su pastilla entera como imagen.
+     * @param e Evento de arrastre del asa de la pastilla.
+     * @param param Nombre del dato.
+     */
+    function dragParam(e: DragEvent & { currentTarget: HTMLElement }, param: string) {
+        e.dataTransfer?.setData(PARAM_TYPE, param)
+        e.dataTransfer?.setDragImage(e.currentTarget.parentElement ?? e.currentTarget, 0, 0)
+    }
+
+    /**
+     * Deja soltar un dato sobre la Cantidad de una línea y la resalta.
+     * @param e Evento de arrastre sobre la celda.
+     * @param line Línea de la celda.
+     */
+    function dragOver(e: DragEvent, line: Line) {
+        if (e.dataTransfer?.types.includes(PARAM_TYPE)) {
+            e.preventDefault()
+            dropTarget = line
+        }
+    }
+
+    /**
+     * Pone como Cantidad de una línea el dato que se suelta sobre ella.
+     * @param e Evento de soltar sobre la celda.
+     * @param line Línea de la celda.
+     */
+    function dropParam(e: DragEvent, line: Line) {
+        dropTarget = null
+        const param = e.dataTransfer?.getData(PARAM_TYPE)
+        if (param && section.params.includes(param)) {
+            e.preventDefault()
+            line.quantity = param
+        }
+    }
+
+    /**
      * Cambia el nombre de un dato de la receta; si no se puede, el campo vuelve al nombre de antes.
      * @param param Nombre actual.
      * @param input Campo con el nombre nuevo.
@@ -125,25 +172,33 @@
             aria-label={section.isFunction ? 'Título de la receta' : 'Título de la sección'}
         />
         {#if section.isFunction}
-            <span class="flex flex-wrap items-center gap-1.5 font-mono text-muted">
-                (
-                {#each section.params as param (param)}
-                    <span class="param inline-flex items-center gap-0.5 pr-1!">
-                        <input
-                            class="borderless min-w-10 field-sizing-content font-mono text-[14px] font-semibold text-recipe-ink"
-                            value={param}
-                            onchange={(e) => renameParam(param, e.currentTarget)}
-                            aria-label="Nombre del dato"
-                        />
-                        <button class="mini px-0.5!" onclick={() => product.removeParam(section, param)} aria-label="Quitar el dato «{param}»">×</button>
-                    </span>
-                {/each}
-                )
-                <button class="add-link text-[15px]" onclick={() => product.addParam(section)}>+ dato</button>
-            </span>
-            <span class="order-last basis-full font-mono text-sm" title="Lo que cuesta una unidad según sus datos">
-                Una unidad = {section.formula()}
-            </span>
+            {#each section.params as param (param)}
+                <span class="param inline-flex items-center gap-1 pr-1!">
+                    <span
+                        class="cursor-grab font-normal text-muted"
+                        draggable="true"
+                        ondragstart={(e) => dragParam(e, param)}
+                        title="Arrástralo a una Cantidad"
+                        aria-hidden="true">⠿</span
+                    >
+                    <input
+                        class="borderless min-w-10 field-sizing-content font-mono text-[14px] font-semibold text-recipe-ink"
+                        value={param}
+                        onchange={(e) => renameParam(param, e.currentTarget)}
+                        aria-label="Nombre del dato"
+                    />
+                    <button class="mini px-0.5!" onclick={() => product.removeParam(section, param)} aria-label="Quitar el dato «{param}»">×</button>
+                </span>
+            {/each}
+            {#if section.params.length < Section.MAX_PARAMS}
+                <input
+                    class="param-ghost"
+                    placeholder="dato…"
+                    onchange={(e) => addParam(e.currentTarget)}
+                    onkeydown={(e) => e.key === 'Enter' && e.currentTarget.blur()}
+                    aria-label="Nuevo dato"
+                />
+            {/if}
         {:else}
             <strong class="font-mono text-lg">{formatEuros(section.subtotal())}</strong>
         {/if}
@@ -237,17 +292,28 @@
                                 </span>
                             {/if}
                         </td>
-                        <td>
-                            <input
-                                class="numeric highlighted w-24 {section.params.includes(line.quantity.trim()) ? 'param' : ''}"
-                                bind:value={line.quantity}
-                                onchange={() => line.normalizeQuantity()}
-                                list={section.isFunction ? `params-${uid}` : undefined}
-                                inputmode={line.timeUnit() || section.isFunction ? 'text' : 'decimal'}
-                                placeholder={line.timeUnit() ? '3h 5m' : '0'}
-                                title={line.timeUnit() ? 'Duración: 3d 5h 1m 3s, 15:08 (horas:minutos) o un número' : 'Cuántas unidades gastas'}
-                                aria-label="Cantidad"
-                            />
+                        <td
+                            class={dropTarget === line ? 'drop-target' : ''}
+                            ondragover={(e) => section.isFunction && dragOver(e, line)}
+                            ondragleave={() => (dropTarget = null)}
+                            ondrop={(e) => dropParam(e, line)}
+                        >
+                            {#if section.params.includes(line.quantity.trim())}
+                                <span class="param flex w-24 items-center justify-between pr-1!">
+                                    <span class="font-mono text-sm">{line.quantity.trim()}</span>
+                                    <button class="mini px-0.5!" onclick={() => (line.quantity = '')} aria-label="Quitar el dato de la Cantidad">×</button>
+                                </span>
+                            {:else}
+                                <input
+                                    class="numeric highlighted w-24"
+                                    bind:value={line.quantity}
+                                    onchange={() => line.normalizeQuantity()}
+                                    inputmode={line.timeUnit() ? 'text' : 'decimal'}
+                                    placeholder={line.timeUnit() ? '3h 5m' : '0'}
+                                    title={line.timeUnit() ? 'Duración: 3d 5h 1m 3s, 15:08 (horas:minutos) o un número' : 'Cuántas unidades gastas'}
+                                    aria-label="Cantidad"
+                                />
+                            {/if}
                         </td>
                         <td>
                             {#if fn}
@@ -316,11 +382,6 @@
                 </tr>
             </tbody>
         </table>
-        {#if section.isFunction}
-            <datalist id="params-{uid}">
-                {#each section.params as param (param)}<option value={param}></option>{/each}
-            </datalist>
-        {/if}
     </div>
 </div>
 
@@ -331,13 +392,21 @@
     .recipe-card {
         @apply min-w-0 rounded-md border-2 border-recipe bg-white shadow-[4px_4px_0_var(--recipe)];
     }
-    /* Cabecera de una receta: título, datos, fórmula y acciones, sobre fondo pósit. */
+    /* Cabecera de una receta: título, datos y acciones, sobre fondo pósit. */
     .recipe-header {
         @apply flex flex-wrap items-center gap-3 border-b-2 border-recipe bg-recipe-soft px-4 py-2;
     }
     /* Dato de una receta, como una pastilla marrón (en la cabecera o en una Cantidad). */
     .param {
         @apply rounded-full border-2 border-recipe bg-recipe-soft px-2.5 py-0.5 font-semibold text-recipe-ink;
+    }
+    /* Hueco para escribir un dato nuevo de una receta. */
+    .param-ghost {
+        @apply w-24 rounded-full border-2 border-dashed border-recipe bg-white/60 px-2.5 py-0.5 font-mono text-sm italic placeholder:text-[#9AA9B8];
+    }
+    /* Cantidad sobre la que se arrastra un dato. */
+    .drop-target {
+        @apply outline-2 -outline-offset-2 outline-recipe outline-dashed;
     }
     /* Desplegable «Tipo» de una línea que llama a una receta. */
     .recipe-type {

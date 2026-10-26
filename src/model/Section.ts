@@ -41,6 +41,9 @@ function assertReorder<T>(current: T[], next: T[]): void {
 
 /** Sección `## Título`, o `## ƒ Título (datos)` si es un grupo función. Avisa de sus cambios y de los de sus filas. */
 export class Section implements Serializable, Observable {
+    /** Máximo de datos de entrada de una receta. */
+    static readonly MAX_PARAMS = 3
+
     #title: string
     /** Datos de entrada si es un grupo función; si no, `null`. */
     #params: string[] | null = null
@@ -323,14 +326,13 @@ export class Section implements Serializable, Observable {
     }
 
     /**
-     * Crea un grupo función con un dato y una línea en blanco que lo usa como Cantidad.
-     * @param title Título del grupo.
-     * @returns El grupo nuevo.
+     * Crea una receta sin datos y con una línea en blanco.
+     * @param title Título de la receta.
+     * @returns La receta nueva.
      */
     static blankFunction(title: string): Section {
         const section = Section.blank(title)
-        section.#params = ['dato']
-        section.lines[0].quantity = 'dato'
+        section.#params = []
         return section
     }
 
@@ -348,6 +350,9 @@ export class Section implements Serializable, Observable {
         const section = new Section(fn ? fn[1] : heading)
         if (fn) {
             section.#params = fn[2].split(',').map((param) => param.trim()).filter(Boolean)
+            if (section.#params.length > Section.MAX_PARAMS) {
+                reader.fail(`como mucho ${Section.MAX_PARAMS} datos en «## ƒ Título (dato, dato)»`)
+            }
         }
         reader.readColumns(Line.COLUMNS)
         while (atRow(reader)) {

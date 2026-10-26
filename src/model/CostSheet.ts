@@ -27,6 +27,13 @@ import { Table } from './text/Table.ts'
 const atRow = (reader: DocumentReader) => !(reader.peek()?.startsWith('#') ?? true)
 
 /**
+ * Nombre de un dato de receta sin lo que rompe su escritura en el título (comas, paréntesis y «·»).
+ * @param name Nombre tal cual se escribe.
+ * @returns El nombre limpio, vacío si no queda nada.
+ */
+const cleanParam = (name: string) => name.replace(/[,()·]/g, ' ').trim()
+
+/**
  * Comprueba que `next` tiene los mismos elementos que `current` en otro orden.
  * @param current Elementos actuales.
  * @param next Elementos en el orden nuevo.
@@ -185,17 +192,18 @@ export class CostSheet implements Serializable, Observable {
     }
 
     /**
-     * Añade un dato de entrada a un grupo función, con un nombre que no tenga ya.
-     * @param section Grupo función.
-     * @returns El nombre del dato nuevo.
+     * Añade un dato de entrada al final de una receta, si cabe (`Section.MAX_PARAMS`).
+     * @param section Receta.
+     * @param name Nombre del dato; si queda vacío o ya existe, no se añade.
+     * @returns El nombre limpio con el que queda, o `null` si no se añade.
      */
-    addParam(section: Section): string {
-        let name = 'dato'
-        for (let i = 2; section.params.includes(name); i++) {
-            name = `dato ${i}`
+    addParam(section: Section, name: string): string | null {
+        const clean = cleanParam(name)
+        if (!clean || section.params.includes(clean) || section.params.length >= Section.MAX_PARAMS) {
+            return null
         }
-        section.setParams([...section.params, name])
-        return name
+        section.setParams([...section.params, clean])
+        return clean
     }
 
     /**
@@ -205,7 +213,7 @@ export class CostSheet implements Serializable, Observable {
      * @param to Nombre nuevo; si queda vacío o ya existe, no cambia nada.
      */
     renameParam(section: Section, from: string, to: string): void {
-        const name = to.replace(/[,()·]/g, ' ').trim()
+        const name = cleanParam(to)
         if (!name || section.params.includes(name)) {
             return
         }
