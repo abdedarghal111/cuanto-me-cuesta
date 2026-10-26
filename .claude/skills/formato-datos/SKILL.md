@@ -24,7 +24,7 @@ Categorías: Material, Impresora, Mano de obra
 Texto libre de varias líneas.
 ```
 
-## ƒ Impresión 3D (tiempo, gramos) (= tiempo × 0,128 €/h + gramos × 0,012 €/g + 15 %)
+## [Receta] Impresión 3D (tiempo, gramos) (= tiempo × 0,128 €/h + gramos × 0,012 €/g + 15 %)
 Cuenta | Concepto | Tipo | Precio | Cantidad | Categoría | = Coste
 sí     | …
 
@@ -46,7 +46,7 @@ no     | …
 …
 ````
 
-- Delimitadores: `#` abre la hoja (su nombre), `##` una sección, `### Recargos` los recargos de la sección, `# Sobre el total` los recargos globales y `# Resumen` el final de lo que se lee. Cada título cierra la parte anterior.
+- Delimitadores: `#` abre la hoja (su nombre), `##` una sección (`## [Receta]` si es una receta), `### Recargos` los recargos de la sección, `# Sobre el total` los recargos globales y `# Resumen` el final de lo que se lee. Cada título cierra la parte anterior.
 - Orden: nombre, `Fecha:`, `Categorías:`, observaciones, secciones y `# Sobre el total`.
 - Las observaciones van en un bloque ` ```observaciones ` … ` ``` ` y se toman tal cual. El bloque va siempre, aunque esté vacío. Si el texto contiene una línea ` ``` `, el bloque se escribe con una valla más larga (```` ```` ````).
 - `# Sobre el total` aparece cuando hay recargos globales.
@@ -67,7 +67,7 @@ no     | …
 
 ## Recetas
 
-- Una receta es una sección `## ƒ Título (dato, dato)` con hasta 3 datos de entrada (o ninguno, `()`), que no suma por sí sola. La app las muestra arriba, en el estante «Recetas».
+- Una receta es una sección `## [Receta] Título (dato, dato)` con hasta 3 datos de entrada (o ninguno, `()`), que no suma por sí sola. La app las muestra arriba, en el estante «Recetas».
 - Sus líneas son de los tipos básicos, y en Cantidad llevan el nombre de uno de sus datos (`gramos`) o un número fijo. Un dato usado por una línea que se gasta por duraciones es de tiempo.
 - Sus recargos se aplican en cada unidad que se calcula.
 - Una línea la llama con su título en Tipo y sus datos en Precio, separados por ` · ` (`tiempo 43m · gramos 9,6`). Una unidad cuesta lo que la receta con esos datos, recargos incluidos, y la Cantidad dice cuántas.
@@ -121,7 +121,7 @@ Remodelación: ya tenía tornillos y palos. 2 paralelas.
 Pendiente: confirmar el precio del filamento con el proveedor.
 ```
 
-## ƒ Impresión 3D (tiempo, gramos) (= tiempo × 0,128 €/h + gramos × 0,012 €/g + 15 %)
+## [Receta] Impresión 3D (tiempo, gramos) (= tiempo × 0,128 €/h + gramos × 0,012 €/g + 15 %)
 Cuenta | Concepto                 | Tipo | Precio            | Cantidad | Categoría |     = Coste
 sí     | Filamento PLA            | lote | 12 € por 1000 g   |   gramos | Prototipo | = 0,012 €/g
 sí     | Luz 140 W a 0,20 €/kWh   | luz  | 140 W a 0,2 €/kWh |   tiempo | Prototipo | = 0,028 €/h
@@ -176,7 +176,7 @@ Guardado: 13/10/2026, 13:59:51
     luz:   la potencia y el precio de la luz (140 W a 0,20 €/kWh).
 - Escribe en Cantidad cuántas unidades gastas (3 o 350). En horas, en luz y en un lote por d, h o min, escribe una duración (3d 5h 1m 3s o 15:08).
 - Calcula así: Coste = precio de una unidad × Cantidad.
-- Abre una receta con «## ƒ Título (dato, dato)», con hasta 3 datos. No suma por sí sola. En Cantidad, sus líneas llevan el nombre de un dato o un número.
+- Abre una receta con «## [Receta] Título (dato, dato)», con hasta 3 datos. No suma por sí sola. En Cantidad, sus líneas llevan el nombre de un dato o un número.
 - Para usar una receta, pon su título en Tipo, sus datos en Precio separados por « · » (tiempo 43m · gramos 9,6) y en Cantidad cuántas veces. Una unidad cuesta lo que la receta con esos datos, con sus recargos.
 - Cada recargo de sección es un % de la suma de las líneas que suman en esa sección.
 - Los recargos de «# Sobre el total» se aplican en orden, cada uno sobre lo acumulado.

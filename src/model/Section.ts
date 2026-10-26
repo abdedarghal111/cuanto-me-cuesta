@@ -14,11 +14,11 @@ import type { DocumentReader } from './text/DocumentReader.ts'
 import { formatEuros, formatNumber, parseNumber } from './text/numbers.ts'
 import { Table } from './text/Table.ts'
 
-/** Marca que va delante del título de un grupo función. */
-const FUNCTION_MARK = 'ƒ'
+/** Marca que va delante del título de una receta. */
+const FUNCTION_MARK = '[Receta]'
 
-/** Título de un grupo función: «ƒ Nombre (dato, dato)». */
-const FUNCTION_TITLE = /^ƒ\s*(.*?)\s*\(([^()]*)\)$/
+/** Título de una receta: «[Receta] Nombre (dato, dato)». */
+const FUNCTION_TITLE = /^\[Receta\]\s*(.*?)\s*\(([^()]*)\)$/
 
 /**
  * Si la siguiente línea del lector es una fila de tabla (no un título ni el final).
@@ -39,7 +39,7 @@ function assertReorder<T>(current: T[], next: T[]): void {
     }
 }
 
-/** Sección `## Título`, o `## ƒ Título (datos)` si es un grupo función. Avisa de sus cambios y de los de sus filas. */
+/** Sección `## Título`, o `## [Receta] Título (datos)` si es una receta. Avisa de sus cambios y de los de sus filas. */
 export class Section implements Serializable, Observable {
     /** Máximo de datos de entrada de una receta. */
     static readonly MAX_PARAMS = 3
@@ -345,13 +345,13 @@ export class Section implements Serializable, Observable {
         const heading = reader.heading(Delimiter.SECTION)
         const fn = heading.startsWith(FUNCTION_MARK) ? heading.match(FUNCTION_TITLE) : null
         if (heading.startsWith(FUNCTION_MARK) && !fn) {
-            reader.fail('«## ƒ Título (dato, dato)» en un grupo función')
+            reader.fail('«## [Receta] Título (dato, dato)» en una receta')
         }
         const section = new Section(fn ? fn[1] : heading)
         if (fn) {
             section.#params = fn[2].split(',').map((param) => param.trim()).filter(Boolean)
             if (section.#params.length > Section.MAX_PARAMS) {
-                reader.fail(`como mucho ${Section.MAX_PARAMS} datos en «## ƒ Título (dato, dato)»`)
+                reader.fail(`como mucho ${Section.MAX_PARAMS} datos en «## [Receta] Título (dato, dato)»`)
             }
         }
         reader.readColumns(Line.COLUMNS)
