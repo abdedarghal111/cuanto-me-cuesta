@@ -15,6 +15,7 @@
 </script>
 
 <script lang="ts">
+    import { tick } from 'svelte'
     import type { CostSheet } from '../model/CostSheet.ts'
     import { Line } from '../model/Line.ts'
     import type { BasicLineType } from '../model/LineType.ts'
@@ -31,18 +32,29 @@
     /** Grupos función a los que pueden llamar sus líneas; desde un grupo función, ninguno. */
     const functions = $derived(section.isFunction ? [] : product.functions)
 
-    /** Añade una línea en blanco con la categoría de la última. */
-    function addLine() {
-        const line = new Line()
-        product.assignCategory(line, section.lastCategory())
-        section.addLine(line)
-    }
+    /** Tarjeta del bloque, para pasar el foco a la fila que se crea. */
+    let card: HTMLDivElement
 
-    /** Añade un recargo en blanco con la categoría de la última línea. */
-    function addSurcharge() {
-        const surcharge = new Surcharge(false)
-        product.assignCategory(surcharge, section.lastCategory())
-        section.addSurcharge(surcharge)
+    /**
+     * Crea una línea o un recargo con lo que se ha escrito en su fila fantasma, con la categoría de la última
+     * línea, vacía la fila y pasa el foco al concepto de la fila nueva para seguir escribiendo.
+     * @param input Campo de la fila fantasma.
+     * @param kind Qué se crea.
+     */
+    async function addFromGhost(input: HTMLInputElement, kind: 'line' | 'surcharge') {
+        const item = kind === 'line' ? new Line() : new Surcharge(false)
+        item.name = input.value
+        product.assignCategory(item, section.lastCategory())
+        if (item instanceof Line) {
+            section.addLine(item)
+        } else {
+            section.addSurcharge(item)
+        }
+        input.value = ''
+        await tick()
+        const field = [...card.querySelectorAll<HTMLInputElement>(`[data-concept="${kind}"]`)].at(-1)
+        field?.focus()
+        field?.setSelectionRange(field.value.length, field.value.length)
     }
 
     /**
@@ -87,7 +99,7 @@
     }
 </script>
 
-<div class="overflow-hidden {section.isFunction ? 'function-card' : 'paper'}">
+<div class="overflow-hidden {section.isFunction ? 'function-card' : 'paper'}" bind:this={card}>
     <div class={section.isFunction ? 'function-header' : 'card-header'}>
         {#if section.isFunction}
             <span class="hand-title text-[34px] text-accent" title="Grupo función: no suma por sí solo">ƒ</span>
@@ -158,7 +170,7 @@
                     <tr class="cost-row {line.counts ? '' : 'opacity-45'}">
                         <td><input type="checkbox" class="check" bind:checked={line.counts} aria-label="Cuenta" /></td>
                         <td class="w-full">
-                            <input class="concept-input" bind:value={line.name} placeholder="Ej. Filamento PLA" aria-label="Concepto" />
+                            <input class="concept-input" bind:value={line.name} placeholder="Ej. Filamento PLA" aria-label="Concepto" data-concept="line" />
                         </td>
                         <td>
                             <select
@@ -237,6 +249,17 @@
                         <td><RowActions list={section.lines} index={lineIndex} reorder={(lines) => (section.lines = lines)} onremove={() => section.removeLine(line)} /></td>
                     </tr>
                 {/each}
+                <tr class="ghost-row">
+                    <td class="ghost-mark">+</td>
+                    <td colspan="7">
+                        <input
+                            class="ghost-input"
+                            placeholder="Escribe aquí para añadir una línea…"
+                            oninput={(e) => addFromGhost(e.currentTarget, 'line')}
+                            aria-label="Nueva línea"
+                        />
+                    </td>
+                </tr>
                 {#if section.surcharges.length}
                     <tr class="border-t-2 border-dashed border-[#AEBCCB] bg-[#E8EFF8]">
                         <td colspan="8" class="font-mono text-xs text-[#3F4E5D]">
@@ -248,7 +271,7 @@
                     <tr class="cost-row {surcharge.counts ? '' : 'opacity-45'}">
                         <td><input type="checkbox" class="check" bind:checked={surcharge.counts} aria-label="Cuenta" /></td>
                         <td class="w-full">
-                            <input class="concept-input" bind:value={surcharge.name} placeholder="Ej. Riesgo por fallos" aria-label="Concepto" />
+                            <input class="concept-input" bind:value={surcharge.name} placeholder="Ej. Riesgo por fallos" aria-label="Concepto" data-concept="surcharge" />
                         </td>
                         <td colspan="3">
                             <span class="inline-flex items-center gap-1">
@@ -265,6 +288,17 @@
                         <td><RowActions list={section.surcharges} index={surchargeIndex} reorder={(surcharges) => (section.surcharges = surcharges)} onremove={() => section.removeSurcharge(surcharge)} /></td>
                     </tr>
                 {/each}
+                <tr class="ghost-row">
+                    <td class="ghost-mark">+</td>
+                    <td colspan="7">
+                        <input
+                            class="ghost-input"
+                            placeholder="Escribe aquí para añadir un recargo (% {section.isFunction ? 'del grupo' : 'del bloque'})…"
+                            oninput={(e) => addFromGhost(e.currentTarget, 'surcharge')}
+                            aria-label="Nuevo recargo"
+                        />
+                    </td>
+                </tr>
             </tbody>
         </table>
         {#if section.isFunction}
@@ -272,10 +306,6 @@
                 {#each section.params as param (param)}<option value={param}></option>{/each}
             </datalist>
         {/if}
-    </div>
-    <div class="card-footer flex gap-5">
-        <button class="add-link" onclick={addLine}>+ línea</button>
-        <button class="add-link" onclick={addSurcharge}>+ recargo (% {section.isFunction ? 'del grupo' : 'del bloque'})</button>
     </div>
 </div>
 
@@ -297,6 +327,16 @@
     /* Desplegable «Tipo» de una línea que llama a un grupo función. */
     .function-type {
         @apply border-2 border-accent bg-[#E3ECFA] font-semibold text-accent;
+    }
+    /* Fila fantasma al final de las líneas o de los recargos: al escribir en ella se crea una fila nueva. */
+    .ghost-row {
+        @apply border-t border-dashed border-[#AEBCCB];
+    }
+    .ghost-mark {
+        @apply text-center font-mono text-lg text-[#AEBCCB];
+    }
+    .ghost-input {
+        @apply concept-input border-dashed italic placeholder:text-[#9AA9B8];
     }
     /* Celda del precio de una unidad: sus campos en fila con el texto que los une («€ por», «W a»…). */
     .price-cell {
