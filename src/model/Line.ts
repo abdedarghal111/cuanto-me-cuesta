@@ -1,5 +1,5 @@
 /**
- * @file Línea de gasto: sus valores, su coste y cómo se normaliza según su tipo.
+ * @file Línea de gasto: el precio de una unidad, escrito según su tipo, por la Cantidad.
  */
 
 import { LineItem } from './LineItem.ts'
@@ -8,78 +8,87 @@ import type { SerializableClass } from './SerializableClass.ts'
 import { Column } from './text/Column.ts'
 import type { DocumentReader } from './text/DocumentReader.ts'
 import {
-    TIME_UNIT_SECONDS, durationSeconds, formatNumber, normalizeDuration, normalizeNumber, parseNumber, timeUnit,
+    TIME_UNIT_SECONDS, durationSeconds, isTimeUnit, normalizeDuration, normalizeNumber, parseNumber, type TimeUnit,
 } from './text/numbers.ts'
 
-/** Valores de texto de una línea que dependen de su tipo. */
-interface LineValues {
+/** Partes del precio de una línea, como texto. */
+interface PriceParts {
     price: string
-    per: string
+    size: string
     unit: string
-    usage: string
-}
-
-/** Valores numéricos con los que se calcula el coste de una línea. */
-interface CostInputs {
-    price: number
-    per: number
-    usage: number
+    watts: string
 }
 
 /** Comportamiento de un tipo de línea. */
 interface LineTypeRules {
-    /** Precio, Por, Unidad y Consumo normalizados. */
-    normalize(line: Line): LineValues
-    /** Precio, Por y Consumo como números, con sus valores por defecto. */
-    costInputs(line: Line): CostInputs
-    /** Valores que cambian al elegir este tipo para una línea; los que no da se quedan igual. */
-    onSelect(line: Line): Partial<LineValues>
+    /** Patrón de la celda Precio; cada grupo es una de `parts`, en orden. */
+    pattern: RegExp
+    /** Partes que lleva la celda Precio. */
+    parts: (keyof PriceParts)[]
+    /** Lo que se espera en la celda Precio, para el error. */
+    expected: string
+    /** Escribe la celda Precio. */
+    format(line: Line): string
+    /** Precio de una unidad, en €. */
+    unitPrice(line: Line): number
+    /** Unidad de tiempo de la Cantidad, o `null` si la Cantidad es un número. */
+    timeUnit(line: Line): TimeUnit | null
 }
+
+/**
+ * Número de una parte del precio.
+ * @param text Texto de la parte.
+ * @param fallback Valor si está vacía o no es un número.
+ * @returns El número.
+ */
+const num = (text: string, fallback = 0) => parseNumber(text) ?? fallback
 
 /** Reglas de cada tipo. Un tipo nuevo solo necesita su entrada aquí y en `LineType`. */
 const LINE_TYPE_RULES: Record<LineType, LineTypeRules> = {
-    number: {
-        normalize: (line) => ({
-            price: normalizeNumber(line.price),
-            per: normalizeNumber(line.per),
-            unit: line.unit.trim(),
-            usage: normalizeNumber(line.usage),
-        }),
-        costInputs: (line) => ({ price: parseNumber(line.price) ?? 0, per: parseNumber(line.per) ?? 1, usage: parseNumber(line.usage) ?? 0 }),
-        onSelect: () => ({}),
+    common: {
+        pattern: /^(.*?)\s*€$/,
+        parts: ['price'],
+        expected: 'en Precio el precio de una unidad («6,5 €»)',
+        format: (line) => `${normalizeNumber(line.price)} €`,
+        unitPrice: (line) => num(line.price),
+        timeUnit: () => null,
     },
-    time: {
-        normalize: (line) => {
-            const unit = timeUnit(line.unit)
-            // Un Por en horas:minutos ("3000:00") pasa a número.
-            const per = parseNumber(line.per, true)
-            return {
-                price: normalizeNumber(line.price),
-                per: per === null ? line.per.trim() : formatNumber(per),
-                unit,
-                usage: normalizeDuration(line.usage, unit),
-            }
+    lot: {
+        pattern: /^(.*?)\s*€ por(?:\s+(\S+))?(?:\s+(.+))?$/,
+        parts: ['price', 'size', 'unit'],
+        expected: 'en Precio lo que costó el lote y lo que trae («4,2 € por 20 ud»)',
+        format: (line) => `${normalizeNumber(line.price)} € por ${normalizeNumber(line.size)} ${line.unit.trim()}`,
+        unitPrice: (line) => {
+            const size = num(line.size, 1)
+            return size === 0 ? 0 : num(line.price) / size
         },
-        // El Consumo se pasa a la unidad de la línea.
-        costInputs: (line) => ({
-            price: parseNumber(line.price) ?? 0,
-            per: parseNumber(line.per, true) ?? 1,
-            usage: (durationSeconds(line.usage, line.unit) ?? 0) / TIME_UNIT_SECONDS[timeUnit(line.unit)],
-        }),
-        // La Unidad queda en d, h o min.
-        onSelect: (line) => ({ unit: timeUnit(line.unit) }),
+        // Un lote por d, h o min se gasta por duraciones.
+        timeUnit: (line) => {
+            const unit = line.unit.trim()
+            return isTimeUnit(unit) ? unit : null
+        },
     },
-    fixed: {
-        normalize: (line) => ({ price: '1', per: '1', unit: line.unit.trim(), usage: normalizeNumber(line.usage) }),
-        costInputs: (line) => ({ price: 1, per: 1, usage: parseNumber(line.usage) ?? 0 }),
-        // Precio y Por pasan a 1, y una Unidad vacía pasa a €.
-        onSelect: (line) => ({ price: '1', per: '1', unit: line.unit.trim() || '€' }),
+    hours: {
+        pattern: /^(.*?)\s*€\/h$/,
+        parts: ['price'],
+        expected: 'en Precio el precio de una hora («12 €/h»)',
+        format: (line) => `${normalizeNumber(line.price)} €/h`,
+        unitPrice: (line) => num(line.price),
+        timeUnit: () => 'h',
+    },
+    power: {
+        pattern: /^(.*?)\s*W a\s*(.*?)\s*€\/kWh$/,
+        parts: ['watts', 'price'],
+        expected: 'en Precio la potencia y el precio de la luz («140 W a 0,20 €/kWh»)',
+        format: (line) => `${normalizeNumber(line.watts)} W a ${normalizeNumber(line.price)} €/kWh`,
+        unitPrice: (line) => (num(line.watts) / 1000) * num(line.price),
+        timeUnit: () => 'h',
     },
 }
 
 /**
- * Línea de gasto, en blanco y de tipo número al crearse. Los números se guardan como texto tal cual se escriben
- * ("11,21", "0,5", "15:08").
+ * Línea de gasto, en blanco y de tipo común al crearse. Coste = precio de una unidad × Cantidad. Los números se
+ * guardan como texto tal cual se escriben ("11,21", "0,5", "15:08").
  */
 export class Line extends LineItem {
     /** Columnas de la tabla de líneas de una sección. */
@@ -87,45 +96,30 @@ export class Line extends LineItem {
         new Column('Cuenta', 'counts'),
         new Column('Concepto', 'name'),
         new Column('Tipo', 'type'),
-        new Column('Precio €', 'price', true),
-        new Column('Por', 'per', true),
-        new Column('Unidad', 'unit'),
-        new Column('Consumo', 'usage', true),
-        new Column('Multiplicador', 'multiplier', true),
+        new Column('Precio', 'price'),
+        new Column('Cantidad', 'quantity', true),
         new Column('Categoría', 'category'),
-        new Column('= Coste', 'cost'),
+        new Column('= Coste', 'cost', true),
     ]
 
-    #type: LineType = 'number'
+    #type: LineType = 'common'
     #price = ''
-    #per = '1'
+    #size = ''
     #unit = ''
-    #usage = ''
-    #multiplier = '1'
+    #watts = ''
+    #quantity = ''
 
-    /**
-     * Tipo: cómo se escriben Por y Consumo. Al cambiarlo se aplican las reglas del tipo nuevo: `fixed` pone Precio
-     * y Por a 1 y una Unidad vacía a €, y `time` deja la Unidad en d, h o min. Al leer un archivo no se aplican.
-     */
+    /** Tipo: cómo se escribe el precio de una unidad. */
     get type(): LineType {
         return this.#type
     }
 
-    /**
-     * Cambia el tipo, aplica las reglas del tipo nuevo y avisa una sola vez.
-     * @param type Tipo nuevo.
-     */
     set type(type: LineType) {
         this.#type = type
-        const values = LINE_TYPE_RULES[type].onSelect(this)
-        this.#price = values.price ?? this.#price
-        this.#per = values.per ?? this.#per
-        this.#unit = values.unit ?? this.#unit
-        this.#usage = values.usage ?? this.#usage
         this.notify()
     }
 
-    /** Precio, en €. */
+    /** Precio en €: de una unidad (`common`), del lote (`lot`), de una hora (`hours`) o del kWh (`power`). */
     get price(): string {
         return this.#price
     }
@@ -135,17 +129,17 @@ export class Line extends LineItem {
         this.notify()
     }
 
-    /** Cantidad a la que corresponde el precio; vacío vale 1. */
-    get per(): string {
-        return this.#per
+    /** Lo que trae el lote (`lot`); vacío vale 1. */
+    get size(): string {
+        return this.#size
     }
 
-    set per(per: string) {
-        this.#per = per
+    set size(size: string) {
+        this.#size = size
         this.notify()
     }
 
-    /** Texto libre para leer la línea (g, m, l, uds…); en `time` es d, h o min. */
+    /** Unidad del lote (`lot`): texto libre (g, ml, ud…); con d, h o min, la Cantidad es una duración. */
     get unit(): string {
         return this.#unit
     }
@@ -155,50 +149,66 @@ export class Line extends LineItem {
         this.notify()
     }
 
-    /** Consumo: un número, una duración o un importe, según el tipo. */
-    get usage(): string {
-        return this.#usage
+    /** Potencia en W (`power`). */
+    get watts(): string {
+        return this.#watts
     }
 
-    set usage(usage: string) {
-        this.#usage = usage
+    set watts(watts: string) {
+        this.#watts = watts
         this.notify()
     }
 
-    /** Cuántas veces se repite el consumo; vacío vale 1. Admite decimales. */
-    get multiplier(): string {
-        return this.#multiplier
+    /** Cantidad: un número, o una duración si el tipo se gasta por tiempo. */
+    get quantity(): string {
+        return this.#quantity
     }
 
-    set multiplier(multiplier: string) {
-        this.#multiplier = multiplier
+    set quantity(quantity: string) {
+        this.#quantity = quantity
         this.notify()
     }
 
     /**
-     * Coste = Precio / Por × Consumo × Multiplicador. En `fixed`, Consumo × Multiplicador; en `time`, el Consumo
-     * se pasa a la unidad de la línea.
+     * Unidad de tiempo de la Cantidad.
+     * @returns d, h o min si la Cantidad es una duración; si no, `null`.
+     */
+    timeUnit(): TimeUnit | null {
+        return LINE_TYPE_RULES[this.#type].timeUnit(this)
+    }
+
+    /**
+     * Precio de una unidad: de una pieza, de una unidad del lote o de una hora.
+     * @returns El precio en €.
+     */
+    unitPrice(): number {
+        return LINE_TYPE_RULES[this.#type].unitPrice(this)
+    }
+
+    /**
+     * Cantidad como número; una duración, en la unidad de tiempo de la línea.
+     * @returns La cantidad, o 0 si está vacía o no es válida.
+     */
+    amount(): number {
+        const unit = this.timeUnit()
+        if (unit) {
+            return (durationSeconds(this.#quantity, unit) ?? 0) / TIME_UNIT_SECONDS[unit]
+        }
+        return parseNumber(this.#quantity) ?? 0
+    }
+
+    /**
+     * Coste = precio de una unidad × Cantidad.
      * @returns El coste en €.
      */
     cost(): number {
-        const { price, per, usage } = LINE_TYPE_RULES[this.#type].costInputs(this)
-        return per === 0 ? 0 : (price / per) * usage * (parseNumber(this.#multiplier) ?? 1)
+        return this.unitPrice() * this.amount()
     }
 
-    /** Normaliza Precio, Por, Unidad, Consumo y Multiplicador según el tipo, y avisa del cambio. */
-    normalize(): void {
-        const values = this.#normalized()
-        this.#price = values.price
-        this.#per = values.per
-        this.#unit = values.unit
-        this.#usage = values.usage
-        this.#multiplier = values.multiplier
-        this.notify()
-    }
-
-    /** Normaliza solo el Consumo según el tipo (en `time`, una duración como "3d 5h 1m"), y avisa del cambio. */
-    normalizeUsage(): void {
-        this.#usage = LINE_TYPE_RULES[this.#type].normalize(this).usage
+    /** Normaliza solo la Cantidad (una duración como "3d 5h 1m" si se gasta por tiempo), y avisa del cambio. */
+    normalizeQuantity(): void {
+        const unit = this.timeUnit()
+        this.#quantity = unit ? normalizeDuration(this.#quantity, unit) : normalizeNumber(this.#quantity)
         this.notify()
     }
 
@@ -207,16 +217,13 @@ export class Line extends LineItem {
      * @returns Las celdas, en el orden de `COLUMNS` sin «= Coste».
      */
     serialize(): string[] {
-        const values = this.#normalized()
+        const unit = this.timeUnit()
         return [
             this.counts ? 'sí' : 'no',
             this.name,
             LINE_TYPE_LABELS[this.#type],
-            values.price,
-            values.per,
-            values.unit,
-            values.usage,
-            values.multiplier,
+            LINE_TYPE_RULES[this.#type].format(this).trim(),
+            unit ? normalizeDuration(this.#quantity, unit) : normalizeNumber(this.#quantity),
             this.category,
         ]
     }
@@ -232,10 +239,10 @@ export class Line extends LineItem {
         copy.name = this.name
         copy.#type = this.#type
         copy.#price = this.#price
-        copy.#per = this.#per
+        copy.#size = this.#size
         copy.#unit = this.#unit
-        copy.#usage = this.#usage
-        copy.#multiplier = this.#multiplier
+        copy.#watts = this.#watts
+        copy.#quantity = this.#quantity
         return copy
     }
 
@@ -248,23 +255,37 @@ export class Line extends LineItem {
         const values = reader.cells()
         const type = (Object.keys(LINE_TYPE_LABELS) as LineType[]).find((t) => LINE_TYPE_LABELS[t] === values.type)
         if (!type) {
-            reader.fail(`en Tipo uno de: ${Object.values(LINE_TYPE_LABELS).join(', ')}`)
+            return reader.fail(`en Tipo uno de: ${Object.values(LINE_TYPE_LABELS).join(', ')}`)
         }
         const line = new Line()
         line.readCommon(values, reader)
         line.#type = type
-        line.#price = values.price
-        line.#per = values.per
-        line.#unit = values.unit
-        line.#usage = values.usage
-        line.#multiplier = values.multiplier
-        line.normalize()
+        line.#readPrice(values.price, reader)
+        line.#quantity = values.quantity
+        line.normalizeQuantity()
         return line
     }
 
-    /** Valores normalizados según el tipo, sin cambiar la línea. */
-    #normalized(): LineValues & { multiplier: string } {
-        return { ...LINE_TYPE_RULES[this.#type].normalize(this), multiplier: normalizeNumber(this.#multiplier) }
+    /**
+     * Toma las partes del precio de la celda Precio, según el tipo.
+     * @param cell Celda Precio.
+     * @param reader Lector de la hoja, para el error.
+     * @throws {ParseError} Si la celda no encaja con el tipo.
+     */
+    #readPrice(cell: string, reader: DocumentReader): void {
+        const rules = LINE_TYPE_RULES[this.#type]
+        const match = cell.match(rules.pattern)
+        if (!match) {
+            reader.fail(rules.expected)
+        }
+        const parts: PriceParts = { price: '', size: '', unit: '', watts: '' }
+        rules.parts.forEach((part, i) => {
+            parts[part] = (match[i + 1] ?? '').trim()
+        })
+        this.#price = normalizeNumber(parts.price)
+        this.#size = normalizeNumber(parts.size)
+        this.#unit = parts.unit
+        this.#watts = normalizeNumber(parts.watts)
     }
 }
 

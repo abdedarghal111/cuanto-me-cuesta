@@ -6,12 +6,9 @@
 
 <script lang="ts" module>
     import { LINE_TYPE_LABELS } from '../model/LineType.ts'
-    import { TIME_UNIT_LABELS } from '../model/text/numbers.ts'
 
     /** Opciones del desplegable «Tipo»: el valor de cada tipo y su nombre. */
     const LINE_TYPE_OPTIONS = Object.entries(LINE_TYPE_LABELS)
-    /** Opciones del desplegable «Unidad» del tipo `time`: el valor de cada unidad y su nombre. */
-    const TIME_UNIT_OPTIONS = Object.entries(TIME_UNIT_LABELS)
 </script>
 
 <script lang="ts">
@@ -67,12 +64,9 @@
                 <tr>
                     <th title="Si lo quitas, la línea se ve pero no suma">✓</th>
                     <th>Concepto</th>
-                    <th title="Cómo se escriben «por» y «consumo»: número, tiempo (una duración como 3d 5h 1m) o fijo (un importe en €)">Tipo</th>
-                    <th>Precio €</th>
-                    <th>por</th>
-                    <th title="Texto libre para leerlo: g, m, l, uds…">Unidad</th>
-                    <th>Consumo</th>
-                    <th title="Multiplicador: cuántas veces se repite el consumo (admite 0,5)">×</th>
+                    <th title="Cómo se escribe el precio: común, lote (lo que costó y lo que trae), horas o luz">Tipo</th>
+                    <th class="text-left">Precio de una unidad</th>
+                    <th title="Cuántas unidades gastas; en horas, luz y lotes por d, h o min, una duración como 3d 5h 1m">× Cantidad</th>
                     <th>Categoría</th>
                     <th>Coste</th>
                     <th></th>
@@ -90,37 +84,37 @@
                                 {#each LINE_TYPE_OPTIONS as [value, label] (value)}<option {value}>{label}</option>{/each}
                             </select>
                         </td>
-                        {#if line.type === 'fixed'}
-                            <td><input class="numeric w-20" value="1" disabled aria-label="Precio €" /></td>
-                            <td><input class="numeric w-16" value="1" disabled aria-label="Por" /></td>
-                        {:else}
-                            <td><input class="numeric w-20" bind:value={line.price} inputmode="decimal" placeholder="0" aria-label="Precio €" /></td>
-                            <td><input class="numeric w-16" bind:value={line.per} inputmode="decimal" placeholder="1" aria-label="Por" /></td>
-                        {/if}
                         <td>
-                            {#if line.type === 'time'}
-                                <select class="w-24 font-mono text-sm" bind:value={line.unit} aria-label="Unidad">
-                                    {#each TIME_UNIT_OPTIONS as [value, label] (value)}<option {value}>{label}</option>{/each}
-                                </select>
-                            {:else}
-                                <input class="w-24 font-mono text-sm" bind:value={line.unit} placeholder="g, m…" aria-label="Unidad" />
-                            {/if}
+                            <span class="price-cell">
+                                {#if line.type === 'power'}
+                                    <input class="numeric w-18" bind:value={line.watts} inputmode="decimal" placeholder="0" aria-label="Potencia en W" />
+                                    W a
+                                {/if}
+                                <input class="numeric w-18" bind:value={line.price} inputmode="decimal" placeholder="0" aria-label="Precio €" />
+                                {#if line.type === 'common'}
+                                    €
+                                {:else if line.type === 'lot'}
+                                    € por
+                                    <input class="numeric w-16" bind:value={line.size} inputmode="decimal" placeholder="1" aria-label="Lo que trae el lote" />
+                                    <input class="w-14 font-mono text-sm" bind:value={line.unit} placeholder="ud" aria-label="Unidad del lote" />
+                                {:else if line.type === 'hours'}
+                                    €/h
+                                {:else}
+                                    €/kWh
+                                {/if}
+                            </span>
                         </td>
                         <td>
-                            {#if line.type === 'time'}
-                                <input
-                                    class="numeric highlighted w-24"
-                                    bind:value={line.usage}
-                                    onchange={() => line.normalizeUsage()}
-                                    placeholder="3d 5h 1m"
-                                    title="Duración: 3d 5h 1m 3s, 15:08 (horas:minutos) o un número en la unidad"
-                                    aria-label="Consumo"
-                                />
-                            {:else}
-                                <input class="numeric highlighted w-24" bind:value={line.usage} inputmode="decimal" placeholder={line.type === 'fixed' ? '0,00 €' : '0'} aria-label="Consumo" />
-                            {/if}
+                            <input
+                                class="numeric highlighted w-24"
+                                bind:value={line.quantity}
+                                onchange={() => line.normalizeQuantity()}
+                                inputmode={line.timeUnit() ? 'text' : 'decimal'}
+                                placeholder={line.timeUnit() ? '3h 5m' : '0'}
+                                title={line.timeUnit() ? 'Duración: 3d 5h 1m 3s, 15:08 (horas:minutos) o un número' : 'Cuántas unidades gastas'}
+                                aria-label="Cantidad"
+                            />
                         </td>
-                        <td><input class="numeric w-12" bind:value={line.multiplier} inputmode="decimal" placeholder="1" aria-label="Multiplicador" /></td>
                         <td><TagSelect {product} item={line} /></td>
                         <td class="amount-cell {line.counts ? '' : 'line-through'}">{formatEuros(line.cost())}</td>
                         <td><RowActions list={section.lines} index={lineIndex} reorder={(lines) => (section.lines = lines)} onremove={() => section.removeLine(line)} /></td>
@@ -128,7 +122,7 @@
                 {/each}
                 {#if section.surcharges.length}
                     <tr class="border-t-2 border-dashed border-[#AEBCCB] bg-[#E8EFF8]">
-                        <td colspan="11" class="font-mono text-xs text-[#3F4E5D]">
+                        <td colspan="8" class="font-mono text-xs text-[#3F4E5D]">
                             Recargos sobre el bloque · base {formatEuros(base)}
                         </td>
                     </tr>
@@ -139,7 +133,7 @@
                         <td class="w-full">
                             <input class="concept-input" bind:value={surcharge.name} placeholder="Ej. Riesgo por fallos" aria-label="Concepto" />
                         </td>
-                        <td colspan="6">
+                        <td colspan="3">
                             <span class="inline-flex items-center gap-1">
                                 <input class="numeric highlighted w-18" bind:value={surcharge.percent} inputmode="decimal" placeholder="0" aria-label="Porcentaje" />
                                 <span class="font-mono text-[13px] text-[#3F4E5D]">% de la base</span>
@@ -158,3 +152,12 @@
         <button class="add-link" onclick={addSurcharge}>+ recargo (% del bloque)</button>
     </div>
 </div>
+
+<style lang="postcss">
+    @reference '../app.css';
+
+    /* Celda del precio de una unidad: sus campos en fila con el texto que los une («€ por», «W a»…). */
+    .price-cell {
+        @apply inline-flex items-center gap-1.5 font-mono text-[13px] text-muted;
+    }
+</style>

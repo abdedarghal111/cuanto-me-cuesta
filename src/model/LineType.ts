@@ -3,11 +3,11 @@
  */
 
 /**
- * Tipo de una línea: cómo se escriben «Por» y «Consumo».
- * `number`: números con decimales; `time`: la Unidad es d, h o min, Por es un número en esa unidad y el Consumo
- * una duración ("3d 5h 1m 3s"); `fixed`: Precio y Por valen 1 y el Consumo es el importe en €.
+ * Tipo de una línea: cómo se escribe el precio de una unidad.
+ * `common`: el precio ("6,5 €"); `lot`: lo que costó un lote y lo que trae ("4,2 € por 20 ud");
+ * `hours`: el precio de una hora ("12 €/h"); `power`: la potencia y el precio de la luz ("140 W a 0,20 €/kWh").
  */
-export type LineType = 'number' | 'time' | 'fixed'
+export type LineType = 'common' | 'lot' | 'hours' | 'power'
 
 /** Nombre de cada tipo en el archivo y en la pantalla. */
-export const LINE_TYPE_LABELS: Record<LineType, string> = { number: 'número', time: 'tiempo', fixed: 'fijo' }
+export const LINE_TYPE_LABELS: Record<LineType, string> = { common: 'común', lot: 'lote', hours: 'horas', power: 'luz' }

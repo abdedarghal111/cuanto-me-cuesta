@@ -2,21 +2,18 @@
  * @file Números, importes, porcentajes y duraciones: de texto a número y de número a texto, con coma decimal.
  */
 
-/** Unidad del tipo `time`: días, horas o minutos. */
+/** Unidad de tiempo: días, horas o minutos. */
 export type TimeUnit = 'd' | 'h' | 'min'
 
-/** Unidades del tipo `time`, con sus segundos. */
+/** Unidades de tiempo, con sus segundos. */
 export const TIME_UNIT_SECONDS: Record<TimeUnit, number> = { d: 86400, h: 3600, min: 60 }
 
-/** Nombre de cada unidad del tipo `time` en la pantalla. */
-export const TIME_UNIT_LABELS: Record<TimeUnit, string> = { d: 'días', h: 'horas', min: 'minutos' }
-
 /**
- * Si un texto es una unidad del tipo `time`.
+ * Si un texto es una unidad de tiempo.
  * @param text Texto sin espacios en los extremos.
  * @returns `true` si es d, h o min.
  */
-const isTimeUnit = (text: string): text is TimeUnit => Object.hasOwn(TIME_UNIT_SECONDS, text)
+export const isTimeUnit = (text: string): text is TimeUnit => Object.hasOwn(TIME_UNIT_SECONDS, text)
 
 /**
  * Unidad de tiempo válida.
