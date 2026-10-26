@@ -30,7 +30,8 @@ Lo peculiar de esta app es que cada hoja es un texto plano que se explica solo, 
 ## Funcionalidades
 
 - **Hojas de costes:** un producto por hoja, con sus bloques de gastos y sus observaciones.
-- **Cada línea hace sus cuentas:** precio, consumo y multiplicador, en números, en tiempo (`3d 5h 1m`) o como importe fijo.
+- **Cada línea hace sus cuentas:** precio de una unidad × cantidad, como en una factura. El precio puede ser suelto (`6,5 €`), de un lote (`4,2 € por 20 ud`), por horas (`12 €/h`) o de la luz (`140 W a 0,20 €/kWh`), y la cantidad un número o una duración (`3d 5h 1m`).
+- **Grupos función:** una receta con sus datos, como «Impresión 3D (tiempo, gramos)», que no suma por sí sola. Cada línea que la usa rellena esos datos y cuesta lo que la receta, repartido por sus categorías.
 - **Recargos y margen:** un % sobre un bloque (por ejemplo, el riesgo de fallos) o sobre el total (el margen).
 - **Categorías:** cada línea lleva la suya, con su color, y el ranking «¿Dónde se va?» las compara.
 - **Portada «Todo»:** el gasto de todos los productos juntos.
