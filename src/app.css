@@ -152,11 +152,11 @@
 @utility amount-cell {
     @apply text-right font-mono font-semibold;
 }
-/* Cabecera azul de una tarjeta de bloque, con el título a un lado y las cifras y acciones al otro. */
+/* Cabecera azul de una tarjeta de sección, con el título a un lado y las cifras y acciones al otro. */
 @utility card-header {
     @apply flex items-center justify-between gap-3 border-b-2 border-ink bg-[#E8EFF8] px-4 py-2;
 }
-/* Pie de una tarjeta de bloque, con los enlaces para añadir filas. */
+/* Pie de una tarjeta, con los enlaces para añadir filas. */
 @utility card-footer {
     @apply border-t border-dashed border-[#AEBCCB] px-4 py-2;
 }
@@ -164,7 +164,7 @@
 @utility hand-title {
     @apply font-hand leading-none font-bold;
 }
-/* Título de una tarjeta de bloque, en azul. */
+/* Título de una tarjeta de sección, en azul. */
 @utility block-title {
     @apply hand-title text-[32px] text-[#183F86];
 }

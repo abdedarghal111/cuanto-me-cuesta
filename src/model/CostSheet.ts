@@ -129,7 +129,7 @@ export class CostSheet implements Serializable, Observable {
     /**
      * Añade una sección al final, declara las categorías que traiga y escucha sus cambios. Sus líneas de tipo
      * función pasan a llamar al grupo de esta hoja con el mismo título; si no lo hay, se añade antes una copia del
-     * suyo (p. ej. al añadir un bloque de la plantilla).
+     * suyo (p. ej. al añadir una sección de la plantilla).
      * @param section Sección nueva.
      */
     addSection(section: Section): void {

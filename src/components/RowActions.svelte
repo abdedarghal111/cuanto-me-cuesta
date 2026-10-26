@@ -1,7 +1,7 @@
 <!--
     @component
     Botones de subir, bajar y quitar un elemento de una lista del producto abierto (una línea, un recargo
-    o un bloque), con confirmación opcional antes de quitar.
+    o una sección), con confirmación opcional antes de quitar.
 -->
 
 <script lang="ts" generics="T">
@@ -27,7 +27,7 @@
         onremove: () => void
         /** Si se indica, título del diálogo que pide confirmar antes de quitar. */
         confirm?: string
-        /** Qué es el elemento, para el título de los botones («Subir bloque»). */
+        /** Qué es el elemento, para el título de los botones («Subir sección»). */
         label?: string
         /** Tamaño de los iconos. */
         size?: number

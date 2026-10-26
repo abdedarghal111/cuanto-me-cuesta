@@ -9,7 +9,7 @@ import path from 'node:path'
 
 /** Carpeta de datos: un `titulo_fecha.txt` por hoja. */
 const DATA_DIR = path.resolve(import.meta.dirname, '../../../datos')
-/** Plantilla: una hoja normal de la que salen las hojas nuevas y los bloques que se añaden. */
+/** Plantilla: una hoja normal de la que salen las hojas nuevas y las secciones que se añaden. */
 const TEMPLATE_PATH = path.resolve(import.meta.dirname, '../../res/template.txt')
 
 fs.mkdirSync(DATA_DIR, { recursive: true })

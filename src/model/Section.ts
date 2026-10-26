@@ -1,5 +1,5 @@
 /**
- * @file Sección de una hoja: un bloque con título, sus líneas de gasto y sus recargos, y sus cuentas. Un grupo
+ * @file Sección de una hoja: su título, sus líneas de gasto y sus recargos, y sus cuentas. Un grupo
  * función es una sección con datos de entrada, que no suma por sí sola y que calculan las líneas que la llaman.
  */
 

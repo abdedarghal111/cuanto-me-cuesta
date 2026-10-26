@@ -85,7 +85,7 @@ class ProductStore {
     /** Hojas cargadas, por nombre de archivo, envueltas para que Svelte siga sus cambios. */
     products = $state<Record<string, CostSheet>>({})
     files = $state<string[]>([])
-    /** Plantilla: una hoja normal de la que salen las hojas nuevas y los bloques que se añaden. */
+    /** Plantilla: una hoja normal de la que salen las hojas nuevas y las secciones que se añaden. */
     template = $state<CostSheet>(new CostSheet())
     /** Archivo abierto; `''` es la vista «Todo». */
     selected = $state('')

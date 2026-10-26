@@ -1,7 +1,7 @@
 <!--
     @component
-    Un bloque del producto abierto: título editable con su subtotal y la tabla de sus líneas de gasto
-    y de sus recargos sobre el bloque. Si es un grupo función, lleva sus datos de entrada y su fórmula en vez
+    Una sección del producto abierto: título editable con su subtotal y la tabla de sus líneas de gasto
+    y de sus recargos sobre la sección. Si es un grupo función, lleva sus datos de entrada y su fórmula en vez
     del subtotal.
 -->
 
@@ -25,14 +25,14 @@
     import RowActions from './RowActions.svelte'
     import TagSelect from './TagSelect.svelte'
 
-    /** `section` es el bloque número `index` de `product`. */
+    /** `section` es la sección número `index` de `product`. */
     let { product, section, index }: { product: CostSheet; section: Section; index: number } = $props()
 
     const base = $derived(section.base())
     /** Grupos función a los que pueden llamar sus líneas; desde un grupo función, ninguno. */
     const functions = $derived(section.isFunction ? [] : product.functions)
 
-    /** Tarjeta del bloque, para pasar el foco a la fila que se crea. */
+    /** Tarjeta de la sección, para pasar el foco a la fila que se crea. */
     let card: HTMLDivElement
 
     /**
@@ -59,7 +59,7 @@
 
     /**
      * Valor de la línea en el desplegable «Tipo».
-     * @param line Línea del bloque.
+     * @param line Línea de la sección.
      * @returns El tipo básico, o el prefijo de función con la posición de su grupo.
      */
     function typeValue(line: Line): string {
@@ -68,7 +68,7 @@
 
     /**
      * Cambia el tipo de una línea al elegido en el desplegable «Tipo».
-     * @param line Línea del bloque.
+     * @param line Línea de la sección.
      * @param value Valor de la opción elegida.
      */
     function setType(line: Line, value: string) {
@@ -107,7 +107,7 @@
         <input
             class="editable-title block-title flex-1 {section.isFunction ? 'min-w-56' : 'min-w-0'}"
             bind:value={section.title}
-            aria-label={section.isFunction ? 'Título del grupo función' : 'Título del bloque'}
+            aria-label={section.isFunction ? 'Título del grupo función' : 'Título de la sección'}
         />
         {#if section.isFunction}
             <span class="flex flex-wrap items-center gap-1.5 font-mono text-muted">
@@ -139,8 +139,8 @@
             onremove={() => product.removeSection(section)}
             confirm={section.isFunction
                 ? `Quitar el grupo función «${section.title}»; sus ${product.callers(section).length} líneas pasan a fijo`
-                : `Quitar el bloque «${section.title}»`}
-            label="bloque"
+                : `Quitar la sección «${section.title}»`}
+            label="sección"
             size={18}
         />
     </div>
@@ -263,7 +263,7 @@
                 {#if section.surcharges.length}
                     <tr class="border-t-2 border-dashed border-[#AEBCCB] bg-[#E8EFF8]">
                         <td colspan="8" class="font-mono text-xs text-[#3F4E5D]">
-                            {section.isFunction ? 'Recargos del grupo · se aplican en cada unidad' : `Recargos sobre el bloque · base ${formatEuros(base)}`}
+                            {section.isFunction ? 'Recargos del grupo · se aplican en cada unidad' : `Recargos sobre la sección · base ${formatEuros(base)}`}
                         </td>
                     </tr>
                 {/if}
@@ -293,7 +293,7 @@
                     <td colspan="7">
                         <input
                             class="ghost-input"
-                            placeholder="Escribe aquí para añadir un recargo (% {section.isFunction ? 'del grupo' : 'del bloque'})…"
+                            placeholder="Escribe aquí para añadir un recargo (% {section.isFunction ? 'del grupo' : 'de la sección'})…"
                             oninput={(e) => addFromGhost(e.currentTarget, 'surcharge')}
                             aria-label="Nuevo recargo"
                         />
