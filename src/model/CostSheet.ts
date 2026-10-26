@@ -183,6 +183,39 @@ export class CostSheet implements Serializable, Observable {
     }
 
     /**
+     * Si una línea se puede llevar a una sección: dentro de la suya, o entre secciones que no son recetas.
+     * @param line Línea de la hoja.
+     * @param to Sección de destino.
+     * @returns `true` si se puede.
+     */
+    canMoveLine(line: Line, to: Section): boolean {
+        const from = this.#sections.find((section) => section.lines.includes(line))
+        return from === to || (!!from && !from.isFunction && !to.isFunction)
+    }
+
+    /**
+     * Lleva una línea a una posición de su sección o de otra (ver `canMoveLine`).
+     * @param line Línea de la hoja.
+     * @param to Sección de destino.
+     * @param index Posición de destino, contada con la línea aún en su sitio.
+     * @throws {Error} Si no se puede llevar ahí.
+     */
+    moveLine(line: Line, to: Section, index: number): void {
+        const from = this.#sections.find((section) => section.lines.includes(line))
+        if (!from || !this.canMoveLine(line, to)) {
+            throw new Error('Esa línea no se puede llevar ahí.')
+        }
+        if (from === to) {
+            const lines = to.lines.filter((l) => l !== line)
+            lines.splice(index > to.lines.indexOf(line) ? index - 1 : index, 0, line)
+            to.lines = lines
+        } else {
+            from.removeLine(line)
+            to.addLine(line, index)
+        }
+    }
+
+    /**
      * Líneas que llaman a un grupo función.
      * @param section Grupo función.
      * @returns Las líneas, en orden de aparición.

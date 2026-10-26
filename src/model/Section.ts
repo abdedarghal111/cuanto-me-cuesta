@@ -145,13 +145,25 @@ export class Section implements Serializable, Observable {
     }
 
     /**
-     * Añade una línea al final y escucha sus cambios.
+     * Añade una línea y escucha sus cambios.
      * @param line Línea nueva.
+     * @param index Posición en la que queda; por defecto, al final.
      */
-    addLine(line: Line): void {
-        this.#lines.push(line)
+    addLine(line: Line, index = this.#lines.length): void {
+        this.#lines.splice(index, 0, line)
         this.#unsubscribers.set(line, line.subscribe(() => this.notify()))
         this.notify()
+    }
+
+    /**
+     * Añade una copia de una de sus líneas justo debajo de ella.
+     * @param line Línea de la sección.
+     * @returns La copia.
+     */
+    cloneLine(line: Line): Line {
+        const copy = line.clone()
+        this.addLine(copy, this.#lines.indexOf(line) + 1)
+        return copy
     }
 
     /**

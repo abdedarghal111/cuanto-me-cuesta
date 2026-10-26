@@ -10,6 +10,8 @@
         down: 'M12 5v14M5 12l7 7 7-7',
         remove: 'M6 6l12 12M18 6L6 18',
         save: 'M5 3h11l3 3v15H5zM8 3v6h8V3M8 21v-7h8v7',
+        drag: 'M9 6h.01M9 12h.01M9 18h.01M15 6h.01M15 12h.01M15 18h.01',
+        clone: 'M8 8h12v12H8zM16 8V4H4v12h4',
     }
     export type IconName = keyof typeof ICON_PATHS
 </script>
