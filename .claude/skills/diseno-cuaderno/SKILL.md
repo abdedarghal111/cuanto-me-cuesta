@@ -29,7 +29,9 @@ Locales, en `src/res/fonts/`.
 - `note-card` para la cifra importante.
 - Ranking con barras de bloques en el color de cada categoría para comparar importes.
 - Tablas con filas alternas bien distinguibles; los números con `numeric` y el campo que más se cambia con `highlighted`.
-- `editable-title` para los títulos que se editan en el sitio y `link` para las acciones secundarias.
+- `editable-title` para los títulos que se editan en el sitio.
+- Botones: `button-yellow` para la acción principal, `button-soft` (azul) para las secundarias y `button-soft-danger` (rojo) para borrar. Las acciones son siempre botones, nunca enlaces.
+- Para añadir filas o elementos, un hueco fantasma («Escribe aquí para añadir…», «Nueva sección…») en lugar de un botón.
 - Las pantallas nuevas se construyen con estas mismas piezas.
 
 ## Reglas

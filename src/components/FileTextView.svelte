@@ -28,7 +28,7 @@
     <div class="flex flex-wrap items-center justify-between gap-3">
         <h2 class="hand-title text-4xl">Así queda el archivo</h2>
         <div class="flex items-center gap-3">
-            <button class="link" onclick={() => (store.textMode = false)}>volver sin cargar</button>
+            <button class="button-soft min-h-11" onclick={() => (store.textMode = false)}>Volver sin cargar</button>
             <button class="button-yellow" onclick={load}>Cargar este texto</button>
         </div>
     </div>

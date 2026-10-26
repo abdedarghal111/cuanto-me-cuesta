@@ -25,7 +25,7 @@ Es un proyecto personal, nacido de una necesidad propia y sin capas de más, sob
 
 ## Pensada para la IA
 
-Lo peculiar de esta app es que cada hoja es un texto plano que se explica solo, con sus instrucciones al final, así que es muy amigable con la IA: pegas una hoja en cualquier chat, le pides tu presupuesto y pegas la respuesta en «ver texto» para verlo todo representado. La IA no se olvida de los detalles, y el repositorio trae skills con el formato (`.claude/skills/`) y está abierto a un asistente dentro de la app que cambie la hoja con un prompt (en un futuro se podría implementar, ahora mismo no urge).
+Lo peculiar de esta app es que cada hoja es un texto plano que se explica solo, con sus instrucciones al final, así que es muy amigable con la IA: pegas una hoja en cualquier chat, le pides tu presupuesto y pegas la respuesta en «Ver texto» para verlo todo representado. La IA no se olvida de los detalles, y el repositorio trae skills con el formato (`.claude/skills/`) y está abierto a un asistente dentro de la app que cambie la hoja con un prompt (en un futuro se podría implementar, ahora mismo no urge).
 
 ## Funcionalidades
 
@@ -99,7 +99,7 @@ Svelte 5, TypeScript y Tailwind 4 sobre Vite, sin servidor aparte: los endpoints
 
 <p align="center">
     <img src="./.github/images/screenshot5.png" width="800"><br>
-    <em>«ver texto»: el archivo tal cual se guarda, para cambiarlo o pegar otro texto y cargarlo.</em>
+    <em>«Ver texto»: el archivo tal cual se guarda, para cambiarlo o pegar otro texto y cargarlo.</em>
 </p>
 
 <p align="center">

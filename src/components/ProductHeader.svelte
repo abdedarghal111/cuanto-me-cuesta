@@ -85,12 +85,12 @@
             bind:value={product.name}
             aria-label="Nombre del producto"
         />
-        <div class="flex flex-wrap items-center gap-4 text-base">
+        <div class="flex flex-wrap items-center gap-2.5 text-base">
             <input type="date" class="font-mono text-sm" bind:value={product.date} aria-label="Fecha" />
-            <button class="link" class:font-bold={store.textMode} onclick={() => (store.textMode = true)}>ver texto</button>
-            <button class="link" onclick={duplicate}>clonar</button>
-            {#if store.unsaved[store.selected]}<button class="link" onclick={discard}>descartar cambios</button>{/if}
-            <button class="link text-bad" onclick={deleteProduct}>borrar</button>
+            <button class="button-soft {store.textMode ? 'bg-[#FFF4A8]!' : ''}" onclick={() => (store.textMode = true)}>Ver texto</button>
+            <button class="button-soft" onclick={duplicate}>Clonar</button>
+            {#if store.unsaved[store.selected]}<button class="button-soft" onclick={discard}>Descartar cambios</button>{/if}
+            <button class="button-soft-danger" onclick={deleteProduct}>Borrar</button>
         </div>
     </div>
     <span class="font-mono text-xs text-muted">datos/{store.selected}</span>

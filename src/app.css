@@ -119,8 +119,13 @@
 @utility button-danger {
     @apply min-h-11 rounded-lg border-2 border-bad bg-bad px-4 font-bold text-white;
 }
-@utility link {
-    @apply border-0 bg-transparent p-0 text-accent underline underline-offset-2 hover:text-[#163A7C];
+/* Botón secundario: en el azul de los enlaces, con fondo azul claro y sombra dura azul. */
+@utility button-soft {
+    @apply rounded-md border-2 border-accent bg-[#F3F7FD] px-3 py-1 font-bold text-accent shadow-[2px_2px_0_var(--accent)] hover:bg-[#E3ECFA] active:translate-x-px active:translate-y-px active:shadow-none;
+}
+/* Botón secundario para borrar: como `button-soft`, en rojo. */
+@utility button-soft-danger {
+    @apply rounded-md border-2 border-bad bg-[#FDF2F1] px-3 py-1 font-bold text-bad shadow-[2px_2px_0_var(--bad)] hover:bg-[#FBE3E1] active:translate-x-px active:translate-y-px active:shadow-none;
 }
 @utility mini {
     @apply border-0 bg-transparent px-1.5 py-0.5 text-muted hover:text-ink;
@@ -136,9 +141,6 @@
 }
 @utility highlighted {
     @apply border-2 border-ink bg-[#FFF4A8] font-semibold;
-}
-@utility add-link {
-    @apply cursor-pointer border-0 bg-transparent p-0 text-accent;
 }
 /* Tabla de líneas y recargos, con las celdas separadas por una raya fina, y su cabecera. */
 @utility cost-table {
@@ -162,10 +164,6 @@
 /* Cabecera azul de una tarjeta de sección, con el título a un lado y las cifras y acciones al otro. */
 @utility card-header {
     @apply flex items-center justify-between gap-3 border-b-2 border-ink bg-[#E8EFF8] px-4 py-2;
-}
-/* Pie de una tarjeta, con los enlaces para añadir filas. */
-@utility card-footer {
-    @apply border-t border-dashed border-[#AEBCCB] px-4 py-2;
 }
 /* Título a mano; el tamaño lo pone cada uso. */
 @utility hand-title {

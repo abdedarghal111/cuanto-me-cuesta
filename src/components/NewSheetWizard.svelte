@@ -182,10 +182,10 @@
             </div>
         {:else if template && preview}
             <p>Marca solo lo que vas a usar en <b>{name}</b>. Lo que no marques no aparece en la hoja.</p>
-            <div class="flex flex-wrap gap-4">
-                <button type="button" class="link" onclick={() => setAll(groups.flatMap((g) => g.items), true)}>Marcar todo</button>
-                <button type="button" class="link" onclick={() => setAll(groups.flatMap((g) => g.items), false)}>Desmarcar todo</button>
-                <button type="button" class="link" onclick={reset}>Restablecer</button>
+            <div class="flex flex-wrap gap-2.5">
+                <button type="button" class="button-soft text-sm" onclick={() => setAll(groups.flatMap((g) => g.items), true)}>Marcar todo</button>
+                <button type="button" class="button-soft text-sm" onclick={() => setAll(groups.flatMap((g) => g.items), false)}>Desmarcar todo</button>
+                <button type="button" class="button-soft text-sm" onclick={reset}>Restablecer</button>
             </div>
             <div class="grid gap-5 md:grid-cols-[1fr_220px]">
                 <div class="grid content-start gap-3">
@@ -227,9 +227,9 @@
         {/if}
 
         <div class="flex flex-wrap items-center justify-between gap-4">
-            {#if step === 2}<button type="button" class="link" onclick={() => (step = 1)}>← atrás</button>{:else}<span></span>{/if}
-            <span class="flex items-center gap-4">
-                <button type="button" class="link" onclick={() => dialog.close()}>cancelar</button>
+            {#if step === 2}<button type="button" class="button-soft min-h-11" onclick={() => (step = 1)}>← Atrás</button>{:else}<span></span>{/if}
+            <span class="flex items-center gap-3">
+                <button type="button" class="button-soft min-h-11" onclick={() => dialog.close()}>Cancelar</button>
                 <button type="submit" class="button-yellow" disabled={!canCreate}>{step === 1 && template ? 'Siguiente →' : 'Crear hoja'}</button>
             </span>
         </div>

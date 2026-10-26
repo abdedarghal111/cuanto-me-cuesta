@@ -79,7 +79,7 @@
             <input bind:this={input} bind:value={text} class="borderless border-b-2 border-ink py-1 text-2xl" aria-label={options.title} />
         {/if}
         <div class="flex flex-wrap items-center justify-end gap-4">
-            <button type="button" class="link" onclick={() => close(null)}>cancelar</button>
+            <button type="button" class="button-soft min-h-11" onclick={() => close(null)}>Cancelar</button>
             <button type="submit" class={options.danger ? 'button-danger' : 'button-yellow'}>{options.confirmLabel ?? 'Aceptar'}</button>
         </div>
     </form>
