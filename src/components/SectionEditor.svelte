@@ -153,15 +153,6 @@
         product.renameParam(section, param, input.value)
         input.value = section.params.includes(input.value.trim()) ? input.value.trim() : param
     }
-
-    /**
-     * Reparto por categoría del coste de una línea, para leerlo debajo.
-     * @param line Línea que llama a una receta.
-     * @returns «Material 2,40 € · Impresora 1,27 €».
-     */
-    function split(line: Line): string {
-        return [...line.byCategory()].map(([category, amount]) => `${category} ${formatEuros(amount)}`).join(' · ')
-    }
 </script>
 
 <div class="overflow-hidden {section.isFunction ? 'recipe-card' : 'paper'}" bind:this={card}>
@@ -250,27 +241,23 @@
                                 aria-label="Tipo"
                             >
                                 {#each LINE_TYPE_OPTIONS as [value, label] (value)}<option {value}>{label}</option>{/each}
-                                {#each functions as option, i (option)}<option value="{FUNCTION_OPTION}{i}">ƒ {option.title}</option>{/each}
+                                {#each functions as option, i (option)}<option value="{FUNCTION_OPTION}{i}">{option.title}</option>{/each}
                             </select>
                         </td>
                         <td>
                             {#if fn}
-                                <span class="price-cell items-end!">
+                                <span class="price-cell">
                                     {#each fn.params as param (param)}
-                                        <label class="inline-flex flex-col">
-                                            <span class="mb-0.5 text-[10px] leading-none uppercase">{param}</span>
-                                            <input
-                                                class="numeric w-22"
-                                                value={line.arg(param)}
-                                                oninput={(e) => line.setArg(param, e.currentTarget.value)}
-                                                onchange={() => line.normalizeArg(param)}
-                                                placeholder={fn.isTimeParam(param) ? '3h 5m' : '0'}
-                                            />
-                                        </label>
+                                        <input
+                                            class="numeric w-22"
+                                            value={line.arg(param)}
+                                            oninput={(e) => line.setArg(param, e.currentTarget.value)}
+                                            onchange={() => line.normalizeArg(param)}
+                                            placeholder={param}
+                                            aria-label={param}
+                                        />
                                     {/each}
                                 </span>
-                                <div class="mt-0.5 font-mono text-[11px] text-muted">= {formatEuros(line.unitPrice())} cada una</div>
-                                <div class="font-mono text-[10px] text-muted">{split(line)}</div>
                             {:else}
                                 <span class="price-cell">
                                     {#if line.type === 'power'}
@@ -316,11 +303,7 @@
                             {/if}
                         </td>
                         <td>
-                            {#if fn}
-                                <span class="font-mono text-[12px] text-muted" title="El coste se reparte en las categorías de «{fn.title}»">de la receta</span>
-                            {:else}
-                                <TagSelect {product} item={line} />
-                            {/if}
+                            {#if !fn}<TagSelect {product} item={line} />{/if}
                         </td>
                         {#if section.isFunction}
                             <td class="amount-cell font-normal text-muted">{formatNumber(line.unitPrice())} €/{line.unitLabel()}</td>
