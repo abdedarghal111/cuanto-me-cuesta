@@ -25,7 +25,9 @@
         const value = e.currentTarget.value
         e.currentTarget.value = ''
         const templateSection = store.template.sections[Number(value)]
-        if (value === 'empty' || !templateSection) {
+        if (value === 'function') {
+            product.addSection(Section.blankFunction('Nueva función'))
+        } else if (value === 'empty' || !templateSection) {
             product.addSection(Section.blank('Nuevo bloque'))
         } else {
             product.addSection(templateSection.clone())
@@ -46,13 +48,17 @@
         <select class="add-block self-start" onchange={addSection} aria-label="Nuevo bloque">
             <option value="" selected disabled>+ nuevo bloque…</option>
             <option value="empty">Bloque en blanco</option>
-            {#each store.template.sections as templateSection, i (i)}<option value={i}>{templateSection.title}</option>{/each}
+            <option value="function">Grupo función en blanco</option>
+            {#each store.template.sections as templateSection, i (i)}
+                <option value={i}>{templateSection.isFunction ? 'ƒ ' : ''}{templateSection.title}</option>
+            {/each}
         </select>
 
         <TotalSurcharges {product} {summary} />
 
         <p class="paper-soft">
             Coste = precio de una unidad × cantidad. Solo números con coma (<code>0,5</code>). El tipo dice cómo se escribe el precio: común (<code>6,5 €</code>), lote (lo que costó y lo que trae: <code>4,2 € por 20 ud</code>), horas (<code>12 €/h</code>) o luz (<code>140 W a 0,20 €/kWh</code>). En horas, en luz y en un lote por d, h o min, la cantidad es una duración: <code>3d 5h 1m 3s</code>.
+            Un grupo función (ƒ) no suma por sí solo: sus líneas usan sus datos como cantidad, y una línea que lo elige como tipo rellena esos datos y cuesta lo que el grupo, por su cantidad.
             Los recargos de un bloque son un % de la suma de sus líneas y se suman entre sí; los de «Sobre el total» se aplican en orden, cada uno sobre lo acumulado.
             Los bloques de «+ nuevo bloque» y los de un producto nuevo salen de la plantilla, <code>src/res/template.txt</code>.
         </p>
@@ -67,7 +73,7 @@
     <TagRanking segments={tagSegments(summary.byCategory, store.tags)} total={summary.total} />
     <div class="panel">
         <h2 class="panel-title">Por bloques</h2>
-        {#each product.sections as section (section)}
+        {#each product.groups as section (section)}
             <div class="panel-row flex justify-between gap-2">
                 <span class="truncate">{section.title}</span><span class="font-mono text-sm font-semibold">{formatEuros(section.subtotal())}</span>
             </div>

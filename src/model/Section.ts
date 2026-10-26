@@ -1,17 +1,24 @@
 /**
- * @file Sección de una hoja: un bloque con título, sus líneas de gasto y sus recargos, y sus cuentas.
+ * @file Sección de una hoja: un bloque con título, sus líneas de gasto y sus recargos, y sus cuentas. Un grupo
+ * función es una sección con datos de entrada, que no suma por sí sola y que calculan las líneas que la llaman.
  */
 
 import { Category } from './Category.ts'
-import { Line } from './Line.ts'
+import { type Args, Line } from './Line.ts'
 import type { Observable } from './Observable.ts'
 import type { Serializable } from './Serializable.ts'
 import type { SerializableClass } from './SerializableClass.ts'
 import { Surcharge } from './Surcharge.ts'
 import { Delimiter } from './text/Delimiter.ts'
 import type { DocumentReader } from './text/DocumentReader.ts'
-import { formatEuros } from './text/numbers.ts'
+import { formatEuros, formatNumber, parseNumber } from './text/numbers.ts'
 import { Table } from './text/Table.ts'
+
+/** Marca que va delante del título de un grupo función. */
+const FUNCTION_MARK = 'ƒ'
+
+/** Título de un grupo función: «ƒ Nombre (dato, dato)». */
+const FUNCTION_TITLE = /^ƒ\s*(.*?)\s*\(([^()]*)\)$/
 
 /**
  * Si la siguiente línea del lector es una fila de tabla (no un título ni el final).
@@ -32,9 +39,11 @@ function assertReorder<T>(current: T[], next: T[]): void {
     }
 }
 
-/** Sección `## Título`. Avisa de sus cambios y de los de sus líneas y recargos. */
+/** Sección `## Título`, o `## ƒ Título (datos)` si es un grupo función. Avisa de sus cambios y de los de sus filas. */
 export class Section implements Serializable, Observable {
     #title: string
+    /** Datos de entrada si es un grupo función; si no, `null`. */
+    #params: string[] | null = null
     #lines: Line[] = []
     #surcharges: Surcharge[] = []
     /** Función que deja de escuchar a cada línea o recargo. */
@@ -57,6 +66,57 @@ export class Section implements Serializable, Observable {
     set title(title: string) {
         this.#title = title
         this.notify()
+    }
+
+    /** Si es un grupo función. */
+    get isFunction(): boolean {
+        return this.#params !== null
+    }
+
+    /** Datos de entrada del grupo función, en orden; vacío si no lo es. Se cambian con los métodos de `CostSheet`. */
+    get params(): string[] {
+        return this.#params ?? []
+    }
+
+    /**
+     * Cambia los datos de entrada sin tocar las líneas y avisa. Interno: lo usa `CostSheet`.
+     * @param params Datos nuevos.
+     */
+    setParams(params: string[]): void {
+        this.#params = [...params]
+        this.notify()
+    }
+
+    /**
+     * Si un dato se gasta por tiempo: lo usa como Cantidad alguna línea que se gasta por duraciones.
+     * @param param Nombre del dato.
+     * @returns `true` si es de tiempo.
+     */
+    isTimeParam(param: string): boolean {
+        return this.lines.some((line) => line.quantity.trim() === param && line.timeUnit() !== null)
+    }
+
+    /**
+     * Fórmula del grupo función, para leerla: lo que suma cada dato por unidad, lo fijo y el % de sus recargos.
+     * @returns La fórmula («tiempo × 0,128 €/h + gramos × 0,02 €/g + 15 %»).
+     */
+    formula(): string {
+        const zeros = Object.fromEntries(this.params.map((param) => [param, '0']))
+        const fixed = this.base(zeros)
+        const terms = this.params.map((param) => {
+            const time = this.isTimeParam(param)
+            const rate = this.base({ ...zeros, [param]: time ? '1h' : '1' }) - fixed
+            const unit = time ? 'h' : (this.lines.find((line) => line.quantity.trim() === param)?.unitLabel() ?? 'ud')
+            return `${param} × ${formatNumber(rate)} €/${unit}`
+        })
+        if (fixed !== 0 || !terms.length) {
+            terms.push(formatEuros(fixed))
+        }
+        const percent = this.surcharges.filter((s) => s.counts).reduce((sum, s) => sum + (parseNumber(s.percent) ?? 0), 0)
+        if (percent) {
+            terms.push(`${formatNumber(percent)} %`)
+        }
+        return terms.join(' + ')
     }
 
     /** Líneas de gasto, en orden. Asignar el array solo cambia el orden: tiene que llevar las mismas líneas. */
@@ -121,37 +181,42 @@ export class Section implements Serializable, Observable {
 
     /**
      * Base de la sección.
+     * @param args Datos de entrada, si es un grupo función.
      * @returns La suma de las líneas que cuentan.
      */
-    base(): number {
-        return this.lines.filter((line) => line.counts).reduce((sum, line) => sum + line.cost(), 0)
+    base(args?: Args): number {
+        return this.lines.filter((line) => line.counts).reduce((sum, line) => sum + line.cost(args), 0)
     }
 
     /**
-     * Subtotal de la sección.
+     * Subtotal de la sección; en un grupo función, el total de una unidad con esos datos.
+     * @param args Datos de entrada, si es un grupo función.
      * @returns La base más los recargos que cuentan.
      */
-    subtotal(): number {
-        const base = this.base()
+    subtotal(args?: Args): number {
+        const base = this.base(args)
         return this.surcharges.filter((s) => s.counts).reduce((sum, s) => sum + s.amount(base), base)
     }
 
     /**
      * Reparto por categoría de las líneas y recargos que cuentan; lo que no tiene categoría va a «Sin categoría».
+     * @param args Datos de entrada, si es un grupo función.
      * @returns El importe de cada categoría, en orden de aparición.
      */
-    byCategory(): Map<string, number> {
+    byCategory(args?: Args): Map<string, number> {
         const result = new Map<string, number>()
-        const base = this.base()
-        const amounts = [
-            ...this.lines.map((line) => [line, line.cost()] as const),
-            ...this.surcharges.map((s) => [s, s.amount(base)] as const),
-        ]
-        for (const [item, amount] of amounts) {
-            if (item.counts) {
-                const category = item.category.trim() || Category.UNTAGGED
-                result.set(category, (result.get(category) ?? 0) + amount)
+        const add = (category: string, amount: number) => {
+            const key = category.trim() || Category.UNTAGGED
+            result.set(key, (result.get(key) ?? 0) + amount)
+        }
+        const base = this.base(args)
+        for (const line of this.lines.filter((l) => l.counts)) {
+            for (const [category, amount] of line.byCategory(args)) {
+                add(category, amount)
             }
+        }
+        for (const surcharge of this.surcharges.filter((s) => s.counts)) {
+            add(surcharge.category, surcharge.amount(base))
         }
         return result
     }
@@ -183,7 +248,8 @@ export class Section implements Serializable, Observable {
     }
 
     /**
-     * Escribe la sección: su título con el subtotal, la tabla de líneas y, si hay recargos, su tabla.
+     * Escribe la sección: su título con el subtotal (o la fórmula, si es un grupo función), la tabla de líneas y,
+     * si hay recargos, su tabla. En un grupo función, el coste de cada línea es el de una unidad de su dato.
      * @returns Líneas de texto, terminadas en una línea en blanco.
      */
     serialize(): string[] {
@@ -191,15 +257,21 @@ export class Section implements Serializable, Observable {
         const title = Table.escape(this.#title) || 'Sin título'
         const lines = new Table(Line.COLUMNS)
         for (const line of this.lines) {
-            lines.addRow([...line.serialize(), `= ${formatEuros(line.cost())}`])
+            const cost = this.isFunction ? `${formatNumber(line.unitPrice())} €/${line.unitLabel()}` : formatEuros(line.cost())
+            lines.addRow([...line.serialize(), `= ${cost}`])
         }
-        const text = [`${Delimiter.SECTION} ${title} (= subtotal ${formatEuros(this.subtotal())})`, ...lines.render(), '']
+        const heading = this.isFunction
+            ? `${Delimiter.SECTION} ${FUNCTION_MARK} ${title} (${this.params.join(', ')}) (= ${this.formula()})`
+            : `${Delimiter.SECTION} ${title} (= subtotal ${formatEuros(this.subtotal())})`
+        const text = [heading, ...lines.render(), '']
         if (this.surcharges.length) {
             const surcharges = new Table(Surcharge.columns(false))
             for (const surcharge of this.surcharges) {
-                surcharges.addRow([...surcharge.serialize(), `= ${formatEuros(surcharge.amount(base))}`])
+                const cost = this.isFunction ? 'en cada unidad' : formatEuros(surcharge.amount(base))
+                surcharges.addRow([...surcharge.serialize(), `= ${cost}`])
             }
-            text.push(`${Delimiter.SURCHARGES} (= base ${formatEuros(base)})`, ...surcharges.render(), '')
+            const computed = this.isFunction ? 'sobre cada unidad' : `base ${formatEuros(base)}`
+            text.push(`${Delimiter.SURCHARGES} (= ${computed})`, ...surcharges.render(), '')
         }
         return text
     }
@@ -210,6 +282,7 @@ export class Section implements Serializable, Observable {
      */
     clone(): Section {
         const copy = new Section(this.#title)
+        copy.#params = this.#params && [...this.#params]
         for (const line of this.lines) {
             copy.addLine(line.clone())
         }
@@ -250,12 +323,32 @@ export class Section implements Serializable, Observable {
     }
 
     /**
+     * Crea un grupo función con un dato y una línea en blanco que lo usa como Cantidad.
+     * @param title Título del grupo.
+     * @returns El grupo nuevo.
+     */
+    static blankFunction(title: string): Section {
+        const section = Section.blank(title)
+        section.#params = ['dato']
+        section.lines[0].quantity = 'dato'
+        return section
+    }
+
+    /**
      * Lee una sección: `## Título`, su tabla de líneas y, si la hay, `### Recargos` con su tabla.
      * @param reader Lector de la hoja, situado en el título.
      * @returns La sección.
      */
     static deserialize(reader: DocumentReader): Section {
-        const section = new Section(reader.heading(Delimiter.SECTION))
+        const heading = reader.heading(Delimiter.SECTION)
+        const fn = heading.startsWith(FUNCTION_MARK) ? heading.match(FUNCTION_TITLE) : null
+        if (heading.startsWith(FUNCTION_MARK) && !fn) {
+            reader.fail('«## ƒ Título (dato, dato)» en un grupo función')
+        }
+        const section = new Section(fn ? fn[1] : heading)
+        if (fn) {
+            section.#params = fn[2].split(',').map((param) => param.trim()).filter(Boolean)
+        }
         reader.readColumns(Line.COLUMNS)
         while (atRow(reader)) {
             section.addLine(Line.deserialize(reader))

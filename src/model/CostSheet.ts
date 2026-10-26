@@ -4,6 +4,7 @@
  */
 
 import { Category } from './Category.ts'
+import type { Line } from './Line.ts'
 import type { LineItem } from './LineItem.ts'
 import type { Observable } from './Observable.ts'
 import { Section } from './Section.ts'
@@ -101,6 +102,16 @@ export class CostSheet implements Serializable, Observable {
         this.notify()
     }
 
+    /** Secciones que suman: las que no son grupos función. */
+    get groups(): Section[] {
+        return this.#sections.filter((section) => !section.isFunction)
+    }
+
+    /** Grupos función, que no suman por sí solos. */
+    get functions(): Section[] {
+        return this.#sections.filter((section) => section.isFunction)
+    }
+
     /**
      * Recargos sobre el total, que se aplican en orden. Asignar el array solo cambia el orden: tiene que llevar los
      * mismos recargos.
@@ -116,23 +127,93 @@ export class CostSheet implements Serializable, Observable {
     }
 
     /**
-     * Añade una sección al final, declara las categorías que traiga y escucha sus cambios.
+     * Añade una sección al final, declara las categorías que traiga y escucha sus cambios. Sus líneas de tipo
+     * función pasan a llamar al grupo de esta hoja con el mismo título; si no lo hay, se añade antes una copia del
+     * suyo (p. ej. al añadir un bloque de la plantilla).
      * @param section Sección nueva.
      */
     addSection(section: Section): void {
-        this.#categories = [...new Set([...this.#categories, ...section.usedCategories()])]
-        this.#sections.push(section)
-        this.#unsubscribers.set(section, section.subscribe(() => this.notify()))
-        this.notify()
+        for (const line of section.lines) {
+            const fn = line.function
+            if (fn && !this.#sections.includes(fn)) {
+                const own = this.functions.find((f) => f.title === fn.title)
+                if (own) {
+                    line.call(own)
+                } else {
+                    const copy = fn.clone()
+                    this.addSection(copy)
+                    line.call(copy)
+                }
+            }
+        }
+        this.#attach(section)
     }
 
     /**
-     * Quita una sección y deja de escucharla.
+     * Quita una sección y deja de escucharla. Si es un grupo función, las líneas que lo llaman pasan a común.
      * @param section Sección de la hoja.
      * @throws {Error} Si la sección no es de la hoja.
      */
     removeSection(section: Section): void {
+        for (const line of this.callers(section)) {
+            line.type = 'common'
+        }
         this.#remove(this.#sections, section)
+    }
+
+    /**
+     * Líneas que llaman a un grupo función.
+     * @param section Grupo función.
+     * @returns Las líneas, en orden de aparición.
+     */
+    callers(section: Section): Line[] {
+        return this.#sections.flatMap((s) => s.lines).filter((line) => line.function === section)
+    }
+
+    /**
+     * Añade un dato de entrada a un grupo función, con un nombre que no tenga ya.
+     * @param section Grupo función.
+     * @returns El nombre del dato nuevo.
+     */
+    addParam(section: Section): string {
+        let name = 'dato'
+        for (let i = 2; section.params.includes(name); i++) {
+            name = `dato ${i}`
+        }
+        section.setParams([...section.params, name])
+        return name
+    }
+
+    /**
+     * Cambia el nombre de un dato de un grupo función, y también en sus líneas y en las que lo llaman.
+     * @param section Grupo función.
+     * @param from Nombre actual.
+     * @param to Nombre nuevo; si queda vacío o ya existe, no cambia nada.
+     */
+    renameParam(section: Section, from: string, to: string): void {
+        const name = to.replace(/[,()·]/g, ' ').trim()
+        if (!name || section.params.includes(name)) {
+            return
+        }
+        section.setParams(section.params.map((param) => (param === from ? name : param)))
+        for (const line of section.lines.filter((l) => l.quantity.trim() === from)) {
+            line.quantity = name
+        }
+        for (const line of this.callers(section)) {
+            line.renameArg(from, name)
+        }
+    }
+
+    /**
+     * Quita un dato de un grupo función; las líneas que lo usaban como Cantidad quedan con la Cantidad vacía.
+     * @param section Grupo función.
+     * @param param Nombre del dato.
+     */
+    removeParam(section: Section, param: string): void {
+        section.setParams(section.params.filter((p) => p !== param))
+        for (const line of section.lines.filter((l) => l.quantity.trim() === param)) {
+            line.quantity = ''
+        }
     }
 
     /**
@@ -212,10 +293,10 @@ export class CostSheet implements Serializable, Observable {
 
     /**
      * Coste de la hoja.
-     * @returns La suma de los subtotales de las secciones.
+     * @returns La suma de los subtotales de las secciones que suman.
      */
     cost(): number {
-        return this.sections.reduce((sum, section) => sum + section.subtotal(), 0)
+        return this.groups.reduce((sum, section) => sum + section.subtotal(), 0)
     }
 
     /**
@@ -236,7 +317,7 @@ export class CostSheet implements Serializable, Observable {
             const key = category.trim() || Category.UNTAGGED
             result.set(key, (result.get(key) ?? 0) + amount)
         }
-        for (const section of this.sections) {
+        for (const section of this.groups) {
             for (const [category, amount] of section.byCategory()) {
                 add(category, amount)
             }
@@ -255,7 +336,7 @@ export class CostSheet implements Serializable, Observable {
      * @returns La suma de las líneas y recargos de las secciones que no cuentan.
      */
     excluded(): number {
-        return this.sections.reduce((sum, section) => sum + section.excluded(), 0)
+        return this.groups.reduce((sum, section) => sum + section.excluded(), 0)
     }
 
     /**
@@ -310,8 +391,13 @@ export class CostSheet implements Serializable, Observable {
         copy.#date = this.#date
         copy.#description = this.#description
         copy.#categories = [...this.#categories]
-        for (const section of this.sections) {
-            copy.addSection(section.clone())
+        // Las líneas de tipo función de la copia llaman a las copias de los grupos.
+        const map = new Map(this.sections.map((section) => [section, section.clone()]))
+        for (const section of map.values()) {
+            for (const line of section.lines) {
+                line.relink(map)
+            }
+            copy.#attach(section)
         }
         for (const surcharge of this.totalSurcharges) {
             copy.addTotalSurcharge(surcharge.clone())
@@ -423,7 +509,14 @@ export class CostSheet implements Serializable, Observable {
         reader.categories = sheet.#categories
         sheet.#description = reader.readBlock(Delimiter.OBSERVATIONS)
         while (reader.atHeading(Delimiter.SECTION)) {
-            sheet.addSection(Section.deserialize(reader))
+            sheet.#attach(Section.deserialize(reader))
+        }
+        // Las líneas de tipo función se enlazan con su grupo cuando ya se han leído todos; dentro de un grupo
+        // función no se puede llamar a otro.
+        for (const section of sheet.sections) {
+            for (const line of section.lines) {
+                line.link(section.isFunction ? [] : sheet.functions, reader)
+            }
         }
         if (reader.atHeading(Delimiter.TOTAL)) {
             reader.heading(Delimiter.TOTAL)
@@ -452,6 +545,17 @@ export class CostSheet implements Serializable, Observable {
         list.splice(index, 1)
         this.#unsubscribers.get(item)?.()
         this.#unsubscribers.delete(item)
+        this.notify()
+    }
+
+    /**
+     * Añade una sección al final tal cual, declara las categorías que traiga y escucha sus cambios.
+     * @param section Sección nueva.
+     */
+    #attach(section: Section): void {
+        this.#categories = [...new Set([...this.#categories, ...section.usedCategories()])]
+        this.#sections.push(section)
+        this.#unsubscribers.set(section, section.subscribe(() => this.notify()))
         this.notify()
     }
 
