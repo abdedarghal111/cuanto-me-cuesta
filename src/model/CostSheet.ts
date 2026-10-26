@@ -150,13 +150,13 @@ export class CostSheet implements Serializable, Observable {
     }
 
     /**
-     * Quita una sección y deja de escucharla. Si es un grupo función, las líneas que lo llaman pasan a común.
+     * Quita una sección y deja de escucharla. Si es un grupo función, las líneas que lo llaman pasan a fijo.
      * @param section Sección de la hoja.
      * @throws {Error} Si la sección no es de la hoja.
      */
     removeSection(section: Section): void {
         for (const line of this.callers(section)) {
-            line.type = 'common'
+            line.type = 'fixed'
         }
         this.#remove(this.#sections, section)
     }

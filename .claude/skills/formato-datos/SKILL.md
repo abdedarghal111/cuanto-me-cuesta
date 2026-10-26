@@ -53,7 +53,7 @@ no     | …
 - Columnas de cada línea: `Cuenta | Concepto | Tipo | Precio | Cantidad | Categoría | = Coste`, en el orden de la fila de títulos.
 - Coste = precio de una unidad × Cantidad.
 - Tipo y celda Precio:
-  - `común`: el precio de una unidad (`6,5 €`).
+  - `fijo`: el precio de una unidad (`6,5 €`).
   - `lote`: lo que costó el lote y lo que trae, con su unidad de texto libre (`4,2 € por 20 ud`); una unidad cuesta precio / lo que trae, y lo que trae vacío vale 1.
   - `horas`: el precio de una hora (`12 €/h`).
   - `luz`: la potencia y el precio de la luz (`140 W a 0,20 €/kWh`); una hora cuesta W / 1000 × €/kWh.
@@ -86,7 +86,7 @@ En los campos de una línea (celdas, títulos y `Categorías:`):
 ## Lectura
 
 - La lectura es estricta: al primer fallo se para y se indica el número de línea, la línea y lo que se esperaba.
-- Se comprueban la estructura, que cada columna aparezca una vez, que cada fila tenga tantas celdas como columnas, Cuenta (`sí` o `no`), Tipo (`común`, `lote`, `horas`, `luz` o el título de un grupo función), que Precio encaje con el Tipo, que los datos sean los del grupo, los escapes y que cada categoría usada esté declarada en `Categorías:`.
+- Se comprueban la estructura, que cada columna aparezca una vez, que cada fila tenga tantas celdas como columnas, Cuenta (`sí` o `no`), Tipo (`fijo`, `lote`, `horas`, `luz` o el título de un grupo función), que Precio encaje con el Tipo, que los datos sean los del grupo, los escapes y que cada categoría usada esté declarada en `Categorías:`.
 - Se lee hasta `# Resumen`. Las columnas que empiezan por `=` y el último `(= …)` de cada título son valores calculados: se escriben para leerlos a mano y se ignoran al leer.
 - Se aceptan fines de línea `\r\n` y `\n`.
 
@@ -107,7 +107,7 @@ Una hoja tal como la escribe la app. Imítala al escribir o editar una hoja: cad
 
 - `Impresión 3D` es un grupo función: `Paralela de prueba` lo llama con `tiempo 5:25 · gramos 70,7`, y la app guarda `5:25` como `5h 25m`.
 - `0:45` se escribió a mano y la app lo guarda como `45m`.
-- `Envío` es de tipo `común`: un importe se escribe como una unidad por su precio.
+- `Envío` es de tipo `fijo`: un importe se escribe como una unidad por su precio.
 - `Diseño prototipo y producto` lleva `no`: se calcula su coste, pero no suma; aparece en «(no cuenta)».
 - `Tornillos M3 \| M4` muestra el escape de `|`.
 
@@ -136,9 +136,9 @@ Cuenta | Concepto           | Tipo         | Precio                      | Canti
 sí     | Paralela de prueba | Impresión 3D | tiempo 5h 25m · gramos 70,7 |        1 |           | = 1,77 €
 
 ## Material (= subtotal 5,10 €)
-Cuenta | Concepto                        | Tipo  | Precio        | Cantidad | Categoría |  = Coste
-sí     | Tornillos M3 \| M4 (paquete 30) | lote  | 6 € por 30 ud |        8 | Material  | = 1,60 €
-sí     | Envío                           | común | 3,5 €         |        1 | Material  | = 3,50 €
+Cuenta | Concepto                        | Tipo | Precio        | Cantidad | Categoría |  = Coste
+sí     | Tornillos M3 \| M4 (paquete 30) | lote | 6 € por 30 ud |        8 | Material  | = 1,60 €
+sí     | Envío                           | fijo | 3,5 €         |        1 | Material  | = 3,50 €
 
 ## Mis horas (= subtotal 7,50 €)
 Cuenta | Concepto                    | Tipo  | Precio | Cantidad | Categoría    |   = Coste
@@ -170,7 +170,7 @@ Guardado: 13/10/2026, 13:59:51
 - Escribe los números con coma decimal y sin punto de miles. No uses fórmulas.
 - Pon «sí» en Cuenta para que sume y «no» para que se vea sin sumar.
 - Elige el Tipo y escribe en Precio lo que cuesta una unidad:
-    común: el precio de una unidad (6,5 €).
+    fijo:  el precio de una unidad (6,5 €).
     lote:  lo que costó el lote y lo que trae (4,2 € por 20 ud).
     horas: el precio de una hora (12 €/h).
     luz:   la potencia y el precio de la luz (140 W a 0,20 €/kWh).

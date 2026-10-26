@@ -52,7 +52,7 @@ Guardado: 25/10/2026, 17:21:10
 - Escribe los números con coma decimal y sin punto de miles. No uses fórmulas.
 - Pon «sí» en Cuenta para que sume y «no» para que se vea sin sumar.
 - Elige el Tipo y escribe en Precio lo que cuesta una unidad:
-    común: el precio de una unidad (6,5 €).
+    fijo:  el precio de una unidad (6,5 €).
     lote:  lo que costó el lote y lo que trae (4,2 € por 20 ud).
     horas: el precio de una hora (12 €/h).
     luz:   la potencia y el precio de la luz (140 W a 0,20 €/kWh).

@@ -126,7 +126,7 @@
             reorder={(sections) => (product.sections = sections)}
             onremove={() => product.removeSection(section)}
             confirm={section.isFunction
-                ? `Quitar el grupo función «${section.title}»; sus ${product.callers(section).length} líneas pasan a común`
+                ? `Quitar el grupo función «${section.title}»; sus ${product.callers(section).length} líneas pasan a fijo`
                 : `Quitar el bloque «${section.title}»`}
             label="bloque"
             size={18}
@@ -138,7 +138,7 @@
                 <tr>
                     <th title="Si lo quitas, la línea se ve pero no suma">✓</th>
                     <th>Concepto</th>
-                    <th title="Cómo se escribe el precio: común, lote (lo que costó y lo que trae), horas, luz o un grupo función">Tipo</th>
+                    <th title="Cómo se escribe el precio: fijo, lote (lo que costó y lo que trae), horas, luz o un grupo función">Tipo</th>
                     <th class="text-left">Precio de una unidad</th>
                     <th
                         title={section.isFunction
@@ -196,7 +196,7 @@
                                         W a
                                     {/if}
                                     <input class="numeric w-18" bind:value={line.price} inputmode="decimal" placeholder="0" aria-label="Precio €" />
-                                    {#if line.type === 'common'}
+                                    {#if line.type === 'fixed'}
                                         €
                                     {:else if line.type === 'lot'}
                                         € por

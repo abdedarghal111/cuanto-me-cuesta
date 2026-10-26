@@ -49,7 +49,7 @@ const num = (text: string, fallback = 0) => parseNumber(text) ?? fallback
 
 /** Reglas de cada tipo básico. Un tipo nuevo solo necesita su entrada aquí y en `LineType`. */
 const LINE_TYPE_RULES: Record<BasicLineType, LineTypeRules> = {
-    common: {
+    fixed: {
         pattern: /^(.*?)\s*€$/,
         parts: ['price'],
         expected: 'en Precio el precio de una unidad («6,5 €»)',
@@ -94,7 +94,7 @@ const LINE_TYPE_RULES: Record<BasicLineType, LineTypeRules> = {
 const ARGS_SEPARATOR = ' · '
 
 /**
- * Línea de gasto, en blanco y de tipo común al crearse. Coste = precio de una unidad × Cantidad. Los números se
+ * Línea de gasto, en blanco y de tipo fijo al crearse. Coste = precio de una unidad × Cantidad. Los números se
  * guardan como texto tal cual se escriben ("11,21", "0,5", "15:08").
  */
 export class Line extends LineItem {
@@ -109,7 +109,7 @@ export class Line extends LineItem {
         new Column('= Coste', 'cost', true),
     ]
 
-    #type: LineType = 'common'
+    #type: LineType = 'fixed'
     #price = ''
     #size = ''
     #unit = ''
@@ -132,7 +132,7 @@ export class Line extends LineItem {
         this.notify()
     }
 
-    /** Precio en €: de una unidad (`common`), del lote (`lot`), de una hora (`hours`) o del kWh (`power`). */
+    /** Precio en €: de una unidad (`fixed`), del lote (`lot`), de una hora (`hours`) o del kWh (`power`). */
     get price(): string {
         return this.#price
     }
@@ -318,7 +318,7 @@ export class Line extends LineItem {
             const args = fn.params.map((param) => `${param} ${this.arg(param).trim()}`.trim())
             return [this.counts ? 'sí' : 'no', this.name, fn.title, args.join(ARGS_SEPARATOR), this.#normalizedQuantity(), '']
         }
-        const type = this.#type === 'function' ? 'common' : this.#type
+        const type = this.#type === 'function' ? 'fixed' : this.#type
         return [
             this.counts ? 'sí' : 'no',
             this.name,
