@@ -52,7 +52,16 @@
     import TagSelect from './TagSelect.svelte'
 
     /** `section` es una sección o una receta de `product`. */
-    let { product, section }: { product: CostSheet; section: Section } = $props()
+    let {
+        product,
+        section,
+        oncloned,
+    }: {
+        product: CostSheet
+        section: Section
+        /** Se llama con la copia al clonar la sección (p. ej. para abrir en el estante la receta copiada). */
+        oncloned?: (copy: Section) => void
+    } = $props()
 
     const base = $derived(section.base())
     /** Recetas a las que pueden llamar sus líneas; desde una receta, ninguna. */
@@ -291,11 +300,14 @@
             <strong class="font-mono text-lg">{formatEuros(section.subtotal())}</strong>
         {/if}
         <span class="card-controls inline-flex">
-            {#if !section.isFunction}
-                <button class="mini" onclick={() => product.cloneSection(section)} title="Clonar sección" aria-label="Clonar sección">
-                    <Icon name="clone" size={18} />
-                </button>
-            {/if}
+            <button
+                class="mini"
+                onclick={() => oncloned?.(product.cloneSection(section))}
+                title="Clonar {section.isFunction ? 'receta' : 'sección'}"
+                aria-label="Clonar {section.isFunction ? 'receta' : 'sección'}"
+            >
+                <Icon name="clone" size={18} />
+            </button>
             <RowActions
                 list={siblings}
                 index={siblings.indexOf(section)}

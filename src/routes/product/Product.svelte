@@ -47,7 +47,7 @@
         <RecipeShelf {product} {open} />
         {#each product.functions as section (section)}
             {#if open.has(section)}
-                <SectionEditor {product} {section} />
+                <SectionEditor {product} {section} oncloned={(copy) => open.add(copy)} />
             {/if}
         {/each}
 

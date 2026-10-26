@@ -183,16 +183,21 @@ export class CostSheet implements Serializable, Observable {
     }
 
     /**
-     * Añade una copia de una sección justo debajo de ella. Sus líneas llaman a las mismas recetas.
-     * @param section Sección de la hoja que no es una receta.
+     * Añade una copia de una sección justo debajo de ella. Sus líneas llaman a las mismas recetas. La copia de una
+     * receta se titula «Título (copia)», o «(copia 2)»…, para que no haya dos recetas con el mismo título: las
+     * líneas las llaman por él.
+     * @param section Sección o receta de la hoja.
      * @returns La copia.
-     * @throws {Error} Si es una receta (dos recetas con el mismo título no se distinguirían al leer).
      */
     cloneSection(section: Section): Section {
-        if (section.isFunction) {
-            throw new Error('Una receta no se clona.')
-        }
         const copy = section.clone()
+        if (section.isFunction) {
+            const titles = this.functions.map((f) => f.title)
+            copy.title = `${section.title} (copia)`
+            for (let i = 2; titles.includes(copy.title); i++) {
+                copy.title = `${section.title} (copia ${i})`
+            }
+        }
         this.#attach(copy)
         this.#sections.splice(this.#sections.indexOf(section) + 1, 0, this.#sections.pop()!)
         this.notify()
