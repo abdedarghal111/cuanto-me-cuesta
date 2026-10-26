@@ -1,0 +1,90 @@
+# Obra y reformas
+Fecha: 2026-10-26
+Categorías: Material, Mano de obra, Alquileres, Residuos, Transporte, Imprevistos, Margen
+
+```observaciones
+Reformas por partidas: recetas por m² para alicatar y pintar, material suelto, oficios por horas, alquileres, escombros e imprevistos.
+```
+
+## [Receta] Alicatado (m²) (= m² × 45,5 €/m² + 10 %)
+Cuenta | Concepto                     | Tipo | Precio        | Cantidad | Categoría    |    = Coste
+sí     | Azulejo                      | lote | 18 € por 1 m² |       m² | Material     |  = 18 €/m²
+sí     | Cemento cola (saco de 25 kg) | lote | 9 € por 5 m²  |       m² | Material     | = 1,8 €/m²
+sí     | Junta                        | lote | 7 € por 10 m² |       m² | Material     | = 0,7 €/m²
+sí     | Colocación                   | lote | 25 € por 1 m² |       m² | Mano de obra |  = 25 €/m²
+
+### Recargos (= sobre cada unidad)
+Cuenta | Concepto         |  % | Categoría |          = Coste
+sí     | Cortes y roturas | 10 | Material  | = en cada unidad
+
+## [Receta] Pintar (m²) (= m² × 7,875 €/m²)
+Cuenta | Concepto                             | Tipo | Precio          | Cantidad | Categoría    |      = Coste
+sí     | Pintura plástica (15 l, unos 120 m²) | lote | 60 € por 120 m² |       m² | Material     |   = 0,5 €/m²
+sí     | Mano de pintura                      | lote | 7 € por 1 m²    |       m² | Mano de obra |     = 7 €/m²
+sí     | Cinta, plástico y rodillos           | lote | 15 € por 40 m²  |       m² | Material     | = 0,375 €/m²
+
+## Partidas (= subtotal 0,00 €)
+Cuenta | Concepto           | Tipo      | Precio | Cantidad | Categoría |  = Coste
+sí     | Alicatar el baño   | Alicatado | m²     |        1 |           | = 0,00 €
+sí     | Pintar las paredes | Pintar    | m²     |        1 |           | = 0,00 €
+
+## Material (= subtotal 0,00 €)
+Cuenta | Concepto                           | Tipo | Precio         | Cantidad | Categoría |  = Coste
+no     | Cemento (saco de 25 kg)            | fijo | 6 €            |          | Material  | = 0,00 €
+no     | Pladur (placa de 2,4 m²)           | lote | 9 € por 2,4 m² |          | Material  | = 0,00 €
+no     | Fontanería (tubos, codos y llaves) | fijo | 60 €           |          | Material  | = 0,00 €
+no     | Electricidad (cable y mecanismos)  | fijo | 80 €           |          | Material  | = 0,00 €
+
+## Mano de obra (= subtotal 0,00 €)
+Cuenta | Concepto     | Tipo  | Precio | Cantidad | Categoría    |  = Coste
+sí     | Oficial      | horas | 25 €/h |          | Mano de obra | = 0,00 €
+no     | Peón         | horas | 18 €/h |          | Mano de obra | = 0,00 €
+no     | Fontanero    | horas | 35 €/h |          | Mano de obra | = 0,00 €
+no     | Electricista | horas | 35 €/h |          | Mano de obra | = 0,00 €
+
+## Alquileres y residuos (= subtotal 0,00 €)
+Cuenta | Concepto                | Tipo | Precio         | Cantidad | Categoría  |  = Coste
+sí     | Contenedor de escombros | fijo | 200 €          |          | Residuos   | = 0,00 €
+no     | Sacos de escombro       | lote | 15 € por 10 ud |          | Residuos   | = 0,00 €
+no     | Andamio                 | lote | 40 € por 1 d   |          | Alquileres | = 0,00 €
+no     | Herramienta alquilada   | lote | 30 € por 1 d   |          | Alquileres | = 0,00 €
+sí     | Transporte de material  | fijo | 40 €           |          | Transporte | = 0,00 €
+
+# Sobre el total (= coste 0,00 € → total 0,00 €)
+Cuenta | Concepto    |  % | Categoría   | = Importe | = Acumulado
+sí     | Imprevistos | 10 | Imprevistos |  = 0,00 € |    = 0,00 €
+no     | Margen      | 15 | Margen      |  = 0,00 € |    = 0,00 €
+
+# Resumen
+Material       0,00 €
+Mano de obra   0,00 €
+Residuos       0,00 €
+Transporte     0,00 €
+Imprevistos    0,00 €
+TOTAL          0,00 €
+Guardado: 26/10/2026, 12:00:00
+
+# Instrucciones
+- Edita solo lo que hay antes de «# Resumen». El resumen y estas instrucciones los rehace la app al guardar.
+- Mantén el orden: título, Fecha, Categorías, observaciones, secciones y «# Sobre el total».
+- Escribe el nombre de la hoja detrás de «# » en la primera línea.
+- Escribe la fecha como AAAA-MM-DD.
+- Escribe en Categorías todas las que uses, separadas por comas.
+- Escribe las observaciones entre ```observaciones y ```. Dentro puedes poner lo que quieras.
+- Abre cada sección con «## Título». Sus recargos van debajo, con «### Recargos».
+- Escribe una fila por gasto, con las columnas en el orden de la fila de títulos.
+- Escribe los números con coma decimal y sin punto de miles. No uses fórmulas.
+- Pon «sí» en Cuenta para que sume y «no» para que se vea sin sumar.
+- Elige el Tipo y escribe en Precio lo que cuesta una unidad:
+    fijo:  el precio de una unidad (6,5 €).
+    lote:  lo que costó el lote y lo que trae (4,2 € por 20 ud).
+    horas: el precio de una hora (12 €/h).
+    luz:   la potencia y el precio de la luz (140 W a 0,20 €/kWh).
+- Escribe en Cantidad cuántas unidades gastas (3 o 350). En horas, en luz y en un lote por d, h o min, escribe una duración (3d 5h 1m 3s o 15:08).
+- Calcula así: Coste = precio de una unidad × Cantidad.
+- Abre una receta con «## [Receta] Título (dato, dato)», con hasta 3 datos. No suma por sí sola. En Cantidad, sus líneas llevan el nombre de un dato o un número.
+- Para usar una receta, pon su título en Tipo, sus datos en Precio separados por « · » (tiempo 43m · gramos 9,6) y en Cantidad cuántas veces. Una unidad cuesta lo que la receta con esos datos, con sus recargos.
+- Cada recargo de sección es un % de la suma de las líneas que suman en esa sección.
+- Los recargos de «# Sobre el total» se aplican en orden, cada uno sobre lo acumulado.
+- Si un texto lleva | escribe \|. Si una categoría lleva una coma escribe \,. Si lleva \ escribe \\.
+- No edites lo que empieza por «=» ni lo que va entre «(= …)»: lo calcula la app.

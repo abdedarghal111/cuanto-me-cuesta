@@ -1,6 +1,6 @@
 /**
  * @file Endpoints de los productos (Node): `/api/products` lista, lee, escribe y borra los `.txt` de `datos/`,
- * y `/api/template` sirve la plantilla `src/res/template.txt`. `main.server.ts` los conecta al servidor de Vite.
+ * y `/api/templates` sirve las plantillas de `src/res/plantillas/`. `main.server.ts` los conecta al servidor de Vite.
  */
 
 import type { Connect } from 'vite'
@@ -9,8 +9,8 @@ import path from 'node:path'
 
 /** Carpeta de datos: un `titulo_fecha.txt` por hoja. */
 const DATA_DIR = path.resolve(import.meta.dirname, '../../../datos')
-/** Plantilla: una hoja normal de la que salen las hojas nuevas y las secciones que se añaden. */
-const TEMPLATE_PATH = path.resolve(import.meta.dirname, '../../res/template.txt')
+/** Carpeta de plantillas: una hoja normal por oficio, de la que el asistente saca las hojas nuevas. */
+const TEMPLATES_DIR = path.resolve(import.meta.dirname, '../../res/plantillas')
 
 fs.mkdirSync(DATA_DIR, { recursive: true })
 
@@ -73,11 +73,12 @@ export const productsEndpoint: Connect.NextHandleFunction = async (req, res, nex
     next()
 }
 
-/** `GET /api/template`: el texto de la plantilla. */
-export const templateEndpoint: Connect.NextHandleFunction = (req, res, next) => {
+/** `GET /api/templates`: el texto de cada plantilla, por orden de nombre de archivo, como un array JSON. */
+export const templatesEndpoint: Connect.NextHandleFunction = (req, res, next) => {
     if (req.method !== 'GET' || req.url !== '/') {
         return next()
     }
-    res.setHeader('Content-Type', 'text/plain; charset=utf-8')
-    res.end(fs.readFileSync(TEMPLATE_PATH, 'utf8'))
+    const files = fs.readdirSync(TEMPLATES_DIR).filter((f) => f.endsWith('.txt')).sort()
+    res.setHeader('Content-Type', 'application/json')
+    res.end(JSON.stringify(files.map((f) => fs.readFileSync(path.join(TEMPLATES_DIR, f), 'utf8'))))
 }

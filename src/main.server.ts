@@ -4,12 +4,12 @@
  */
 
 import type { Connect, Plugin } from 'vite'
-import { productsEndpoint, templateEndpoint } from './routes/product/product.server.ts'
+import { productsEndpoint, templatesEndpoint } from './routes/product/product.server.ts'
 
 /** Endpoints de la API: ruta → función que la atiende. Para uno nuevo basta con añadirlo aquí. */
 const ENDPOINTS: Record<string, Connect.NextHandleFunction> = {
     '/api/products': productsEndpoint,
-    '/api/template': templateEndpoint,
+    '/api/templates': templatesEndpoint,
 }
 
 /** Envuelve un endpoint para que un error responda 500 con su mensaje en lugar de dejar la petición colgada. */

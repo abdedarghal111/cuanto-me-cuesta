@@ -1,5 +1,5 @@
 /**
- * @file Gestor de hojas (navegador): lee las hojas de `datos/` y la plantilla, lleva la hoja abierta (y su URL)
+ * @file Gestor de hojas (navegador): lee las hojas de `datos/` y las plantillas, lleva la hoja abierta (y su URL)
  * y los cambios sin guardar, y las escribe en disco. Los componentes lo importan como `store`.
  */
 
@@ -74,19 +74,19 @@ function fileOfUrl(pathname: string): string {
  * Fecha de hoy.
  * @returns La fecha como AAAA-MM-DD.
  */
-function today(): string {
+export function today(): string {
     const d = new Date()
     const pad = (n: number) => String(n).padStart(2, '0')
     return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`
 }
 
-/** Hojas, plantilla, hoja abierta y cambios sin guardar. */
+/** Hojas, plantillas, hoja abierta y cambios sin guardar. */
 class ProductStore {
     /** Hojas cargadas, por nombre de archivo, envueltas para que Svelte siga sus cambios. */
     products = $state<Record<string, CostSheet>>({})
     files = $state<string[]>([])
-    /** Plantilla: una hoja normal de la que salen las hojas nuevas y las secciones que se añaden. */
-    template = $state<CostSheet>(new CostSheet())
+    /** Plantillas: hojas normales, una por oficio, de las que el asistente saca las hojas nuevas. Sin envolver. */
+    templates = $state.raw<CostSheet[]>([])
     /** Archivo abierto; `''` es la vista «Todo». */
     selected = $state('')
     /** Si la hoja abierta se muestra como texto del archivo. */
@@ -100,7 +100,12 @@ class ProductStore {
     product = $derived(this.selected ? this.products[this.selected] : undefined)
     summary = $derived(this.product?.summarize())
     /** Todas las categorías, en el orden que fija su color. */
-    tags = $derived(Category.sort(this.template.categories, Object.values(this.products).flatMap((p) => p.categories)))
+    tags = $derived(
+        Category.sort(
+            [...new Set(this.templates.flatMap((t) => t.categories))],
+            Object.values(this.products).flatMap((p) => p.categories),
+        ),
+    )
 
     /** Último texto leído o escrito de cada archivo, para detectar cambios hechos fuera de la app. */
     #lastText: Record<string, string> = {}
@@ -235,7 +240,7 @@ class ProductStore {
             if (this.selected && !this.files.includes(this.selected)) {
                 this.#navigate('', true)
             }
-            this.template = DocumentReader.read(await api.readTemplate())
+            this.templates = (await api.readTemplates()).map((text) => DocumentReader.read(text))
             if (errors.length) {
                 this.status = `No se pudo leer ${errors.join(' · ')}`
             }
@@ -244,9 +249,13 @@ class ProductStore {
         }
     }
 
-    /** Crea una hoja sin guardar, copia de la plantilla o de `source`, con el nombre dado y la fecha de hoy, y la abre. */
-    create(name: string, source?: CostSheet) {
-        const sheet = CostSheet.copy(unwrap(source ?? this.template), name, today())
+    /** Crea una hoja sin guardar, en blanco o copia de `source`, con el nombre y la fecha dados, y la abre. */
+    create(name: string, source?: CostSheet, date = today()) {
+        this.add(CostSheet.copy(unwrap(source ?? new CostSheet()), name, date))
+    }
+
+    /** Añade una hoja nueva sin guardar (p. ej. la que sale del asistente) y la abre. */
+    add(sheet: CostSheet) {
         const newName = this.#freeFileName(sheet)
         this.products[newName] = this.#watch(sheet)
         this.files = [...this.files, newName].sort()

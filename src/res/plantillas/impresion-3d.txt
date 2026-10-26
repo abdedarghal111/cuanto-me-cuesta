@@ -1,44 +1,56 @@
-# Plantilla
-Fecha: 2026-10-05
-Categorías: Material, Impresora, Prototipo, Diseño, Mano de obra, Margen
+# Impresión 3D
+Fecha: 2026-10-26
+Categorías: Material, Impresora, Mano de obra, Embalaje y envío, Imprevistos, Margen
 
 ```observaciones
+Piezas impresas en 3D: filamento por gramos, luz y desgaste de la impresora por tiempo, piezas que fallan, horas de diseño y acabado, y entrega.
 ```
 
-## [Receta] Impresión 3D (tiempo, gramos) (= tiempo × 0,128 €/h + gramos × 0,0112 €/g + 15 %)
-Cuenta | Concepto                 | Tipo | Precio             | Cantidad | Categoría |      = Coste
-sí     | Filamento PLA            | lote | 11,21 € por 1000 g |   gramos | Material  | = 0,0112 €/g
-sí     | Luz de la impresora      | luz  | 140 W a 0,2 €/kWh  |   tiempo | Impresora |  = 0,028 €/h
-sí     | Desgaste de la impresora | lote | 300 € por 3000 h   |   tiempo | Impresora |    = 0,1 €/h
+## [Receta] Impresión 3D (tiempo, gramos) (= tiempo × 0,124 €/h + gramos × 0,02 €/g + 10 %)
+Cuenta | Concepto                  | Tipo | Precio             | Cantidad | Categoría |     = Coste
+sí     | Filamento PLA             | lote | 19,99 € por 1000 g |   gramos | Material  |  = 0,02 €/g
+no     | Filamento PETG            | lote | 24,99 € por 1000 g |   gramos | Material  | = 0,025 €/g
+sí     | Luz de la impresora       | luz  | 120 W a 0,2 €/kWh  |   tiempo | Impresora | = 0,024 €/h
+sí     | Desgaste de la impresora  | lote | 400 € por 4000 h   |   tiempo | Impresora |   = 0,1 €/h
+no     | Boquillas, cama y correas | lote | 40 € por 1000 h    |   tiempo | Impresora |  = 0,04 €/h
 
 ### Recargos (= sobre cada unidad)
 Cuenta | Concepto          |  % | Categoría |          = Coste
-sí     | Riesgo por fallos | 15 | Impresora | = en cada unidad
-
-## Prototipos (= subtotal 0,00 €)
-Cuenta | Concepto  | Tipo         | Precio          | Cantidad | Categoría |  = Coste
-sí     | Prototipo | Impresión 3D | tiempo · gramos |        1 |           | = 0,00 €
+sí     | Piezas que fallan | 10 | Impresora | = en cada unidad
 
 ## Piezas (= subtotal 0,00 €)
 Cuenta | Concepto | Tipo         | Precio          | Cantidad | Categoría |  = Coste
 sí     | Pieza    | Impresión 3D | tiempo · gramos |        1 |           | = 0,00 €
 
+## Material extra (= subtotal 0,00 €)
+Cuenta | Concepto              | Tipo | Precio          | Cantidad | Categoría |  = Coste
+no     | Insertos y tornillos  | lote | 8 € por 100 ud  |          | Material  | = 0,00 €
+no     | Imanes                | lote | 8 € por 100 ud  |          | Material  | = 0,00 €
+no     | Imprimación y pintura | lote | 12 € por 400 ml |          | Material  | = 0,00 €
+
 ## Mis horas (= subtotal 0,00 €)
-Cuenta | Concepto               | Tipo  | Precio | Cantidad | Categoría    |  = Coste
-sí     | Diseño                 | horas | 10 €/h |          | Diseño       | = 0,00 €
-sí     | Posprocesado y montaje | horas | 10 €/h |          | Mano de obra | = 0,00 €
+Cuenta | Concepto                | Tipo  | Precio | Cantidad | Categoría    |  = Coste
+sí     | Diseño y laminado       | horas | 15 €/h |          | Mano de obra | = 0,00 €
+sí     | Quitar soportes y lijar | horas | 15 €/h |          | Mano de obra | = 0,00 €
+no     | Pintar y montar         | horas | 15 €/h |          | Mano de obra | = 0,00 €
+
+## Entrega (= subtotal 0,00 €)
+Cuenta | Concepto       | Tipo | Precio | Cantidad | Categoría        |  = Coste
+sí     | Caja y relleno | fijo | 1,2 €  |          | Embalaje y envío | = 0,00 €
+no     | Envío          | fijo | 4,5 €  |          | Embalaje y envío | = 0,00 €
 
 # Sobre el total (= coste 0,00 € → total 0,00 €)
-Cuenta | Concepto |  % | Categoría | = Importe | = Acumulado
-no     | Margen   | 30 | Margen    |  = 0,00 € |    = 0,00 €
+Cuenta | Concepto    |  % | Categoría   | = Importe | = Acumulado
+no     | Imprevistos |  5 | Imprevistos |  = 0,00 € |    = 0,00 €
+no     | Margen      | 30 | Margen      |  = 0,00 € |    = 0,00 €
 
 # Resumen
-Material       0,00 €
-Impresora      0,00 €
-Diseño         0,00 €
-Mano de obra   0,00 €
-TOTAL          0,00 €
-Guardado: 25/10/2026, 17:21:10
+Material           0,00 €
+Impresora          0,00 €
+Mano de obra       0,00 €
+Embalaje y envío   0,00 €
+TOTAL              0,00 €
+Guardado: 26/10/2026, 12:00:00
 
 # Instrucciones
 - Edita solo lo que hay antes de «# Resumen». El resumen y estas instrucciones los rehace la app al guardar.

@@ -150,7 +150,7 @@ export class CostSheet implements Serializable, Observable {
     /**
      * Añade una sección al final, declara las categorías que traiga y escucha sus cambios. Sus líneas de tipo
      * función pasan a llamar al grupo de esta hoja con el mismo título; si no lo hay, se añade antes una copia del
-     * suyo (p. ej. al añadir una sección de la plantilla).
+     * suyo (p. ej. al añadir una sección de otra hoja).
      * @param section Sección nueva.
      */
     addSection(section: Section): void {
@@ -488,6 +488,38 @@ export class CostSheet implements Serializable, Observable {
         const sheet = source.clone()
         sheet.#name = name
         sheet.#date = date
+        return sheet
+    }
+
+    /**
+     * Crea una hoja nueva con solo lo elegido de una plantilla: lo elegido cuenta, y se quitan las secciones que
+     * quedan sin líneas (salvo las recetas a las que llama alguna línea), las observaciones de la plantilla y las
+     * categorías que no usa nada.
+     * @param template Plantilla de la que se parte.
+     * @param name Nombre de la hoja nueva.
+     * @param date Fecha de la hoja nueva, como AAAA-MM-DD.
+     * @param keep Si se queda una línea o un recargo de la plantilla.
+     * @returns La hoja nueva.
+     */
+    static fromTemplate(template: CostSheet, name: string, date: string, keep: (item: LineItem) => boolean): CostSheet {
+        const sheet = CostSheet.copy(template, name, date)
+        sheet.#description = ''
+        template.sections.forEach((section, i) => {
+            const copy = sheet.#sections[i]
+            const lines = [...copy.lines]
+            const surcharges = [...copy.surcharges]
+            section.lines.forEach((line, j) => (keep(line) ? (lines[j].counts = true) : copy.removeLine(lines[j])))
+            section.surcharges.forEach((surcharge, j) => (keep(surcharge) ? (surcharges[j].counts = true) : copy.removeSurcharge(surcharges[j])))
+        })
+        const totals = [...sheet.#totalSurcharges]
+        template.totalSurcharges.forEach((surcharge, j) => (keep(surcharge) ? (totals[j].counts = true) : sheet.removeTotalSurcharge(totals[j])))
+        for (const section of [...sheet.#sections]) {
+            if (!section.lines.length && !(section.isFunction && sheet.callers(section).length)) {
+                sheet.removeSection(section)
+            }
+        }
+        const used = sheet.usedCategories()
+        sheet.#categories = sheet.#categories.filter((category) => used.includes(category))
         return sheet
     }
 

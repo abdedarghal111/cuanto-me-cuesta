@@ -21,8 +21,8 @@ export class Category {
     }
 
     /**
-     * Ordena todas las categorías: las de la plantilla en su orden, seguidas de las demás por orden alfabético.
-     * @param templateCategories Categorías de la plantilla, en su orden.
+     * Ordena todas las categorías: las de las plantillas en su orden, seguidas de las demás por orden alfabético.
+     * @param templateCategories Categorías de las plantillas, en su orden.
      * @param used Categorías usadas en las hojas; se ignoran las vacías y las repetidas.
      * @returns Las categorías en ese orden, sin repetir.
      */

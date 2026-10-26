@@ -35,7 +35,7 @@ Lo peculiar de esta app es que cada hoja es un texto plano que se explica solo, 
 - **Recargos y margen:** un % sobre una sección (por ejemplo, el riesgo de fallos) o sobre el total (el margen).
 - **Categorías:** cada línea lleva la suya, con su color, y el ranking «¿Dónde se va?» las compara.
 - **Portada «Todo»:** el gasto de todos los productos juntos.
-- **Plantilla:** un producto nuevo parte de la plantilla. Las secciones nuevas se crean escribiendo su nombre, y las que ya hay se clonan.
+- **Asistente de hoja nueva:** empiezas en blanco, copiando otra hoja o desde una plantilla de oficio (impresión 3D, carpintería, manualidades, obra y reformas), y marcas solo lo que vas a usar. Las secciones nuevas se crean escribiendo su nombre, y las que ya hay se clonan.
 - **Guardado a mano:** nada se escribe hasta que pulsas «Guardar» o Ctrl+S, y si cambias un archivo por fuera, la app lo recarga.
 - **Lectura estricta:** si un archivo no encaja, la app dice en qué línea falla y qué esperaba.
 
@@ -52,7 +52,7 @@ pnpm install
 pnpm run abrir
 ```
 
-Los productos se guardan en `datos/`, como `titulo_fecha.txt`. Lo que borras desde la app se queda como `algo.txt.borrado`, por si acaso. La plantilla de los productos nuevos es `src/res/template.txt`: una hoja normal que puedes cambiar a tu gusto.
+Los productos se guardan en `datos/`, como `titulo_fecha.txt`. Lo que borras desde la app se queda como `algo.txt.borrado`, por si acaso. Las plantillas de los productos nuevos están en `src/res/plantillas/`, una por oficio: hojas normales que puedes cambiar a tu gusto o ampliar con otra.
 
 ## Desarrollo
 

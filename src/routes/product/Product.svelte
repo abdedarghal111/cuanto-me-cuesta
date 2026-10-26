@@ -70,7 +70,7 @@
             Coste = precio de una unidad × cantidad. Solo números con coma (<code>0,5</code>). El tipo dice cómo se escribe el precio: fijo (<code>6,5 €</code>), lote (lo que costó y lo que trae: <code>4,2 € por 20 ud</code>), horas (<code>12 €/h</code>) o luz (<code>140 W a 0,20 €/kWh</code>). En horas, en luz y en un lote por d, h o min, la cantidad es una duración: <code>3d 5h 1m 3s</code>.
             Una receta no suma por sí sola: sus líneas usan sus datos como cantidad, y una línea que la elige como tipo rellena esos datos y cuesta lo que la receta, por su cantidad.
             Los recargos de una sección son un % de la suma de sus líneas y se suman entre sí; los de «Sobre el total» se aplican en orden, cada uno sobre lo acumulado.
-            Un producto nuevo sale de la plantilla, <code>src/res/template.txt</code>.
+            Un producto nuevo sale en blanco, de una copia de otro o de una plantilla de oficio de <code>src/res/plantillas/</code>, con solo lo que marques.
         </p>
     {/if}
 </section>

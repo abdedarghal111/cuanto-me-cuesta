@@ -1,0 +1,90 @@
+# Carpintería
+Fecha: 2026-10-26
+Categorías: Madera, Herrajes, Acabado, Taller, Mano de obra, Transporte, Imprevistos, Margen
+
+```observaciones
+Muebles y trabajos de madera: tableros y listones con su desperdicio, herrajes, acabado, luz y desgaste de las máquinas, horas de taller y transporte.
+```
+
+## Madera (= subtotal 0,00 €)
+Cuenta | Concepto                    | Tipo | Precio           | Cantidad | Categoría |  = Coste
+sí     | Tablero contrachapado 18 mm | lote | 55 € por 2,98 m² |          | Madera    | = 0,00 €
+sí     | Listón de pino 45×45        | lote | 6,5 € por 2,4 m  |          | Madera    | = 0,00 €
+no     | Tablero DM 16 mm            | lote | 30 € por 5,1 m²  |          | Madera    | = 0,00 €
+no     | Madera maciza de roble      | lote | 1500 € por 1 m³  |          | Madera    | = 0,00 €
+
+### Recargos (= base 0,00 €)
+Cuenta | Concepto             |  % | Categoría |  = Coste
+sí     | Desperdicio y cortes | 15 | Madera    | = 0,00 €
+
+## Herrajes (= subtotal 0,00 €)
+Cuenta | Concepto              | Tipo | Precio         | Cantidad | Categoría |  = Coste
+sí     | Tornillos para madera | lote | 7 € por 200 ud |          | Herrajes  | = 0,00 €
+sí     | Bisagras              | lote | 14 € por 10 ud |          | Herrajes  | = 0,00 €
+no     | Guías de cajón        | lote | 12 € por 1 ud  |          | Herrajes  | = 0,00 €
+no     | Tiradores             | lote | 15 € por 6 ud  |          | Herrajes  | = 0,00 €
+
+## Acabado (= subtotal 0,00 €)
+Cuenta | Concepto      | Tipo | Precio          | Cantidad | Categoría |  = Coste
+sí     | Cola blanca   | lote | 8 € por 1000 g  |          | Acabado   | = 0,00 €
+sí     | Lijas         | lote | 10 € por 10 ud  |          | Acabado   | = 0,00 €
+sí     | Barniz        | lote | 20 € por 750 ml |          | Acabado   | = 0,00 €
+no     | Aceite o cera | lote | 16 € por 500 ml |          | Acabado   | = 0,00 €
+
+## Taller (= subtotal 0,00 €)
+Cuenta | Concepto                           | Tipo | Precio             | Cantidad | Categoría |  = Coste
+sí     | Luz de las máquinas                | luz  | 1500 W a 0,2 €/kWh |          | Taller    | = 0,00 €
+sí     | Desgaste de hojas, fresas y brocas | lote | 80 € por 100 h     |          | Taller    | = 0,00 €
+no     | Alquiler de herramienta            | lote | 30 € por 1 d       |          | Taller    | = 0,00 €
+
+## Mis horas (= subtotal 0,00 €)
+Cuenta | Concepto              | Tipo  | Precio | Cantidad | Categoría    |  = Coste
+sí     | Diseño y despiece     | horas | 20 €/h |          | Mano de obra | = 0,00 €
+sí     | Corte y montaje       | horas | 20 €/h |          | Mano de obra | = 0,00 €
+sí     | Lijado y acabado      | horas | 20 €/h |          | Mano de obra | = 0,00 €
+no     | Entrega e instalación | horas | 20 €/h |          | Mano de obra | = 0,00 €
+
+## Transporte (= subtotal 0,00 €)
+Cuenta | Concepto              | Tipo | Precio       | Cantidad | Categoría  |  = Coste
+no     | Alquiler de furgoneta | lote | 60 € por 1 d |          | Transporte | = 0,00 €
+no     | Combustible           | fijo | 15 €         |          | Transporte | = 0,00 €
+
+# Sobre el total (= coste 0,00 € → total 0,00 €)
+Cuenta | Concepto    |  % | Categoría   | = Importe | = Acumulado
+sí     | Imprevistos | 10 | Imprevistos |  = 0,00 € |    = 0,00 €
+no     | Margen      | 20 | Margen      |  = 0,00 € |    = 0,00 €
+
+# Resumen
+Madera         0,00 €
+Herrajes       0,00 €
+Acabado        0,00 €
+Taller         0,00 €
+Mano de obra   0,00 €
+Imprevistos    0,00 €
+TOTAL          0,00 €
+Guardado: 26/10/2026, 12:00:00
+
+# Instrucciones
+- Edita solo lo que hay antes de «# Resumen». El resumen y estas instrucciones los rehace la app al guardar.
+- Mantén el orden: título, Fecha, Categorías, observaciones, secciones y «# Sobre el total».
+- Escribe el nombre de la hoja detrás de «# » en la primera línea.
+- Escribe la fecha como AAAA-MM-DD.
+- Escribe en Categorías todas las que uses, separadas por comas.
+- Escribe las observaciones entre ```observaciones y ```. Dentro puedes poner lo que quieras.
+- Abre cada sección con «## Título». Sus recargos van debajo, con «### Recargos».
+- Escribe una fila por gasto, con las columnas en el orden de la fila de títulos.
+- Escribe los números con coma decimal y sin punto de miles. No uses fórmulas.
+- Pon «sí» en Cuenta para que sume y «no» para que se vea sin sumar.
+- Elige el Tipo y escribe en Precio lo que cuesta una unidad:
+    fijo:  el precio de una unidad (6,5 €).
+    lote:  lo que costó el lote y lo que trae (4,2 € por 20 ud).
+    horas: el precio de una hora (12 €/h).
+    luz:   la potencia y el precio de la luz (140 W a 0,20 €/kWh).
+- Escribe en Cantidad cuántas unidades gastas (3 o 350). En horas, en luz y en un lote por d, h o min, escribe una duración (3d 5h 1m 3s o 15:08).
+- Calcula así: Coste = precio de una unidad × Cantidad.
+- Abre una receta con «## [Receta] Título (dato, dato)», con hasta 3 datos. No suma por sí sola. En Cantidad, sus líneas llevan el nombre de un dato o un número.
+- Para usar una receta, pon su título en Tipo, sus datos en Precio separados por « · » (tiempo 43m · gramos 9,6) y en Cantidad cuántas veces. Una unidad cuesta lo que la receta con esos datos, con sus recargos.
+- Cada recargo de sección es un % de la suma de las líneas que suman en esa sección.
+- Los recargos de «# Sobre el total» se aplican en orden, cada uno sobre lo acumulado.
+- Si un texto lleva | escribe \|. Si una categoría lleva una coma escribe \,. Si lleva \ escribe \\.
+- No edites lo que empieza por «=» ni lo que va entre «(= …)»: lo calcula la app.

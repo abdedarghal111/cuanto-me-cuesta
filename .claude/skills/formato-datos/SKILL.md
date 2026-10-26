@@ -1,6 +1,6 @@
 ---
 name: formato-datos
-description: Formato de los archivos de texto de «Cuánto me cuesta»: las hojas de costes de datos/ y la plantilla src/res/template.txt. Estructura, columnas, tipos de línea, recetas, cálculo del coste, recargos, escapes, categorías y qué se ignora al leer. Úsala siempre que vayas a leer, escribir o editar uno de esos .txt, o a cambiar su formato.
+description: Formato de los archivos de texto de «Cuánto me cuesta»: las hojas de costes de datos/ y las plantillas de src/res/plantillas/. Estructura, columnas, tipos de línea, recetas, cálculo del coste, recargos, escapes, categorías y qué se ignora al leer. Úsala siempre que vayas a leer, escribir o editar uno de esos .txt, o a cambiar su formato.
 ---
 
 # Formato de los datos
@@ -11,7 +11,8 @@ Los `.txt` son la fuente de verdad: una persona o una IA los lee y los edita a m
 
 - Cada hoja de costes es un archivo `datos/titulo_fecha.txt`; la app lo renombra al guardar si cambian el nombre o la fecha.
 - Borrar una hoja la renombra a `nombre.txt.borrado`.
-- La plantilla, `src/res/template.txt`, es una hoja normal con el mismo formato. Una hoja nueva es una copia de ella con su nombre y la fecha de hoy.
+- Las plantillas, una por oficio en `src/res/plantillas/`, son hojas normales con el mismo formato. Sus observaciones describen la plantilla en el asistente de hoja nueva, y Cuenta dice qué filas salen marcadas: `sí` las más probables y `no` el resto.
+- Una hoja nueva de plantilla lleva solo las filas marcadas, todas con `sí`, sin observaciones y sin las secciones y categorías que se quedan vacías.
 
 ## Estructura de una hoja
 
@@ -97,7 +98,7 @@ En los campos de una línea (celdas, títulos y `Categorías:`):
 
 ## Categorías
 
-- Cada hoja declara las suyas en `Categorías:`, y las nuevas empiezan con las de la plantilla.
+- Cada hoja declara las suyas en `Categorías:`, y las nuevas empiezan con las de la plantilla que usan sus filas.
 - Cada línea y cada recargo llevan una categoría de esa lista; la categoría vacía es «Sin categoría».
 - Quitar una categoría deja sus líneas sin categoría, tras confirmarlo.
 

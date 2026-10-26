@@ -21,7 +21,7 @@ Locales, en `src/res/fonts/`.
 - Azul `#1F4FA8` para los enlaces.
 - Rojo `#B42318` para borrar y para «sin guardar».
 - Amarillo pósit `#FFF4A8`.
-- Cada categoría tiene su color `--c1…--c10` según el orden de la plantilla, con fondo claro mediante `softColor()`.
+- Cada categoría tiene su color `--c1…--c10` según el orden de las plantillas, con fondo claro mediante `softColor()`.
 
 ## Piezas
 
