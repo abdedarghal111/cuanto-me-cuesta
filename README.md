@@ -29,13 +29,13 @@ Lo peculiar de esta app es que cada hoja es un texto plano que se explica solo, 
 
 ## Funcionalidades
 
-- **Hojas de costes:** un producto por hoja, con sus bloques de gastos y sus observaciones.
+- **Hojas de costes:** un producto por hoja, con sus secciones de gastos y sus observaciones.
 - **Cada línea hace sus cuentas:** precio de una unidad × cantidad, como en una factura. El precio puede ser suelto (`6,5 €`), de un lote (`4,2 € por 20 ud`), por horas (`12 €/h`) o de la luz (`140 W a 0,20 €/kWh`), y la cantidad un número o una duración (`3d 5h 1m`).
-- **Grupos función:** una receta con sus datos, como «Impresión 3D (tiempo, gramos)», que no suma por sí sola. Cada línea que la usa rellena esos datos y cuesta lo que la receta, repartido por sus categorías.
-- **Recargos y margen:** un % sobre un bloque (por ejemplo, el riesgo de fallos) o sobre el total (el margen).
+- **Recetas:** una fórmula con hasta 3 datos, como «Impresión 3D (tiempo, gramos)», que no suma por sí sola y vive en el estante de arriba. Sus datos se arrastran a la cantidad de sus líneas, y cada línea que la usa rellena esos datos y cuesta lo que la receta, repartido por sus categorías.
+- **Recargos y margen:** un % sobre una sección (por ejemplo, el riesgo de fallos) o sobre el total (el margen).
 - **Categorías:** cada línea lleva la suya, con su color, y el ranking «¿Dónde se va?» las compara.
 - **Portada «Todo»:** el gasto de todos los productos juntos.
-- **Plantilla:** un producto nuevo parte de la plantilla, y sus bloques se añaden con un clic.
+- **Plantilla:** un producto nuevo parte de la plantilla, y sus secciones se añaden con un clic.
 - **Guardado a mano:** nada se escribe hasta que pulsas «Guardar» o Ctrl+S, y si cambias un archivo por fuera, la app lo recarga.
 - **Lectura estricta:** si un archivo no encaja, la app dice en qué línea falla y qué esperaba.
 
@@ -67,7 +67,7 @@ Svelte 5, TypeScript y Tailwind 4 sobre Vite, sin servidor aparte: los endpoints
 
 | Pieza | Dónde | Qué hace |
 |---|---|---|
-| Modelo | `src/model/` | La hoja, sus bloques, líneas y recargos, con sus cuentas y cómo se escriben en texto |
+| Modelo | `src/model/` | La hoja, sus secciones, recetas, líneas y recargos, con sus cuentas y cómo se escriben en texto |
 | Lector | `src/model/text/` | Lee el `.txt` línea a línea, de forma estricta |
 | Vistas | `src/routes/` | La portada «Todo» y la pantalla de cada producto, con sus llamadas al servidor |
 | Piezas | `src/components/` | Las piezas de la pantalla que comparten las vistas |
@@ -84,12 +84,12 @@ Svelte 5, TypeScript y Tailwind 4 sobre Vite, sin servidor aparte: los endpoints
 
 <p align="center">
     <img src="./.github/images/screenshot2.png" width="800"><br>
-    <em>Una hoja de obra: la ficha con las observaciones, las categorías del documento y el primer bloque de gastos.</em>
+    <em>Una hoja de obra: la ficha con las observaciones, las categorías del documento y la primera sección de gastos.</em>
 </p>
 
 <p align="center">
     <img src="./.github/images/screenshot3.png" width="800"><br>
-    <em>Bloques con sus líneas, un recargo sobre la base del bloque y los imprevistos «Sobre el total».</em>
+    <em>Secciones con sus líneas, un recargo sobre la base de la sección y los imprevistos «Sobre el total».</em>
 </p>
 
 <p align="center">
