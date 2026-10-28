@@ -8,7 +8,7 @@ App local para apuntar lo que cuesta cada cosa que hago y ver en qué se va el d
   - `components/`: el resto de piezas `.svelte`.
   - `model/`: las clases de una hoja de costes, que hacen sus cuentas y se leen y escriben como `.txt`; en `model/text/`, el lector y las piezas del texto.
   - `store.client.svelte.ts`: el estado de la app; `colors.ts`, `app.css` y `res/`.
-- Abrir: `abrir.ps1` o `npm run abrir`. Comprobar: `npm run check`.
+- Abrir: `npm run abrir`. Comprobar: `npm run check`.
 - Interfaz en español de España, con coma decimal.
 - Los datos se guardan en `.txt` para que una persona o una IA los pueda leer y editar con facilidad, y así se pueda automatizar sin problemas. Por eso cada archivo es redundante a propósito: lleva costes, subtotales, resumen e instrucciones que la app recalcula o ignora al leer.
 - Prioridad absoluta a la sencillez y al mantenimiento cero: usa solo las dependencias que ya tiene el proyecto.

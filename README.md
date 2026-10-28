@@ -41,11 +41,7 @@ Lo peculiar de esta app es que cada hoja es un texto plano que se explica solo, 
 
 ## Modo de uso
 
-Hace falta [Node.js](https://nodejs.org).
-
-En Windows, doble clic en **`abrir.ps1`** (o clic derecho → «Ejecutar con PowerShell»). Abre la app en el navegador. Para cerrarla, cierra la ventana.
-
-Desde una terminal, en cualquier sistema:
+Hace falta [Node.js](https://nodejs.org). Desde una terminal, en cualquier sistema:
 
 ```
 pnpm install
