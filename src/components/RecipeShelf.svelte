@@ -1,26 +1,26 @@
 <!--
     @component
-    Estante «Recetas» del producto abierto: un botón por receta, que la abre o la cierra (puede haber varias
+    Estante «Recetas» de la hoja que se ve: un botón por receta, que la abre o la cierra (puede haber varias
     abiertas), y un hueco para escribir el nombre de una receta nueva.
 -->
 
 <script lang="ts">
     import type { SvelteSet } from 'svelte/reactivity'
-    import type { CostSheet } from '../model/CostSheet.ts'
-    import { Section } from '../model/Section.ts'
+    import type { SheetView } from '../model/SheetView.ts'
+    import { store } from '../store.client.svelte.ts'
 
-    /** `open` lleva las recetas abiertas; el estante lo cambia al pulsar. */
-    let { product, open }: { product: CostSheet; open: SvelteSet<Section> } = $props()
+    /** `open` lleva los identificadores de las recetas abiertas; el estante lo cambia al pulsar. */
+    let { view, open }: { view: SheetView; open: SvelteSet<string> } = $props()
 
     /**
      * Abre una receta cerrada o cierra una abierta.
-     * @param recipe Receta del producto.
+     * @param id Identificador de la receta.
      */
-    function toggle(recipe: Section) {
-        if (open.has(recipe)) {
-            open.delete(recipe)
+    function toggle(id: string) {
+        if (open.has(id)) {
+            open.delete(id)
         } else {
-            open.add(recipe)
+            open.add(id)
         }
     }
 
@@ -28,22 +28,24 @@
      * Crea una receta con el nombre escrito, la abre y vacía el hueco.
      * @param input Hueco «Nueva receta…».
      */
-    function addRecipe(input: HTMLInputElement) {
+    async function addRecipe(input: HTMLInputElement) {
         const title = input.value.trim()
         input.value = ''
         if (!title) {
             return
         }
-        product.addSection(Section.blankFunction(title))
-        open.add(product.functions.at(-1)!)
+        const id = await store.edit({ op: 'addSection', title, recipe: true })
+        if (id) {
+            open.add(id)
+        }
     }
 </script>
 
 <h2 class="hand-title text-[34px] text-recipe-ink">Recetas</h2>
 <div class="flex flex-wrap items-center gap-3">
-    {#each product.functions as recipe (recipe)}
-        {@const isOpen = open.has(recipe)}
-        <button class="recipe-button {isOpen ? 'bg-recipe text-white' : 'bg-recipe-soft text-recipe-ink'}" onclick={() => toggle(recipe)} aria-pressed={isOpen}>
+    {#each view.recipes as recipe (recipe.id)}
+        {@const isOpen = open.has(recipe.id)}
+        <button class="recipe-button {isOpen ? 'bg-recipe text-white' : 'bg-recipe-soft text-recipe-ink'}" onclick={() => toggle(recipe.id)} aria-pressed={isOpen}>
             <span class="hand-title text-[24px]">{recipe.title}</span>
             {#if recipe.params.length}<span class="font-mono text-xs opacity-80">{recipe.params.join(' · ')}</span>{/if}
         </button>

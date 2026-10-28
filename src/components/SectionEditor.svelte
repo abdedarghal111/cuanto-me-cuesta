@@ -1,32 +1,38 @@
 <!--
     @component
-    Una sección del producto abierto: título editable con su subtotal y la tabla de sus líneas de gasto
-    y de sus recargos sobre la sección. Si es una receta, va en marrón, sus filas no se activan ni se desactivan
-    y lleva en vez del subtotal sus datos de entrada, que se arrastran a la Cantidad de sus líneas.
+    Una sección de la hoja que se ve: título editable con su subtotal y la tabla de sus líneas de gasto y de sus
+    recargos sobre la sección. Si es una receta, va en marrón, sus filas no se activan ni se desactivan y lleva en vez
+    del subtotal sus datos de entrada, que se arrastran a la Cantidad de sus líneas. Pinta la foto de la sección y
+    manda cada cambio con `store.edit()`.
 -->
 
 <script lang="ts" module>
-    import { Line } from '../model/Line.ts'
     import { LINE_TYPE_LABELS } from '../model/LineType.ts'
     import { Section } from '../model/Section.ts'
 
     /** Opciones básicas del desplegable «Tipo»: el valor de cada tipo y su nombre. */
     const LINE_TYPE_OPTIONS = Object.entries(LINE_TYPE_LABELS)
-    /** Prefijo del valor de las opciones de «Tipo» que llaman a una receta, seguido de su posición. */
+    /** Prefijo del valor de las opciones de «Tipo» que llaman a una receta, seguido de su identificador. */
     const FUNCTION_OPTION = 'ƒ'
     /** Tipo de los datos que se arrastran: el nombre de un dato de receta. */
     const PARAM_TYPE = 'application/x-recipe-param'
 
-    /** Sitio donde se puede soltar una línea: delante de la fila `index` de `section`, o su fila fantasma. */
-    type DropZone = { section: Section; index: number; ghost: boolean }
+    /** Sitio donde se puede soltar una línea: delante de la fila `index` de la sección, o su fila fantasma. */
+    type DropZone = { sectionId: string; recipe: boolean; index: number; ghost: boolean }
     /** Sitio de cada fila de todas las tarjetas, para saber cuál hay bajo el puntero. */
     const zones = new WeakMap<Element, DropZone>()
 
     /**
-     * Arrastre de una línea, compartido por todas las tarjetas: la línea, dónde se soltaría y si se clona (al
-     * soltarla en una fila fantasma).
+     * Arrastre de una línea, compartido por todas las tarjetas: la línea y su sección, dónde se soltaría y si se
+     * clona (al soltarla en una fila fantasma).
      */
-    const drag = $state<{ line: Line | null; to: Section | null; index: number; clone: boolean }>({ line: null, to: null, index: -1, clone: false })
+    const drag = $state<{ lineId: string | null; from: DropZone | null; to: string | null; index: number; clone: boolean }>({
+        lineId: null,
+        from: null,
+        to: null,
+        index: -1,
+        clone: false,
+    })
 
     /**
      * Registra una fila como sitio donde soltar una línea.
@@ -42,82 +48,84 @@
 </script>
 
 <script lang="ts">
-    import { tick } from 'svelte'
-    import type { CostSheet } from '../model/CostSheet.ts'
     import type { BasicLineType } from '../model/LineType.ts'
-    import { Surcharge } from '../model/Surcharge.ts'
+    import type { SectionView, SheetView } from '../model/SheetView.ts'
+    import type { EditField } from '../model/SheetEdit.ts'
     import { formatEuros, formatNumber } from '../model/text/numbers.ts'
+    import { focusOnCreate, focusWhenCreated, liveValue } from '../fields.client.ts'
+    import { store } from '../store.client.svelte.ts'
     import Icon from './Icon.svelte'
     import RowActions from './RowActions.svelte'
     import TagSelect from './TagSelect.svelte'
 
-    /** `section` es una sección o una receta de `product`. */
+    /** `section` es una sección o una receta de `view`. */
     let {
-        product,
+        view,
         section,
         oncloned,
     }: {
-        product: CostSheet
-        section: Section
-        /** Se llama con la copia al clonar la sección (p. ej. para abrir en el estante la receta copiada). */
-        oncloned?: (copy: Section) => void
+        view: SheetView
+        section: SectionView
+        /** Se llama con el identificador de la copia al clonar la sección (p. ej. para abrir la receta copiada). */
+        oncloned?: (copy: string) => void
     } = $props()
 
-    const base = $derived(section.base())
     /** Recetas a las que pueden llamar sus líneas; desde una receta, ninguna. */
-    const functions = $derived(section.isFunction ? [] : product.functions)
-    /** Las de su clase (recetas o secciones), entre las que se mueve con subir y bajar. */
-    const siblings = $derived(section.isFunction ? product.functions : product.groups)
+    const recipes = $derived(section.isFunction ? [] : view.recipes)
+    const categories = $derived(view.categories.map((c) => c.name))
     /** Columnas de la tabla: una receta no lleva la de «✓». */
     const columns = $derived(section.isFunction ? 7 : 8)
 
-    /** Tarjeta de la sección, para pasar el foco a la fila que se crea. */
+    /** Tarjeta de la sección, para saber si se toca fuera de ella. */
     let card: HTMLDivElement
     /** Si se ha tocado la tarjeta en una pantalla táctil: deja ver sus controles hasta que se toca fuera. */
     let touched = $state(false)
     /** Línea sobre cuya Cantidad se arrastra un dato, para resaltarla. */
-    let dropTarget: Line | null = $state(null)
+    let dropTarget: string | null = $state(null)
 
     /**
-     * Crea una línea o un recargo con lo que se ha escrito en su fila fantasma, con la categoría de la última
-     * línea, vacía la fila y pasa el foco al concepto de la fila nueva para seguir escribiendo.
+     * Escribe un campo de un elemento de la sección.
+     * @param id Identificador del elemento.
+     * @param field Campo.
+     * @param value Valor nuevo.
+     */
+    const set = (id: string, field: EditField, value: string | boolean) => store.edit({ op: 'set', id, field, value })
+
+    /**
+     * Crea una línea o un recargo con lo que se ha escrito en su fila fantasma, vacía la fila y pasa el foco al
+     * concepto de la fila nueva para seguir escribiendo.
      * @param input Campo de la fila fantasma.
      * @param kind Qué se crea.
      */
     async function addFromGhost(input: HTMLInputElement, kind: 'line' | 'surcharge') {
-        const item = kind === 'line' ? new Line() : new Surcharge(false)
-        item.name = input.value
-        product.assignCategory(item, section.lastCategory())
-        if (item instanceof Line) {
-            section.addLine(item)
-        } else {
-            section.addSurcharge(item)
-        }
+        const name = input.value
         input.value = ''
-        await tick()
-        const field = [...card.querySelectorAll<HTMLInputElement>(`[data-concept="${kind}"]`)].at(-1)
-        field?.focus()
-        field?.setSelectionRange(field.value.length, field.value.length)
+        const created = await store.edit(
+            kind === 'line' ? { op: 'addLine', sectionId: section.id, name } : { op: 'addSurcharge', sectionId: section.id, name },
+        )
+        focusWhenCreated(created)
     }
 
     /**
      * Empieza a arrastrar una línea desde su asa; el puntero queda capturado por el asa hasta soltarla.
      * @param e Evento de pulsar el asa.
-     * @param line Línea que se arrastra.
+     * @param lineId Línea que se arrastra.
      */
-    function startDrag(e: PointerEvent & { currentTarget: HTMLElement }, line: Line) {
+    function startDrag(e: PointerEvent & { currentTarget: HTMLElement }, lineId: string) {
         e.preventDefault()
         e.currentTarget.setPointerCapture(e.pointerId)
-        drag.line = line
+        drag.lineId = lineId
+        drag.from = { sectionId: section.id, recipe: section.isFunction, index: 0, ghost: false }
     }
 
     /**
      * Busca la fila bajo el puntero y apunta dónde se soltaría la línea: delante o detrás de esa fila según la
-     * mitad en la que esté, o en una fila fantasma para clonarla. Cerca de los bordes de la ventana, la desplaza.
+     * mitad en la que esté, o en una fila fantasma para clonarla. Solo se mueve dentro de su sección o entre secciones
+     * que no son recetas. Cerca de los bordes de la ventana, la desplaza.
      * @param e Evento de mover el puntero.
      */
     function moveDrag(e: PointerEvent) {
-        if (!drag.line) {
+        if (!drag.lineId || !drag.from) {
             return
         }
         if (e.clientY < 60 || e.clientY > innerHeight - 60) {
@@ -125,61 +133,37 @@
         }
         const row = document.elementFromPoint(e.clientX, e.clientY)?.closest('tr')
         const zone = row && zones.get(row)
-        if (!row || !zone || !product.canMoveLine(drag.line, zone.section)) {
+        const allowed = zone && (zone.sectionId === drag.from.sectionId || (!zone.recipe && !drag.from.recipe))
+        if (!row || !zone || !allowed) {
             drag.to = null
             return
         }
         const { top, height } = row.getBoundingClientRect()
-        drag.to = zone.section
+        drag.to = zone.sectionId
         drag.clone = zone.ghost
         drag.index = zone.index + (!zone.ghost && e.clientY > top + height / 2 ? 1 : 0)
     }
 
     /** Suelta la línea donde apunta el arrastre: la mueve, o añade una copia al final si es una fila fantasma. */
     function endDrag() {
-        const { line, to, index, clone } = drag
-        if (line && to) {
-            if (clone) {
-                to.addLine(line.clone())
-            } else {
-                product.moveLine(line, to, index)
-            }
+        const { lineId, to, index, clone } = drag
+        if (lineId && to) {
+            store.edit({ op: 'moveLine', id: lineId, sectionId: to, index, copy: clone })
         }
-        drag.line = null
+        drag.lineId = null
         drag.to = null
     }
 
     /**
-     * Cambia el orden de las recetas o de las secciones entre ellas.
-     * @param sections Las de su clase en el orden nuevo.
-     */
-    function reorder(sections: Section[]) {
-        if (section.isFunction) {
-            product.functions = sections
-        } else {
-            product.groups = sections
-        }
-    }
-
-    /**
-     * Valor de la línea en el desplegable «Tipo».
-     * @param line Línea de la sección.
-     * @returns El tipo básico, o el prefijo de receta con su posición.
-     */
-    function typeValue(line: Line): string {
-        return line.function ? `${FUNCTION_OPTION}${functions.indexOf(line.function)}` : line.type
-    }
-
-    /**
-     * Cambia el tipo de una línea al elegido en el desplegable «Tipo».
-     * @param line Línea de la sección.
+     * Cambia el tipo de una línea al elegido en el desplegable «Tipo»: uno básico o una receta.
+     * @param id Línea de la sección.
      * @param value Valor de la opción elegida.
      */
-    function setType(line: Line, value: string) {
+    function setType(id: string, value: string) {
         if (value.startsWith(FUNCTION_OPTION)) {
-            line.call(functions[Number(value.slice(FUNCTION_OPTION.length))])
+            store.edit({ op: 'callRecipe', id, recipeId: value.slice(FUNCTION_OPTION.length) })
         } else {
-            line.type = value as BasicLineType
+            store.edit({ op: 'setType', id, type: value as BasicLineType })
         }
     }
 
@@ -188,8 +172,18 @@
      * @param input Hueco «dato…».
      */
     function addParam(input: HTMLInputElement) {
-        product.addParam(section, input.value)
+        store.edit({ op: 'addParam', sectionId: section.id, name: input.value })
         input.value = ''
+    }
+
+    /**
+     * Cambia el nombre de un dato de la receta; si no se puede, el campo vuelve al nombre que quede.
+     * @param param Nombre actual.
+     * @param input Campo con el nombre nuevo.
+     */
+    async function renameParam(param: string, input: HTMLInputElement) {
+        await store.edit({ op: 'renameParam', sectionId: section.id, from: param, to: input.value })
+        input.value = section.params.includes(input.value.trim()) ? input.value.trim() : param
     }
 
     /**
@@ -205,37 +199,34 @@
     /**
      * Deja soltar un dato sobre la Cantidad de una línea y la resalta.
      * @param e Evento de arrastre sobre la celda.
-     * @param line Línea de la celda.
+     * @param id Línea de la celda.
      */
-    function dragOver(e: DragEvent, line: Line) {
+    function dragOver(e: DragEvent, id: string) {
         if (e.dataTransfer?.types.includes(PARAM_TYPE)) {
             e.preventDefault()
-            dropTarget = line
+            dropTarget = id
         }
     }
 
     /**
      * Pone como Cantidad de una línea el dato que se suelta sobre ella.
      * @param e Evento de soltar sobre la celda.
-     * @param line Línea de la celda.
+     * @param id Línea de la celda.
      */
-    function dropParam(e: DragEvent, line: Line) {
+    function dropParam(e: DragEvent, id: string) {
         dropTarget = null
         const param = e.dataTransfer?.getData(PARAM_TYPE)
         if (param && section.params.includes(param)) {
             e.preventDefault()
-            line.quantity = param
+            set(id, 'quantity', param)
         }
     }
 
-    /**
-     * Cambia el nombre de un dato de la receta; si no se puede, el campo vuelve al nombre de antes.
-     * @param param Nombre actual.
-     * @param input Campo con el nombre nuevo.
-     */
-    function renameParam(param: string, input: HTMLInputElement) {
-        product.renameParam(section, param, input.value)
-        input.value = section.params.includes(input.value.trim()) ? input.value.trim() : param
+    async function clone() {
+        const copy = await store.edit({ op: 'clone', id: section.id })
+        if (copy) {
+            oncloned?.(copy)
+        }
     }
 </script>
 
@@ -256,7 +247,7 @@
 <svelte:document onpointerdown={(e) => card.contains(e.target as Node) || (touched = false)} />
 
 <div
-    class="section-card overflow-hidden {section.isFunction ? 'recipe-card' : 'paper'} {touched || drag.line ? 'revealed' : ''}"
+    class="section-card overflow-hidden {section.isFunction ? 'recipe-card' : 'paper'} {touched || drag.lineId ? 'revealed' : ''}"
     bind:this={card}
     role="group"
     aria-label={section.title}
@@ -265,7 +256,8 @@
     <div class={section.isFunction ? 'recipe-header' : 'card-header'}>
         <input
             class="editable-title block-title flex-1 {section.isFunction ? 'min-w-56 text-recipe-ink!' : 'min-w-0'}"
-            bind:value={section.title}
+            {@attach liveValue(() => section.title)}
+            oninput={(e) => set(section.id, 'title', e.currentTarget.value)}
             aria-label={section.isFunction ? 'Título de la receta' : 'Título de la sección'}
         />
         {#if section.isFunction}
@@ -284,7 +276,11 @@
                         onchange={(e) => renameParam(param, e.currentTarget)}
                         aria-label="Nombre del dato"
                     />
-                    <button class="mini px-0.5!" onclick={() => product.removeParam(section, param)} aria-label="Quitar el dato «{param}»">×</button>
+                    <button
+                        class="mini px-0.5!"
+                        onclick={() => store.edit({ op: 'removeParam', sectionId: section.id, param })}
+                        aria-label="Quitar el dato «{param}»">×</button
+                    >
                 </span>
             {/each}
             {#if section.params.length < Section.MAX_PARAMS}
@@ -297,24 +293,21 @@
                 />
             {/if}
         {:else}
-            <strong class="font-mono text-lg">{formatEuros(section.subtotal())}</strong>
+            <strong class="font-mono text-lg">{formatEuros(section.subtotal)}</strong>
         {/if}
         <span class="card-controls inline-flex">
             <button
                 class="mini"
-                onclick={() => oncloned?.(product.cloneSection(section))}
+                onclick={clone}
                 title="Clonar {section.isFunction ? 'receta' : 'sección'}"
                 aria-label="Clonar {section.isFunction ? 'receta' : 'sección'}"
             >
                 <Icon name="clone" size={18} />
             </button>
             <RowActions
-                list={siblings}
-                index={siblings.indexOf(section)}
-                {reorder}
-                onremove={() => product.removeSection(section)}
+                id={section.id}
                 confirm={section.isFunction
-                    ? `Quitar la receta «${section.title}»; sus ${product.callers(section).length} líneas pasan a fijo`
+                    ? `Quitar la receta «${section.title}»; sus ${section.callers} líneas pasan a fijo`
                     : `Quitar la sección «${section.title}»`}
                 label={section.isFunction ? 'receta' : 'sección'}
                 size={18}
@@ -342,37 +335,55 @@
                 </tr>
             </thead>
             <tbody>
-                {#each section.lines as line, lineIndex (line)}
-                    {@const fn = line.function}
+                {#each section.lines as line, lineIndex (line.id)}
+                    {@const recipe = view.recipes.find((r) => r.id === line.recipeId)}
                     <tr
-                        class="cost-row {line.counts && drag.line !== line ? '' : 'opacity-45'}"
-                        class:drop-before={drag.to === section && !drag.clone && drag.index === lineIndex}
-                        {@attach dropZone({ section, index: lineIndex, ghost: false })}
+                        class="cost-row {line.counts && drag.lineId !== line.id ? '' : 'opacity-45'}"
+                        class:drop-before={drag.to === section.id && !drag.clone && drag.index === lineIndex}
+                        {@attach dropZone({ sectionId: section.id, recipe: section.isFunction, index: lineIndex, ghost: false })}
                     >
-                        {#if !section.isFunction}<td><input type="checkbox" class="check" bind:checked={line.counts} aria-label="Cuenta" /></td>{/if}
+                        {#if !section.isFunction}
+                            <td>
+                                <input
+                                    type="checkbox"
+                                    class="check"
+                                    checked={line.counts}
+                                    onchange={(e) => set(line.id, 'counts', e.currentTarget.checked)}
+                                    aria-label="Cuenta"
+                                />
+                            </td>
+                        {/if}
                         <td class="w-full">
-                            <input class="concept-input" bind:value={line.name} placeholder="Ej. Filamento PLA" aria-label="Concepto" data-concept="line" />
+                            <input
+                                class="concept-input"
+                                {@attach liveValue(() => line.name)}
+                                {@attach focusOnCreate(line.id)}
+                                oninput={(e) => set(line.id, 'name', e.currentTarget.value)}
+                                placeholder="Ej. Filamento PLA"
+                                aria-label="Concepto"
+                                data-row={line.id}
+                            />
                         </td>
                         <td>
                             <select
-                                class="max-w-40 font-mono text-sm {fn ? 'recipe-type' : ''}"
-                                value={typeValue(line)}
-                                onchange={(e) => setType(line, e.currentTarget.value)}
+                                class="max-w-40 font-mono text-sm {recipe ? 'recipe-type' : ''}"
+                                value={line.recipeId ? `${FUNCTION_OPTION}${line.recipeId}` : line.type}
+                                onchange={(e) => setType(line.id, e.currentTarget.value)}
                                 aria-label="Tipo"
                             >
                                 {#each LINE_TYPE_OPTIONS as [value, label] (value)}<option {value}>{label}</option>{/each}
-                                {#each functions as option, i (option)}<option value="{FUNCTION_OPTION}{i}">{option.title}</option>{/each}
+                                {#each recipes as option (option.id)}<option value="{FUNCTION_OPTION}{option.id}">{option.title}</option>{/each}
                             </select>
                         </td>
                         <td>
-                            {#if fn}
+                            {#if recipe}
                                 <span class="price-cell">
-                                    {#each fn.params as param (param)}
+                                    {#each recipe.params as param (param)}
                                         <input
                                             class="numeric w-22"
-                                            value={line.arg(param)}
-                                            oninput={(e) => line.setArg(param, e.currentTarget.value)}
-                                            onchange={() => line.normalizeArg(param)}
+                                            {@attach liveValue(() => line.args[param] ?? '')}
+                                            oninput={(e) => store.edit({ op: 'setArg', id: line.id, param, value: e.currentTarget.value })}
+                                            onchange={() => store.edit({ op: 'normalize', id: line.id, param })}
                                             placeholder={param}
                                             aria-label={param}
                                         />
@@ -381,16 +392,43 @@
                             {:else}
                                 <span class="price-cell">
                                     {#if line.type === 'power'}
-                                        <input class="numeric w-18" bind:value={line.watts} inputmode="decimal" placeholder="0" aria-label="Potencia en W" />
+                                        <input
+                                            class="numeric w-18"
+                                            {@attach liveValue(() => line.watts)}
+                                            oninput={(e) => set(line.id, 'watts', e.currentTarget.value)}
+                                            inputmode="decimal"
+                                            placeholder="0"
+                                            aria-label="Potencia en W"
+                                        />
                                         W a
                                     {/if}
-                                    <input class="numeric w-18" bind:value={line.price} inputmode="decimal" placeholder="0" aria-label="Precio €" />
+                                    <input
+                                        class="numeric w-18"
+                                        {@attach liveValue(() => line.price)}
+                                        oninput={(e) => set(line.id, 'price', e.currentTarget.value)}
+                                        inputmode="decimal"
+                                        placeholder="0"
+                                        aria-label="Precio €"
+                                    />
                                     {#if line.type === 'fixed'}
                                         €
                                     {:else if line.type === 'lot'}
                                         € por
-                                        <input class="numeric w-16" bind:value={line.size} inputmode="decimal" placeholder="1" aria-label="Lo que trae el lote" />
-                                        <input class="w-14 font-mono text-sm" bind:value={line.unit} placeholder="ud" aria-label="Unidad del lote" />
+                                        <input
+                                            class="numeric w-16"
+                                            {@attach liveValue(() => line.size)}
+                                            oninput={(e) => set(line.id, 'size', e.currentTarget.value)}
+                                            inputmode="decimal"
+                                            placeholder="1"
+                                            aria-label="Lo que trae el lote"
+                                        />
+                                        <input
+                                            class="w-14 font-mono text-sm"
+                                            {@attach liveValue(() => line.unit)}
+                                            oninput={(e) => set(line.id, 'unit', e.currentTarget.value)}
+                                            placeholder="ud"
+                                            aria-label="Unidad del lote"
+                                        />
                                     {:else if line.type === 'hours'}
                                         €/h
                                     {:else}
@@ -400,97 +438,118 @@
                             {/if}
                         </td>
                         <td
-                            class={dropTarget === line ? 'drop-target' : ''}
-                            ondragover={(e) => section.isFunction && dragOver(e, line)}
+                            class={dropTarget === line.id ? 'drop-target' : ''}
+                            ondragover={(e) => section.isFunction && dragOver(e, line.id)}
                             ondragleave={() => (dropTarget = null)}
-                            ondrop={(e) => dropParam(e, line)}
+                            ondrop={(e) => dropParam(e, line.id)}
                         >
                             {#if section.params.includes(line.quantity.trim())}
                                 <span class="param flex w-24 items-center justify-between pr-1!">
                                     <span class="font-mono text-sm">{line.quantity.trim()}</span>
-                                    <button class="mini px-0.5!" onclick={() => (line.quantity = '')} aria-label="Quitar el dato de la Cantidad">×</button>
+                                    <button class="mini px-0.5!" onclick={() => set(line.id, 'quantity', '')} aria-label="Quitar el dato de la Cantidad">×</button>
                                 </span>
                             {:else}
                                 <input
                                     class="numeric highlighted w-24"
-                                    bind:value={line.quantity}
-                                    onchange={() => line.normalizeQuantity()}
-                                    inputmode={line.timeUnit() ? 'text' : 'decimal'}
-                                    placeholder={line.timeUnit() ? '3h 5m' : '0'}
-                                    title={line.timeUnit() ? 'Duración: 3d 5h 1m 3s, 15:08 (horas:minutos) o un número' : 'Cuántas unidades gastas'}
+                                    {@attach liveValue(() => line.quantity)}
+                                    oninput={(e) => set(line.id, 'quantity', e.currentTarget.value)}
+                                    onchange={() => store.edit({ op: 'normalize', id: line.id })}
+                                    inputmode={line.timeUnit ? 'text' : 'decimal'}
+                                    placeholder={line.timeUnit ? '3h 5m' : '0'}
+                                    title={line.timeUnit ? 'Duración: 3d 5h 1m 3s, 15:08 (horas:minutos) o un número' : 'Cuántas unidades gastas'}
                                     aria-label="Cantidad"
                                 />
                             {/if}
                         </td>
                         <td>
-                            {#if !fn}<TagSelect {product} item={line} />{/if}
+                            {#if !recipe}<TagSelect item={line} {categories} />{/if}
                         </td>
                         {#if section.isFunction}
-                            <td class="amount-cell font-normal text-muted">{formatNumber(line.unitPrice())} €/{line.unitLabel()}</td>
+                            <td class="amount-cell font-normal text-muted">{formatNumber(line.unitPrice)} €/{line.unitLabel}</td>
                         {:else}
-                            <td class="amount-cell {line.counts ? '' : 'line-through'}">{formatEuros(line.cost())}</td>
+                            <td class="amount-cell {line.counts ? '' : 'line-through'}">{formatEuros(line.cost)}</td>
                         {/if}
                         <td class="actions-cell">
                             <span class="row-controls">
                                 <button
                                     class="mini drag-handle"
-                                    onpointerdown={(e) => startDrag(e, line)}
+                                    onpointerdown={(e) => startDrag(e, line.id)}
                                     onpointermove={moveDrag}
                                     onpointerup={endDrag}
-                                    onpointercancel={() => (drag.line = drag.to = null)}
+                                    onpointercancel={() => (drag.lineId = drag.to = null)}
                                     title="Arrastrar línea: suéltala en otra fila para moverla o en «Escribe aquí…» para clonarla"
                                     aria-label="Arrastrar línea"
                                 >
                                     <Icon name="drag" size={16} />
                                 </button>
-                                <button class="mini px-0.5" onclick={() => section.cloneLine(line)} title="Clonar línea" aria-label="Clonar línea">
+                                <button class="mini px-0.5" onclick={() => store.edit({ op: 'clone', id: line.id })} title="Clonar línea" aria-label="Clonar línea">
                                     <Icon name="clone" size={16} />
                                 </button>
-                                <RowActions list={section.lines} index={lineIndex} reorder={(lines) => (section.lines = lines)} onremove={() => section.removeLine(line)} />
+                                <RowActions id={line.id} />
                             </span>
                         </td>
                     </tr>
                 {/each}
                 <tr
-                    class:drop-before={drag.to === section && !drag.clone && drag.index === section.lines.length}
-                    class:drop-clone={drag.to === section && drag.clone}
-                    {@attach dropZone({ section, index: section.lines.length, ghost: true })}
+                    class:drop-before={drag.to === section.id && !drag.clone && drag.index === section.lines.length}
+                    class:drop-clone={drag.to === section.id && drag.clone}
+                    {@attach dropZone({ sectionId: section.id, recipe: section.isFunction, index: section.lines.length, ghost: true })}
                 >
                     {@render ghostCells('line', 'Escribe aquí para añadir una línea…', 'Nueva línea')}
                 </tr>
                 {#if section.surcharges.length}
                     <tr class="border-t-2 border-dashed border-[#AEBCCB] bg-[#E8EFF8]">
                         <td colspan={columns} class="font-mono text-xs text-[#3F4E5D]">
-                            {section.isFunction ? 'Recargos de la receta · se aplican en cada unidad' : `Recargos sobre la sección · base ${formatEuros(base)}`}
+                            {section.isFunction ? 'Recargos de la receta · se aplican en cada unidad' : `Recargos sobre la sección · base ${formatEuros(section.base)}`}
                         </td>
                     </tr>
                 {/if}
-                {#each section.surcharges as surcharge, surchargeIndex (surcharge)}
+                {#each section.surcharges as surcharge (surcharge.id)}
                     <tr class="cost-row {surcharge.counts ? '' : 'opacity-45'}">
-                        {#if !section.isFunction}<td><input type="checkbox" class="check" bind:checked={surcharge.counts} aria-label="Cuenta" /></td>{/if}
+                        {#if !section.isFunction}
+                            <td>
+                                <input
+                                    type="checkbox"
+                                    class="check"
+                                    checked={surcharge.counts}
+                                    onchange={(e) => set(surcharge.id, 'counts', e.currentTarget.checked)}
+                                    aria-label="Cuenta"
+                                />
+                            </td>
+                        {/if}
                         <td class="w-full">
-                            <input class="concept-input" bind:value={surcharge.name} placeholder="Ej. Riesgo por fallos" aria-label="Concepto" data-concept="surcharge" />
+                            <input
+                                class="concept-input"
+                                {@attach liveValue(() => surcharge.name)}
+                                {@attach focusOnCreate(surcharge.id)}
+                                oninput={(e) => set(surcharge.id, 'name', e.currentTarget.value)}
+                                placeholder="Ej. Riesgo por fallos"
+                                aria-label="Concepto"
+                                data-row={surcharge.id}
+                            />
                         </td>
                         <td colspan="3">
                             <span class="inline-flex items-center gap-1">
-                                <input class="numeric highlighted w-18" bind:value={surcharge.percent} inputmode="decimal" placeholder="0" aria-label="Porcentaje" />
+                                <input
+                                    class="numeric highlighted w-18"
+                                    {@attach liveValue(() => surcharge.percent)}
+                                    oninput={(e) => set(surcharge.id, 'percent', e.currentTarget.value)}
+                                    inputmode="decimal"
+                                    placeholder="0"
+                                    aria-label="Porcentaje"
+                                />
                                 <span class="font-mono text-[13px] text-[#3F4E5D]">% de la base</span>
                             </span>
                         </td>
-                        <td><TagSelect {product} item={surcharge} /></td>
+                        <td><TagSelect item={surcharge} {categories} /></td>
                         {#if section.isFunction}
                             <td class="amount-cell font-normal text-muted">+ {surcharge.percent || 0} %</td>
                         {:else}
-                            <td class="amount-cell {surcharge.counts ? '' : 'line-through'}">{formatEuros(surcharge.amount(base))}</td>
+                            <td class="amount-cell {surcharge.counts ? '' : 'line-through'}">{formatEuros(surcharge.amount)}</td>
                         {/if}
                         <td class="actions-cell">
                             <span class="row-controls">
-                                <RowActions
-                                    list={section.surcharges}
-                                    index={surchargeIndex}
-                                    reorder={(surcharges) => (section.surcharges = surcharges)}
-                                    onremove={() => section.removeSurcharge(surcharge)}
-                                />
+                                <RowActions id={surcharge.id} />
                             </span>
                         </td>
                     </tr>

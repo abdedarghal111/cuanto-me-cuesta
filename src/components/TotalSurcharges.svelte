@@ -1,48 +1,41 @@
 <!--
     @component
-    «Sobre el total» del producto abierto: recargos que se aplican en orden, cada uno sobre lo acumulado, y una
-    fila fantasma para añadir otro que se despliega al pasar el ratón.
+    «Sobre el total» de la hoja que se ve: recargos que se aplican en orden, cada uno sobre lo acumulado, y una fila
+    fantasma para añadir otro que se despliega al pasar el ratón.
 -->
 
 <script lang="ts">
-    import { tick } from 'svelte'
-    import type { CostSheet } from '../model/CostSheet.ts'
-    import type { Summary } from '../model/Summary.ts'
-    import { Surcharge } from '../model/Surcharge.ts'
+    import { focusOnCreate, focusWhenCreated, liveValue } from '../fields.client.ts'
+    import type { SheetView } from '../model/SheetView.ts'
     import { formatEuros } from '../model/text/numbers.ts'
+    import { store } from '../store.client.svelte.ts'
     import RowActions from './RowActions.svelte'
     import TagSelect from './TagSelect.svelte'
 
-    let { product, summary }: { product: CostSheet; summary: Summary } = $props()
+    let { view }: { view: SheetView } = $props()
 
-    /** Tarjeta, para pasar el foco al recargo que se crea. */
-    let card: HTMLDivElement
+    const categories = $derived(view.categories.map((c) => c.name))
 
     /**
-     * Crea un recargo sobre el total, sin categoría, con lo escrito en la fila fantasma, vacía la fila y pasa el
-     * foco al concepto del recargo nuevo para seguir escribiendo.
+     * Crea un recargo sobre el total con lo escrito en la fila fantasma, vacía la fila y pasa el foco al concepto
+     * del recargo nuevo para seguir escribiendo.
      * @param input Campo de la fila fantasma.
      */
     async function addFromGhost(input: HTMLInputElement) {
-        const surcharge = new Surcharge(true)
-        surcharge.name = input.value
-        product.addTotalSurcharge(surcharge)
+        const name = input.value
         input.value = ''
-        await tick()
-        const field = [...card.querySelectorAll<HTMLInputElement>('[data-concept]')].at(-1)
-        field?.focus()
-        field?.setSelectionRange(field.value.length, field.value.length)
+        focusWhenCreated(await store.edit({ op: 'addSurcharge', sectionId: null, name }))
     }
 </script>
 
-<div class="total-card paper overflow-hidden" bind:this={card}>
+<div class="total-card paper overflow-hidden">
     <div class="card-header">
         <h2 class="block-title">Sobre el total</h2>
-        <span class="font-mono text-sm">coste {formatEuros(summary.cost)} → <strong class="text-lg">{formatEuros(summary.total)}</strong></span>
+        <span class="font-mono text-sm">coste {formatEuros(view.cost)} → <strong class="text-lg">{formatEuros(view.total)}</strong></span>
     </div>
     <div class="overflow-x-auto">
         <table class="cost-table">
-            {#if product.totalSurcharges.length}
+            {#if view.totalSurcharges.length}
                 <thead class="cost-thead">
                     <tr>
                         <th title="Si lo quitas, el recargo se ve pero no suma">✓</th>
@@ -56,17 +49,42 @@
                 </thead>
             {/if}
             <tbody>
-                {#each product.totalSurcharges as surcharge, index (surcharge)}
+                {#each view.totalSurcharges as surcharge (surcharge.id)}
                     <tr class="cost-row {surcharge.counts ? '' : 'opacity-45'}">
-                        <td><input type="checkbox" class="check" bind:checked={surcharge.counts} aria-label="Cuenta" /></td>
-                        <td class="w-full">
-                            <input class="concept-input" bind:value={surcharge.name} placeholder="Ej. Margen" aria-label="Concepto" data-concept />
+                        <td>
+                            <input
+                                type="checkbox"
+                                class="check"
+                                checked={surcharge.counts}
+                                onchange={(e) => store.edit({ op: 'set', id: surcharge.id, field: 'counts', value: e.currentTarget.checked })}
+                                aria-label="Cuenta"
+                            />
                         </td>
-                        <td><input class="numeric highlighted w-18" bind:value={surcharge.percent} inputmode="decimal" placeholder="0" aria-label="Porcentaje" /></td>
-                        <td><TagSelect {product} item={surcharge} /></td>
-                        <td class="amount-cell {surcharge.counts ? '' : 'line-through'}">{formatEuros(summary.totalSurcharges[index]?.amount ?? 0)}</td>
-                        <td class="text-right font-mono">{formatEuros(summary.totalSurcharges[index]?.runningTotal ?? 0)}</td>
-                        <td><RowActions list={product.totalSurcharges} {index} reorder={(surcharges) => (product.totalSurcharges = surcharges)} onremove={() => product.removeTotalSurcharge(surcharge)} /></td>
+                        <td class="w-full">
+                            <input
+                                class="concept-input"
+                                {@attach liveValue(() => surcharge.name)}
+                                {@attach focusOnCreate(surcharge.id)}
+                                oninput={(e) => store.edit({ op: 'set', id: surcharge.id, field: 'name', value: e.currentTarget.value })}
+                                placeholder="Ej. Margen"
+                                aria-label="Concepto"
+                                data-row={surcharge.id}
+                            />
+                        </td>
+                        <td>
+                            <input
+                                class="numeric highlighted w-18"
+                                {@attach liveValue(() => surcharge.percent)}
+                                oninput={(e) => store.edit({ op: 'set', id: surcharge.id, field: 'percent', value: e.currentTarget.value })}
+                                inputmode="decimal"
+                                placeholder="0"
+                                aria-label="Porcentaje"
+                            />
+                        </td>
+                        <td><TagSelect item={surcharge} {categories} /></td>
+                        <td class="amount-cell {surcharge.counts ? '' : 'line-through'}">{formatEuros(surcharge.amount)}</td>
+                        <td class="text-right font-mono">{formatEuros(surcharge.runningTotal)}</td>
+                        <td><RowActions id={surcharge.id} /></td>
                     </tr>
                 {/each}
                 <tr>

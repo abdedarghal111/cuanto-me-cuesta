@@ -1,7 +1,6 @@
 <!--
     @component
-    Desplegable para elegir la categoría de una línea o un recargo entre las del producto,
-    o crear una nueva.
+    Desplegable para elegir la categoría de una línea o un recargo entre las de la hoja, o crear una nueva.
 -->
 
 <script lang="ts" module>
@@ -11,32 +10,31 @@
 
 <script lang="ts">
     import { softColor, tagColor } from '../colors.ts'
-    import { askName } from './Dialog.svelte'
-    import type { CostSheet } from '../model/CostSheet.ts'
-    import type { LineItem } from '../model/LineItem.ts'
+    import type { ItemView } from '../model/SheetView.ts'
     import { store } from '../store.client.svelte.ts'
+    import { askName } from './Dialog.svelte'
 
-    /** `item` es una línea o un recargo de `product`. */
-    let { product, item }: { product: CostSheet; item: LineItem } = $props()
+    /** `item` es una línea o un recargo de una hoja con las categorías `categories`. */
+    let { item, categories }: { item: ItemView; categories: string[] } = $props()
 
     const color = $derived(tagColor(item.category, store.tags))
 
     /**
-     * Pone la categoría elegida a `item`; con «+ nueva categoría…», pide el nombre, la declara y se la pone.
+     * Pone la categoría elegida; con «+ nueva categoría…», pide el nombre, la declara y se la pone.
      * @param e Cambio del desplegable.
-     * @returns Promesa que se cumple al poner la categoría o al cerrar el diálogo.
+     * @returns Promesa que se cumple al mandar el cambio o al cerrar el diálogo.
      */
     async function onChange(e: Event & { currentTarget: HTMLSelectElement }) {
         const select = e.currentTarget
         if (select.value !== NEW_TAG_OPTION) {
-            product.assignCategory(item, select.value)
+            await store.edit({ op: 'assignCategory', id: item.id, category: select.value })
             return
         }
         // Mientras se escribe el nombre, el desplegable sigue mostrando la categoría anterior.
         select.value = item.category
-        const tag = product.addCategory((await askName('Nueva categoría')) ?? '')
-        if (tag !== null) {
-            product.assignCategory(item, tag)
+        const name = await askName('Nueva categoría')
+        if (name) {
+            await store.edit({ op: 'addCategory', name, assignTo: item.id })
         }
     }
 </script>
@@ -49,8 +47,8 @@
     onchange={onChange}
     aria-label="Categoría"
 >
-    {#if !product.categories.includes(item.category)}<option value={item.category} style:background="white">{item.category || '— sin categoría —'}</option>{/if}
-    {#each product.categories as tag (tag)}
+    {#if !categories.includes(item.category)}<option value={item.category} style:background="white">{item.category || '— sin categoría —'}</option>{/if}
+    {#each categories as tag (tag)}
         <option value={tag} style:background={softColor(tagColor(tag, store.tags))} style:color="var(--ink)">{tag}</option>
     {/each}
     <option value={NEW_TAG_OPTION} style:background="white" style:color="var(--accent)">+ nueva categoría…</option>

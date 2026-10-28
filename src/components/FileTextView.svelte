@@ -1,25 +1,30 @@
 <!--
     @component
-    El producto abierto tal como queda en su archivo, para cambiarlo o pegar otro texto y cargarlo.
+    La hoja que se ve tal como queda en su archivo, para cambiarla o pegar otro texto y cargarlo.
 -->
 
 <script lang="ts">
     import { untrack } from 'svelte'
-    import { ask } from './Dialog.svelte'
-    import type { CostSheet } from '../model/CostSheet.ts'
+    import { api } from '../api.client.ts'
+    import type { DocumentInfo } from '../ipc.ts'
     import { store } from '../store.client.svelte.ts'
+    import { ask } from './Dialog.svelte'
 
-    let { product }: { product: CostSheet } = $props()
+    let { document: doc }: { document: DocumentInfo } = $props()
 
-    // Se toma el texto al abrir; lo que se escriba después no cambia el producto hasta cargarlo.
-    let text = $state(untrack(() => product.serialize().join('\n')))
+    // Se pide el texto al abrir; lo que se escriba después no cambia la hoja hasta cargarlo.
+    let text = $state('')
+    api.text(untrack(() => doc.id)).then((value) => (text = value))
 
-    /** Carga el texto como el producto abierto; si no es válido, dice dónde falla y se queda como está. */
+    /** Carga el texto como la hoja; si no es válido, dice dónde falla y se queda como está. */
     async function load() {
         try {
-            store.loadText(text)
+            await api.loadText(doc.id, text)
+            store.textMode = false
         } catch (e) {
-            await ask({ title: 'No se puede cargar', message: String(e), confirmLabel: 'Vale' })
+            // Electron antepone el nombre de la orden al mensaje del error.
+            const message = String(e).replace(/^Error: Error invoking remote method '[^']+': (\w*Error: )?/, '')
+            await ask({ title: 'No se puede cargar', message, confirmLabel: 'Vale' })
         }
     }
 </script>

@@ -1,0 +1,49 @@
+# Empaquetado con electron-builder: `npm run build:<sistema>` compila la página en `dist/` y deja los instaladores
+# en `out/`. La acción `.github/workflows/release.yml` los genera y los publica al subir un tag `vX.Y.Z`.
+appId: es.abderra.cuanto-me-cuesta
+productName: Cuánto me cuesta
+
+directories:
+  output: out
+
+# Solo lo que usa la app instalada: el proceso principal (TypeScript, que Electron lee sin compilar) con el modelo y el
+# contrato que comparte con la ventana, las plantillas y la página compilada.
+files:
+  - package.json
+  - src/**/*.server.ts
+  - src/ipc.ts
+  - src/model/**
+  - src/res/plantillas/**
+  - dist/**
+
+# Las hojas se abren con la app con doble clic.
+fileAssociations:
+  - ext: cmctxt
+    name: Hoja de costes
+    description: Hoja de costes de Cuánto me cuesta
+    mimeType: application/x-cmctxt
+    role: Editor
+
+win:
+  target: nsis
+  icon: .github/images/logo.png
+  artifactName: "cuanto-me-cuesta-${version}-win-setup.${ext}"
+
+nsis:
+  oneClick: false
+  perMachine: false
+  allowToChangeInstallationDirectory: true
+
+mac:
+  target: dmg
+  icon: .github/images/logo.png
+  category: public.app-category.productivity
+  identity: null
+  artifactName: "cuanto-me-cuesta-${version}-mac.${ext}"
+
+linux:
+  target: [deb, rpm, pacman]
+  icon: .github/images/logo.png
+  executableName: cuanto-me-cuesta
+  category: Office
+  artifactName: "cuanto-me-cuesta-${version}-linux.${ext}"

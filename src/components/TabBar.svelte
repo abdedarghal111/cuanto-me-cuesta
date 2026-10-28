@@ -1,10 +1,11 @@
 <!--
     @component
-    Barra de arriba: una pestaña por producto más «Todo» y «+ nuevo», el aviso de cambios sin guardar
+    Barra de arriba: una pestaña por hoja abierta más «Todo», «+ nuevo» y «Abrir…», el aviso de cambios sin guardar
     y el botón Guardar.
 -->
 
 <script lang="ts">
+    import { api } from '../api.client.ts'
     import Icon from './Icon.svelte'
     import { openNewSheet } from './NewSheetWizard.svelte'
     import { store } from '../store.client.svelte.ts'
@@ -14,12 +15,13 @@
     <div class="mx-auto flex max-w-[1500px] flex-wrap items-center justify-between gap-3">
         <nav class="flex flex-wrap gap-1.5">
             <button class="tab" class:active={store.selected === ''} onclick={() => store.select('')}>Todo</button>
-            {#each store.files as file (file)}
-                <button class="tab" class:active={store.selected === file} onclick={() => store.select(file)}>
-                    {store.products[file]?.name ?? file}{#if store.unsaved[file]}<span class="text-bad" title="Sin guardar"> ●</span>{/if}
+            {#each store.documents as doc (doc.id)}
+                <button class="tab" class:active={store.selected === doc.id} onclick={() => store.select(doc.id)}>
+                    {doc.name}{#if doc.dirty}<span class="text-bad" title="Sin guardar"> ●</span>{/if}{#if doc.outside}<span class="text-accent" title="Han cambiado su archivo desde fuera"> ↻</span>{/if}
                 </button>
             {/each}
-            <button class="tab border-dashed text-muted" onclick={openNewSheet}>+ nuevo</button>
+            <button class="tab border-dashed text-muted" onclick={openNewSheet} title="Ctrl+N">+ nuevo</button>
+            <button class="tab border-dashed text-muted" onclick={() => api.openDialog()} title="Ctrl+O">Abrir…</button>
         </nav>
         <div class="flex flex-wrap items-center gap-3.5">
             {#if store.hasUnsaved}
@@ -27,7 +29,7 @@
             {:else}
                 <span class="text-sm text-muted">{store.status}</span>
             {/if}
-            <button class="save-button" onclick={() => store.saveAll()} disabled={!store.hasUnsaved} title="Ctrl+S">
+            <button class="save-button" onclick={() => api.saveAll()} disabled={!store.hasUnsaved} title="Ctrl+S">
                 <Icon name="save" size={20} />
                 Guardar <span class="font-mono text-xs font-normal opacity-80">Ctrl+S</span>
             </button>

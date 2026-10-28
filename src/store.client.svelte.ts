@@ -1,74 +1,32 @@
 /**
- * @file Gestor de hojas (navegador): lee las hojas de `datos/` y las plantillas, lleva la hoja abierta (y su URL)
- * y los cambios sin guardar, y las escribe en disco. Los componentes lo importan como `store`.
+ * @file Estado de la ventana: refleja lo que manda el proceso principal (las hojas abiertas, sus fotos, sus cuentas)
+ * y lleva solo lo propio de la pantalla (la hoja que se ve, su URL y si se ve como texto). Los componentes lo importan
+ * como `store` y mandan sus órdenes con `api` o con `store.edit()`.
  */
 
-import { createSubscriber } from 'svelte/reactivity'
-import { Category } from './model/Category.ts'
-import { CostSheet } from './model/CostSheet.ts'
-import { DocumentReader } from './model/text/DocumentReader.ts'
-import * as api from './routes/product/product.client.ts'
+import { api } from './api.client.ts'
+import type { AppState, DocumentInfo, Overview, TemplateView, UpdateInfo } from './ipc.ts'
+import type { SheetEdit } from './model/SheetEdit.ts'
+import type { SheetView } from './model/SheetView.ts'
 
-/** Objeto del modelo envuelto para Svelte → el objeto original. */
-const originals = new WeakMap<object, object>()
-/** Objeto del modelo → su envoltorio, para que cada objeto tenga siempre el mismo. */
-const wrappers = new WeakMap<object, object>()
+/** URL de cada vista, en el hash: `#/` es «Todo» y `#/product/<hoja>` es una hoja. */
+const urlOf = (id: string) => (id ? `#/product/${encodeURIComponent(id)}` : '#/')
 
 /**
- * Da el objeto original de un envoltorio; los arrays, con sus elementos originales.
- * @param value Valor, envuelto o no.
- * @returns El valor sin envoltorio.
+ * Hoja que abre una URL.
+ * @param hash Hash de la URL.
+ * @returns El identificador de la hoja, o `''` para «Todo».
  */
-function unwrap<T>(value: T): T {
-    if (Array.isArray(value)) {
-        return value.map(unwrap) as T
-    }
-    return (value && typeof value === 'object' ? (originals.get(value) ?? value) : value) as T
+function idOfUrl(hash: string): string {
+    const match = hash.match(/^#\/product\/([^/]+)$/)
+    return match ? decodeURIComponent(match[1]) : ''
 }
 
 /**
- * Envuelve un objeto de una hoja para que Svelte lo siga: cada lectura llama a `track` (el `createSubscriber` de su
- * hoja), y lo que devuelve también va envuelto. Los métodos y setters trabajan sobre el objeto original.
- * @param target Objeto del modelo (la hoja, una sección, una línea, un array…).
- * @param track Función que suscribe a quien lee a los avisos de la hoja.
- * @returns El envoltorio.
+ * Nombre de un archivo sin sus carpetas.
+ * @param file Ruta del archivo.
  */
-function reactive<T extends object>(target: T, track: () => void): T {
-    const known = wrappers.get(target)
-    if (known) {
-        return known as T
-    }
-    const wrap = (value: unknown) => (value && typeof value === 'object' ? reactive(value, track) : value)
-    const wrapper = new Proxy(target, {
-        get(t, key) {
-            track()
-            const value = Reflect.get(t, key, t)
-            if (typeof value === 'function') {
-                return (...args: unknown[]) => wrap(value.apply(t, args.map(unwrap)))
-            }
-            return wrap(value)
-        },
-        set(t, key, value) {
-            return Reflect.set(t, key, unwrap(value), t)
-        },
-    })
-    wrappers.set(target, wrapper)
-    originals.set(wrapper, target)
-    return wrapper
-}
-
-/** URL de cada vista: `/` es «Todo» y `/product/<archivo sin .txt>` es una hoja. */
-const urlOf = (file: string) => (file ? `/product/${encodeURIComponent(file.replace(/\.txt$/, ''))}` : '/')
-
-/**
- * Archivo que abre una URL.
- * @param pathname Ruta de la URL.
- * @returns El archivo, o `''` para «Todo».
- */
-function fileOfUrl(pathname: string): string {
-    const match = pathname.match(/^\/product\/([^/]+)$/)
-    return match ? `${decodeURIComponent(match[1])}.txt` : ''
-}
+export const baseName = (file: string) => file.split(/[\\/]/).pop() ?? file
 
 /**
  * Fecha de hoy.
@@ -80,56 +38,90 @@ export function today(): string {
     return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`
 }
 
-/** Hojas, plantillas, hoja abierta y cambios sin guardar. */
-class ProductStore {
-    /** Hojas cargadas, por nombre de archivo, envueltas para que Svelte siga sus cambios. */
-    products = $state<Record<string, CostSheet>>({})
-    files = $state<string[]>([])
-    /** Plantillas: hojas normales, una por oficio, de las que el asistente saca las hojas nuevas. Sin envolver. */
-    templates = $state.raw<CostSheet[]>([])
-    /** Archivo abierto; `''` es la vista «Todo». */
-    selected = $state('')
-    /** Si la hoja abierta se muestra como texto del archivo. */
-    textMode = $state(false)
+/** Lo que muestra la ventana. */
+class Store {
+    /** Hojas abiertas, tal como las manda el proceso principal. */
+    documents = $state.raw<DocumentInfo[]>([])
+    /** Foto de cada hoja, por identificador. */
+    views = $state.raw<Record<string, SheetView>>({})
+    /** Cuentas de todas las hojas juntas. */
+    overview = $state.raw<Overview>({ cost: 0, total: 0, byCategory: [] })
+    /** Todas las categorías, en el orden que fija su color. */
+    tags = $state.raw<string[]>([])
+    templates = $state.raw<TemplateView[]>([])
+    /** Versión nueva publicada, si la hay. */
+    update = $state.raw<UpdateInfo | null>(null)
     /** Último aviso para la barra de arriba. */
     status = $state('')
-    /** Hojas con cambios sin guardar; solo se escriben en disco al pulsar Guardar o Ctrl+S. */
-    unsaved = $state<Record<string, true>>({})
+    /** Hoja que se ve; `''` es la vista «Todo». */
+    selected = $state('')
+    /** Si la hoja que se ve se muestra como texto de su archivo. */
+    textMode = $state(false)
 
-    hasUnsaved = $derived(Object.keys(this.unsaved).length > 0)
-    product = $derived(this.selected ? this.products[this.selected] : undefined)
-    summary = $derived(this.product?.summarize())
-    /** Todas las categorías, en el orden que fija su color. */
-    tags = $derived(
-        Category.sort(
-            [...new Set(this.templates.flatMap((t) => t.categories))],
-            Object.values(this.products).flatMap((p) => p.categories),
-        ),
-    )
+    document = $derived(this.documents.find((d) => d.id === this.selected))
+    view = $derived(this.selected ? this.views[this.selected] : undefined)
+    hasUnsaved = $derived(this.documents.some((d) => d.dirty))
 
-    /** Último texto leído o escrito de cada archivo, para detectar cambios hechos fuera de la app. */
-    #lastText: Record<string, string> = {}
-    /** Cola de escrituras, que se hacen de una en una. */
-    #writeQueue: Promise<void> = Promise.resolve()
-
-    /** Abre una hoja, o la vista «Todo» con `''`, y la apunta en el historial del navegador. */
-    select(name: string) {
-        this.textMode = false
-        this.#navigate(name)
+    /** Arranque: escucha los avisos del proceso principal, pide el estado y abre la vista de la URL. */
+    async start() {
+        api.on('state', (state) => this.#apply(state))
+        api.on('view', ({ id, view }) => (this.views = { ...this.views, [id]: view }))
+        api.on('status', (status) => (this.status = status))
+        api.on('select', (id) => this.select(id))
+        const { views, ...state } = await api.state()
+        this.views = views
+        this.#apply(state)
+        this.openUrl()
+        this.templates = await api.templates()
+        this.update = await api.checkUpdate()
     }
 
-    /** Abre la vista de la URL actual (al cargar o al ir atrás y adelante); si la hoja no existe, «Todo». */
+    /**
+     * Aplica una edición a la hoja que se ve.
+     * @param edit Orden de edición.
+     * @returns El identificador de lo que crea, o `null`.
+     */
+    async edit(edit: SheetEdit): Promise<string | null> {
+        try {
+            return await api.edit(this.selected, edit)
+        } catch (e) {
+            this.status = `No se pudo cambiar: ${e}`
+            return null
+        }
+    }
+
+    /** Muestra una hoja, o la vista «Todo» con `''`, y la apunta en el historial. */
+    select(id: string) {
+        this.textMode = false
+        this.#navigate(id)
+    }
+
+    /** Abre la vista de la URL actual (al cargar o al ir atrás y adelante); si la hoja no está abierta, «Todo». */
     openUrl() {
-        const file = fileOfUrl(location.pathname)
+        const id = idOfUrl(location.hash)
         this.textMode = false
-        this.#navigate(this.files.includes(file) ? file : '', true)
+        this.#navigate(this.documents.some((d) => d.id === id) ? id : '', true)
     }
 
-    /** Cambia el archivo abierto y pone su URL; con `replace`, sin añadir una entrada al historial. */
-    #navigate(name: string, replace = false) {
-        this.selected = name
-        const url = urlOf(name)
-        if (location.pathname === url) {
+    /**
+     * Toma el estado que manda el proceso principal; si la hoja que se ve se ha cerrado, vuelve a «Todo».
+     * @param state Estado de la app.
+     */
+    #apply(state: AppState) {
+        this.documents = state.documents
+        this.overview = state.overview
+        this.tags = state.tags
+        this.views = Object.fromEntries(Object.entries(this.views).filter(([id]) => state.documents.some((d) => d.id === id)))
+        if (this.selected && !this.document) {
+            this.#navigate('', true)
+        }
+    }
+
+    /** Cambia la hoja que se ve y pone su URL; con `replace`, sin añadir una entrada al historial. */
+    #navigate(id: string, replace = false) {
+        this.selected = id
+        const url = urlOf(id)
+        if (location.hash === url) {
             return
         }
         if (replace) {
@@ -138,165 +130,6 @@ class ProductStore {
             history.pushState(null, '', url)
         }
     }
-
-    /**
-     * Envuelve una hoja para Svelte y marca como sin guardar su archivo cada vez que avisa de un cambio.
-     * @param sheet Hoja recién leída o creada.
-     * @returns La hoja envuelta, que es la que se guarda en `products`.
-     */
-    #watch(sheet: CostSheet): CostSheet {
-        const view = reactive(sheet, createSubscriber((update) => sheet.subscribe(update)))
-        sheet.subscribe(() => {
-            const name = Object.keys(this.products).find((file) => this.products[file] === view)
-            if (name) {
-                this.unsaved[name] = true
-            }
-        })
-        return view
-    }
-
-    /** Nombre de archivo libre para la hoja; `current` es el que ya tiene, si lo tiene. */
-    #freeFileName(sheet: CostSheet, current = ''): string {
-        let name = sheet.fileName()
-        for (let i = 2; name !== current && this.files.includes(name); i++) {
-            name = sheet.fileName(String(i))
-        }
-        return name
-    }
-
-    /** Guarda una hoja. Si ha cambiado el nombre o la fecha, el archivo cambia de nombre. */
-    save(name: string): Promise<void> {
-        const sheet = this.products[name]
-        if (!sheet) {
-            return this.#writeQueue
-        }
-        const newName = this.#freeFileName(sheet, name)
-        if (newName !== name) {
-            this.products[newName] = sheet
-            delete this.products[name]
-            this.files = this.files.map((f) => (f === name ? newName : f)).sort()
-            if (this.selected === name) {
-                this.#navigate(newName, true)
-            }
-        }
-        delete this.unsaved[name]
-        const text = sheet.serialize().join('\n')
-        this.#writeQueue = this.#writeQueue.then(async () => {
-            try {
-                await api.saveProduct(newName, text, name)
-                if (name !== newName) {
-                    delete this.#lastText[name]
-                }
-                this.#lastText[newName] = text
-                this.status = `Guardado en datos/${newName}`
-            } catch (e) {
-                this.unsaved[newName] = true
-                this.status = `No se pudo guardar: ${e}`
-            }
-        })
-        return this.#writeQueue
-    }
-
-    /** Guarda todas las hojas con cambios sin guardar. */
-    saveAll(): Promise<void> {
-        for (const name of Object.keys(this.unsaved)) {
-            this.save(name)
-        }
-        return this.#writeQueue
-    }
-
-    /**
-     * Relee los archivos de disco sin sobrescribir las hojas con cambios sin guardar. Un archivo que no se puede
-     * leer se queda sin cargar y su error va a `status`.
-     */
-    async reload() {
-        await this.#writeQueue
-        try {
-            const diskFiles = await api.listProducts()
-            const errors: string[] = []
-            for (const name of diskFiles) {
-                if (this.unsaved[name]) {
-                    continue
-                }
-                const text = await api.readProduct(name)
-                if (text === this.#lastText[name]) {
-                    continue
-                }
-                try {
-                    this.products[name] = this.#watch(DocumentReader.read(text))
-                    this.#lastText[name] = text
-                } catch (e) {
-                    delete this.products[name]
-                    errors.push(`datos/${name}: ${e}`)
-                }
-            }
-            // Se conservan las hojas nuevas sin guardar, que aún no están en disco.
-            for (const name of Object.keys(this.products)) {
-                if (!diskFiles.includes(name) && !this.unsaved[name]) {
-                    delete this.products[name]
-                }
-            }
-            this.files = [...new Set([...diskFiles, ...Object.keys(this.unsaved)])].sort()
-            if (this.selected && !this.files.includes(this.selected)) {
-                this.#navigate('', true)
-            }
-            this.templates = (await api.readTemplates()).map((text) => DocumentReader.read(text))
-            if (errors.length) {
-                this.status = `No se pudo leer ${errors.join(' · ')}`
-            }
-        } catch (e) {
-            this.status = `No se pudieron leer los archivos: ${e}`
-        }
-    }
-
-    /** Crea una hoja sin guardar, en blanco o copia de `source`, con el nombre y la fecha dados, y la abre. */
-    create(name: string, source?: CostSheet, date = today()) {
-        this.add(CostSheet.copy(unwrap(source ?? new CostSheet()), name, date))
-    }
-
-    /** Añade una hoja nueva sin guardar (p. ej. la que sale del asistente) y la abre. */
-    add(sheet: CostSheet) {
-        const newName = this.#freeFileName(sheet)
-        this.products[newName] = this.#watch(sheet)
-        this.files = [...this.files, newName].sort()
-        this.unsaved[newName] = true
-        this.select(newName)
-    }
-
-    /** Descarta los cambios sin guardar de la hoja abierta y vuelve a leer su archivo. */
-    async discard() {
-        delete this.unsaved[this.selected]
-        delete this.#lastText[this.selected]
-        this.textMode = false
-        await this.reload()
-    }
-
-    /** Borra la hoja abierta: su archivo se queda como `.txt.borrado`. */
-    async delete() {
-        const name = this.selected
-        await this.#writeQueue
-        // Una hoja que nunca se ha guardado no tiene archivo.
-        if (name in this.#lastText) {
-            await api.deleteProduct(name)
-        }
-        delete this.products[name]
-        delete this.unsaved[name]
-        delete this.#lastText[name]
-        this.files = this.files.filter((f) => f !== name)
-        this.#navigate('')
-        this.status = `Borrado «${name}»`
-    }
-
-    /**
-     * Sustituye la hoja abierta por la que se lee de `text`, como cambio sin guardar.
-     * @param text Texto de la hoja.
-     * @throws {ParseError} Si el texto no es una hoja válida; la hoja abierta no cambia.
-     */
-    loadText(text: string) {
-        this.products[this.selected] = this.#watch(DocumentReader.read(text))
-        this.unsaved[this.selected] = true
-        this.textMode = false
-    }
 }
 
-export const store = new ProductStore()
+export const store = new Store()

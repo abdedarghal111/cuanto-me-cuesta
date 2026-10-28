@@ -46,7 +46,7 @@ function assertReorder<T>(current: T[], next: T[]): void {
 }
 
 /**
- * Hoja de costes: un archivo `titulo_fecha.txt`. Avisa de sus cambios y de los de todo lo que contiene, y es la
+ * Hoja de costes: un archivo `.cmctxt` de texto. Avisa de sus cambios y de los de todo lo que contiene, y es la
  * fuente de verdad de las categorías.
  */
 export class CostSheet implements Serializable, Observable {
@@ -444,18 +444,22 @@ export class CostSheet implements Serializable, Observable {
     }
 
     /**
-     * Nombre de archivo de la hoja: "Paralelas Tomás" + "2026-10-04" → "paralelas-tomas_2026-10-04.txt".
-     * @param suffix Texto que se añade al nombre para no repetir archivo.
+     * Nombre de archivo que se propone para la hoja, sacado del título: "Paralelas Tomás" → "paralelas-tomas.cmctxt".
+     * Un título largo se corta en la última palabra entera que cabe en 40 caracteres.
      * @returns El nombre del archivo.
      */
-    fileName(suffix = ''): string {
-        const base = `${this.#name} ${suffix}`
+    fileName(): string {
+        let base = this.#name
             .normalize('NFD')
             .replace(/[̀-ͯ]/g, '')
             .toLowerCase()
             .replace(/[^a-z0-9]+/g, '-')
             .replace(/^-+|-+$/g, '')
-        return `${base || 'producto'}_${this.#date}.txt`
+        if (base.length > 40) {
+            const cut = base.slice(0, 41)
+            base = cut.includes('-') ? cut.slice(0, cut.lastIndexOf('-')) : cut.slice(0, 40)
+        }
+        return `${base || 'producto'}.cmctxt`
     }
 
     /**

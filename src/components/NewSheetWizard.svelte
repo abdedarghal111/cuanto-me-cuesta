@@ -17,14 +17,9 @@
 
 <script lang="ts">
     import { SvelteSet } from 'svelte/reactivity'
-    import { CostSheet } from '../model/CostSheet.ts'
-    import { Line } from '../model/Line.ts'
-    import type { LineItem } from '../model/LineItem.ts'
-    import type { Surcharge } from '../model/Surcharge.ts'
+    import { api } from '../api.client.ts'
+    import type { NewSheet, TemplateItem, TemplatePreview } from '../ipc.ts'
     import { store, today } from '../store.client.svelte.ts'
-
-    /** Grupo de filas que se pueden marcar: una sección, una receta o «Sobre el total». */
-    type Group = { title: string; recipe: boolean; items: LineItem[] }
 
     let dialog: HTMLDialogElement
     let step = $state<1 | 2>(1)
@@ -32,82 +27,55 @@
     let date = $state(today())
     /** Cómo se empieza: `'blank'`, `'copy'` o la posición de la plantilla elegida. */
     let start = $state<'blank' | 'copy' | number>('blank')
-    /** Hoja que se copia, por nombre de archivo. */
-    let copyFile = $state('')
-    /** Líneas y recargos de la plantilla marcados. */
-    const picked = new SvelteSet<LineItem>()
+    /** Hoja que se copia, por identificador. */
+    let copyId = $state('')
+    /** Filas de la plantilla marcadas, por identificador. */
+    const picked = new SvelteSet<string>()
+    /** Lo que tendrá la hoja con lo marcado, según el proceso principal. */
+    let preview = $state<TemplatePreview | null>(null)
 
     const template = $derived(typeof start === 'number' ? store.templates[start] : null)
-    const groups = $derived(template ? groupsOf(template) : [])
-    /** La hoja que saldría con lo marcado, para contar lo que tendrá. */
-    const preview = $derived(template ? CostSheet.fromTemplate(template, name, date, (item) => picked.has(item)) : null)
-    const canCreate = $derived(!!name.trim() && (start !== 'copy' || !!copyFile))
+    const items = $derived(template ? template.groups.flatMap((group) => group.items) : [])
+    const canCreate = $derived(!!name.trim() && (start !== 'copy' || !!copyId))
+
+    // Al cambiar lo marcado, se pide de nuevo lo que tendrá la hoja.
+    $effect(() => {
+        if (typeof start === 'number' && step === 2) {
+            api.previewTemplate(start, [...picked]).then((value) => (preview = value))
+        }
+    })
 
     open = () => {
         step = 1
         name = ''
         date = today()
         start = 'blank'
-        copyFile = ''
+        copyId = ''
+        preview = null
         dialog.showModal()
-    }
-
-    /**
-     * Grupos de filas de una plantilla, en su orden: sus secciones y recetas, y sus recargos sobre el total.
-     * @param sheet Plantilla.
-     * @returns Los grupos que tienen alguna fila.
-     */
-    function groupsOf(sheet: CostSheet): Group[] {
-        return [
-            ...sheet.sections.map((section) => ({ title: section.title, recipe: section.isFunction, items: [...section.lines, ...section.surcharges] })),
-            { title: 'Sobre el total', recipe: false, items: sheet.totalSurcharges },
-        ].filter((group) => group.items.length)
-    }
-
-    /**
-     * Lo que se lee al lado de una fila: el tipo y el precio de una línea, o el % de un recargo.
-     * @param item Línea o recargo de la plantilla.
-     * @returns «lote · 19,99 € por 1000 g» o «recargo · 10 %».
-     */
-    function detail(item: LineItem): string {
-        if (item instanceof Line) {
-            const [, , type, price] = item.serialize()
-            return `${type} · ${price}`
-        }
-        return `recargo · ${(item as Surcharge).percent} %`
     }
 
     /** Marca lo que la plantilla trae como más probable: las filas con «sí» en Cuenta. */
     function reset() {
         picked.clear()
-        for (const item of groups.flatMap((group) => group.items)) {
-            if (item.counts) {
-                picked.add(item)
-            }
+        for (const item of items.filter((i) => i.counts)) {
+            picked.add(item.id)
         }
     }
 
     /**
      * Marca o desmarca varias filas.
-     * @param items Filas de la plantilla.
+     * @param list Filas de la plantilla.
      * @param on Si se marcan.
      */
-    function setAll(items: LineItem[], on: boolean) {
-        for (const item of items) {
+    function setAll(list: TemplateItem[], on: boolean) {
+        for (const item of list) {
             if (on) {
-                picked.add(item)
+                picked.add(item.id)
             } else {
-                picked.delete(item)
+                picked.delete(item.id)
             }
         }
-    }
-
-    /**
-     * Marca una fila desmarcada o desmarca una marcada.
-     * @param item Fila de la plantilla.
-     */
-    function toggle(item: LineItem) {
-        setAll([item], !picked.has(item))
     }
 
     /** Pasa al segundo paso con una plantilla, o crea la hoja en blanco o la copia. */
@@ -120,17 +88,20 @@
         }
     }
 
-    /** Crea la hoja elegida, la abre y cierra el asistente. */
-    function create() {
+    /** Crea la hoja elegida, la muestra y cierra el asistente. */
+    async function create() {
         if (!canCreate) {
             return
         }
-        if (template) {
-            store.add(CostSheet.fromTemplate(template, name.trim(), date, (item) => picked.has(item)))
-        } else {
-            store.create(name.trim(), start === 'copy' ? store.products[copyFile] : undefined, date)
-        }
+        const base = { name: name.trim(), date }
+        const sheet: NewSheet =
+            typeof start === 'number'
+                ? { ...base, from: 'template', index: start, picked: [...picked] }
+                : start === 'copy'
+                  ? { ...base, from: 'copy', documentId: copyId }
+                  : { ...base, from: 'blank' }
         dialog.close()
+        store.select(await api.create(sheet))
     }
 </script>
 
@@ -160,37 +131,37 @@
                     <span class="hand-title text-[26px]">En blanco</span>
                     <span class="text-sm text-muted">Una hoja vacía, sin secciones ni categorías. Lo pones todo tú.</span>
                 </button>
-                {#each store.templates as sheet, i (sheet)}
+                {#each store.templates as sheet, i (sheet.name)}
                     <button type="button" class="start-card {start === i ? 'start-active' : ''}" onclick={() => (start = i)}>
                         <span class="hand-title text-[26px]">{sheet.name}</span>
                         <span class="text-sm text-muted">{sheet.description}</span>
-                        <span class="font-mono text-xs text-accent">{groupsOf(sheet).flatMap((g) => g.items).length} filas para elegir</span>
+                        <span class="font-mono text-xs text-accent">{sheet.groups.flatMap((g) => g.items).length} filas para elegir</span>
                     </button>
                 {/each}
-                {#if store.files.length}
+                {#if store.documents.length}
                     <div class="start-card {start === 'copy' ? 'start-active' : ''}">
                         <button type="button" class="grid gap-1 text-left" onclick={() => (start = 'copy')}>
                             <span class="hand-title text-[26px]">Copiar una hoja mía</span>
                             <span class="text-sm text-muted">Con todo lo que tenga, para un producto parecido.</span>
                         </button>
-                        <select class="font-notebook text-sm" bind:value={copyFile} onchange={() => (start = 'copy')} aria-label="Hoja que se copia">
+                        <select class="font-notebook text-sm" bind:value={copyId} onchange={() => (start = 'copy')} aria-label="Hoja que se copia">
                             <option value="" disabled>Elige una hoja…</option>
-                            {#each store.files as file (file)}<option value={file}>{store.products[file]?.name ?? file}</option>{/each}
+                            {#each store.documents as doc (doc.id)}<option value={doc.id}>{doc.name}</option>{/each}
                         </select>
                     </div>
                 {/if}
             </div>
-        {:else if template && preview}
+        {:else if template}
             <p>Marca solo lo que vas a usar en <b>{name}</b>. Lo que no marques no aparece en la hoja.</p>
             <div class="flex flex-wrap gap-2.5">
-                <button type="button" class="button-soft text-sm" onclick={() => setAll(groups.flatMap((g) => g.items), true)}>Marcar todo</button>
-                <button type="button" class="button-soft text-sm" onclick={() => setAll(groups.flatMap((g) => g.items), false)}>Desmarcar todo</button>
+                <button type="button" class="button-soft text-sm" onclick={() => setAll(items, true)}>Marcar todo</button>
+                <button type="button" class="button-soft text-sm" onclick={() => setAll(items, false)}>Desmarcar todo</button>
                 <button type="button" class="button-soft text-sm" onclick={reset}>Restablecer</button>
             </div>
             <div class="grid gap-5 md:grid-cols-[1fr_220px]">
                 <div class="grid content-start gap-3">
-                    {#each groups as group (group)}
-                        {@const marked = group.items.filter((item) => picked.has(item)).length}
+                    {#each template.groups as group (group)}
+                        {@const marked = group.items.filter((item) => picked.has(item.id)).length}
                         <fieldset class="rounded-md border-2 p-3 pt-1 {group.recipe ? 'border-recipe bg-recipe-soft/40' : 'border-line'}">
                             <legend class="flex items-center gap-2 px-1">
                                 <input
@@ -203,11 +174,11 @@
                                 />
                                 <span class="hand-title text-[24px] {group.recipe ? 'text-recipe-ink' : ''}">{group.recipe ? 'Receta · ' : ''}{group.title}</span>
                             </legend>
-                            {#each group.items as item (item)}
-                                <label class="flex items-center gap-2 py-0.5 {picked.has(item) ? '' : 'text-muted'}">
-                                    <input type="checkbox" class="check" checked={picked.has(item)} onchange={() => toggle(item)} />
+                            {#each group.items as item (item.id)}
+                                <label class="flex items-center gap-2 py-0.5 {picked.has(item.id) ? '' : 'text-muted'}">
+                                    <input type="checkbox" class="check" checked={picked.has(item.id)} onchange={() => setAll([item], !picked.has(item.id))} />
                                     <span class="flex-1">{item.name}</span>
-                                    <span class="font-mono text-xs text-muted">{detail(item)}</span>
+                                    <span class="font-mono text-xs text-muted">{item.detail}</span>
                                 </label>
                             {/each}
                         </fieldset>
@@ -215,12 +186,14 @@
                 </div>
                 <div class="note-card self-start rounded-md border-2 border-ink bg-[#FFF4A8] p-4 md:sticky md:top-0">
                     <p class="hand-title text-[26px]">Tu hoja tendrá</p>
-                    <ul class="mt-2 grid gap-1">
-                        <li>{preview.groups.length} secciones</li>
-                        {#if preview.functions.length}<li>{preview.functions.length} recetas</li>{/if}
-                        <li>{preview.sections.flatMap((s) => s.lines).length} líneas</li>
-                        <li>Categorías: {preview.categories.join(', ') || 'ninguna'}</li>
-                    </ul>
+                    {#if preview}
+                        <ul class="mt-2 grid gap-1">
+                            <li>{preview.groups} secciones</li>
+                            {#if preview.recipes}<li>{preview.recipes} recetas</li>{/if}
+                            <li>{preview.lines} líneas</li>
+                            <li>Categorías: {preview.categories.join(', ') || 'ninguna'}</li>
+                        </ul>
+                    {/if}
                     <p class="mt-3 text-sm text-muted">Las categorías salen solas de lo que marques.</p>
                 </div>
             </div>

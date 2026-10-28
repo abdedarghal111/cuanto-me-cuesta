@@ -1,34 +1,59 @@
 /**
- * @file Punto de entrada (navegador): carga los estilos, monta la aplicación en `#app` y gestiona la URL
- * (atrás y adelante), el guardado con Ctrl+S, la relectura al volver a la ventana y el aviso al cerrar.
+ * @file Punto de entrada de la ventana: carga los estilos, monta la aplicación en `#app` y lleva la URL (atrás y
+ * adelante), los atajos de teclado y las hojas que se sueltan en la ventana.
  */
 
 import { mount } from 'svelte'
 import './app.css'
 import App from './App.svelte'
+import { api } from './api.client.ts'
+import { openNewSheet } from './components/NewSheetWizard.svelte'
 import { store } from './store.client.svelte.ts'
 
-// Al cargar se leen los archivos y se abre la vista de la URL.
-store.reload().then(() => store.openUrl())
+store.start()
 
-// Atrás y adelante del navegador.
+// Atrás y adelante.
 window.addEventListener('popstate', () => store.openUrl())
 
-// Al volver a la ventana se releen los archivos, por si se han editado a mano.
-window.addEventListener('focus', () => store.reload())
-
+// Ctrl+S guarda todo, Ctrl+Mayús+S guarda como, Ctrl+O abre y Ctrl+N crea una hoja.
 window.addEventListener('keydown', (e) => {
-    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') {
+    if (!(e.ctrlKey || e.metaKey)) {
+        return
+    }
+    const key = e.key.toLowerCase()
+    if (key === 's' && e.shiftKey) {
         e.preventDefault()
-        store.saveAll()
+        if (store.selected) {
+            api.saveAs(store.selected)
+        }
+    } else if (key === 's') {
+        e.preventDefault()
+        api.saveAll()
+    } else if (key === 'o') {
+        e.preventDefault()
+        api.openDialog()
+    } else if (key === 'n') {
+        e.preventDefault()
+        openNewSheet()
     }
 })
 
-// Aviso del navegador al cerrar o recargar con cambios sin guardar.
-window.addEventListener('beforeunload', (e) => {
-    if (store.hasUnsaved) {
+// Las hojas soltadas en la ventana se abren; sin esto, la ventana navegaría al archivo. Solo se atienden archivos,
+// para no aceptar en cualquier sitio los datos de receta que se arrastran dentro de la app.
+const carriesFiles = (e: DragEvent) => e.dataTransfer?.types.includes('Files') ?? false
+window.addEventListener('dragover', (e) => {
+    if (carriesFiles(e)) {
         e.preventDefault()
-        e.returnValue = ''
+    }
+})
+window.addEventListener('drop', (e) => {
+    if (!carriesFiles(e)) {
+        return
+    }
+    e.preventDefault()
+    const paths = [...(e.dataTransfer?.files ?? [])].map((file) => api.pathOf(file)).filter(Boolean)
+    if (paths.length) {
+        api.open(paths)
     }
 })
 

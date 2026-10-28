@@ -1,72 +1,69 @@
 <!--
     @component
-    Ficha del producto abierto: nombre, fecha, acciones (ver texto, clonar, descartar, borrar),
-    descripción y categorías con lo que suma cada una.
+    Ficha de la hoja que se ve: nombre, fecha, acciones (ver texto, clonar, guardar como, descartar, cerrar la hoja),
+    su archivo, descripción y categorías con lo que suma cada una.
 -->
 
 <script lang="ts">
+    import { api } from '../api.client.ts'
     import { softColor, tagColor } from '../colors.ts'
-    import { ask, askName } from './Dialog.svelte'
-    import type { CostSheet } from '../model/CostSheet.ts'
+    import { liveValue } from '../fields.client.ts'
+    import type { DocumentInfo } from '../ipc.ts'
+    import type { SheetView } from '../model/SheetView.ts'
     import { formatEuros } from '../model/text/numbers.ts'
+    import { store, today } from '../store.client.svelte.ts'
+    import { ask, askName } from './Dialog.svelte'
     import Icon from './Icon.svelte'
-    import { store } from '../store.client.svelte.ts'
 
-    let { product }: { product: CostSheet } = $props()
+    let { document: doc, view }: { document: DocumentInfo; view: SheetView } = $props()
+
+    /**
+     * Escribe un campo de la hoja.
+     * @param field Campo.
+     * @param value Valor nuevo.
+     */
+    const set = (field: 'name' | 'date' | 'description', value: string) => store.edit({ op: 'set', id: view.id, field, value })
 
     async function duplicate() {
-        const name = await askName('Clonar producto', `${product.name} (copia)`, 'Clonar')
+        const name = await askName('Clonar producto', `${view.name} (copia)`, 'Clonar')
         if (name) {
-            store.create(name, product)
+            store.select(await api.create({ from: 'copy', documentId: doc.id, name, date: today() }))
         }
     }
 
     async function discard() {
         const confirmed = await ask({
             title: 'Descartar cambios',
-            message: 'Se vuelve a lo que hay guardado en el archivo y se pierde lo que no has guardado.',
+            message: doc.path
+                ? 'Se vuelve a lo que hay guardado en el archivo y se pierde lo que no has guardado.'
+                : 'La hoja aún no está guardada en ningún archivo, así que se cierra.',
             confirmLabel: 'Descartar',
             danger: true,
         })
         if (confirmed) {
-            await store.discard()
-        }
-    }
-
-    async function deleteProduct() {
-        const confirmed = await ask({
-            title: `Borrar «${product.name}»`,
-            message: `El archivo se queda como datos/${store.selected}.borrado, por si acaso.`,
-            confirmLabel: 'Borrar',
-            danger: true,
-        })
-        if (confirmed) {
-            await store.delete()
+            store.textMode = false
+            await api.discard(doc.id)
         }
     }
 
     /**
-     * Declara en el producto la categoría escrita en su hueco y vacía el hueco; un nombre vacío no declara nada.
+     * Declara la categoría escrita en su hueco y vacía el hueco; un nombre vacío no declara nada.
      * @param input Hueco «Nueva categoría…».
      */
     function addTag(input: HTMLInputElement) {
-        product.addCategory(input.value)
+        store.edit({ op: 'addCategory', name: input.value })
         input.value = ''
     }
 
     /**
-     * Líneas y recargos del producto que usan la categoría, y lo que suman.
-     * @param tag Categoría del producto.
-     * @returns Las líneas y recargos (`items`) y su importe (`cost`).
+     * Quita una categoría; si la usa alguna fila, antes pide confirmarlo.
+     * @param tag Categoría y cuántas filas la usan.
      */
-    const tagUsage = (tag: string) => ({ items: product.itemsInCategory(tag), cost: store.summary?.byCategory.get(tag) ?? 0 })
-
-    async function removeTag(tag: string) {
-        const { items } = tagUsage(tag)
-        if (items.length) {
+    async function removeTag({ name, items }: SheetView['categories'][number]) {
+        if (items) {
             const confirmed = await ask({
-                title: `Quitar la categoría «${tag}»`,
-                message: `${items.length === 1 ? 'Una línea la usa y se quedará' : `${items.length} líneas la usan y se quedarán`} sin categoría.`,
+                title: `Quitar la categoría «${name}»`,
+                message: `${items === 1 ? 'Una línea la usa y se quedará' : `${items} líneas la usan y se quedarán`} sin categoría.`,
                 confirmLabel: 'Quitar',
                 danger: true,
             })
@@ -74,7 +71,7 @@
                 return
             }
         }
-        product.removeCategory(tag)
+        store.edit({ op: 'removeCategory', name })
     }
 </script>
 
@@ -82,23 +79,26 @@
     <div class="flex flex-wrap items-end justify-between gap-3">
         <input
             class="editable-title hand-title min-w-0 flex-[1_1_300px] text-[50px]"
-            bind:value={product.name}
+            {@attach liveValue(() => view.name)}
+            oninput={(e) => set('name', e.currentTarget.value)}
             aria-label="Nombre del producto"
         />
         <div class="flex flex-wrap items-center gap-2.5 text-base">
-            <input type="date" class="font-mono text-sm" bind:value={product.date} aria-label="Fecha" />
+            <input type="date" class="font-mono text-sm" {@attach liveValue(() => view.date)} onchange={(e) => set('date', e.currentTarget.value)} aria-label="Fecha" />
             <button class="button-soft {store.textMode ? 'bg-[#FFF4A8]!' : ''}" onclick={() => (store.textMode = true)}>Ver texto</button>
             <button class="button-soft" onclick={duplicate}>Clonar</button>
-            {#if store.unsaved[store.selected]}<button class="button-soft" onclick={discard}>Descartar cambios</button>{/if}
-            <button class="button-soft-danger" onclick={deleteProduct}>Borrar</button>
+            <button class="button-soft" onclick={() => api.saveAs(doc.id)} title="Ctrl+Mayús+S">Guardar como…</button>
+            {#if doc.dirty}<button class="button-soft" onclick={discard}>Descartar cambios</button>{/if}
+            <button class="button-soft" onclick={() => api.close(doc.id)} title="La quita de la app; su archivo se queda donde está">Cerrar hoja</button>
         </div>
     </div>
-    <span class="font-mono text-xs text-muted">datos/{store.selected}</span>
+    <span class="font-mono text-xs text-muted">{doc.path ?? 'Sin archivo todavía: al guardar elijo dónde'}</span>
     <label class="grid gap-1 font-bold">
         Descripción
         <textarea
             class="resize-y rounded border border-[#E6D77A] bg-[#FFFBE0] px-3 py-2 text-[17px] leading-normal font-normal"
-            bind:value={product.description}
+            {@attach liveValue(() => view.description)}
+            oninput={(e) => set('description', e.currentTarget.value)}
             rows="3"
             placeholder="Anotaciones para todo el documento: para quién es, qué se reaprovechó, qué falta por saber…"
         ></textarea>
@@ -106,18 +106,17 @@
     <div class="grid gap-1.5">
         <span class="font-bold">Categorías de este documento</span>
         <div class="flex flex-wrap items-center gap-2">
-            {#each product.categories as tag (tag)}
-                {@const color = tagColor(tag, store.tags)}
-                {@const usage = tagUsage(tag)}
+            {#each view.categories as tag (tag.name)}
+                {@const color = tagColor(tag.name, store.tags)}
                 <span
                     class="inline-flex items-center gap-1.5 rounded-[3px] border py-0.5 pr-1 pl-2.5 text-[15px]"
                     style:background={softColor(color)}
                     style:border-color={color}
-                    title="{usage.items.length} líneas"
+                    title="{tag.items} líneas"
                 >
-                    {tag}
-                    <span class="font-mono text-xs text-muted">{formatEuros(usage.cost)}</span>
-                    <button class="mini px-0.5" onclick={() => removeTag(tag)} aria-label="Quitar la categoría {tag}" title="Quitar categoría">
+                    {tag.name}
+                    <span class="font-mono text-xs text-muted">{formatEuros(tag.amount)}</span>
+                    <button class="mini px-0.5" onclick={() => removeTag(tag)} aria-label="Quitar la categoría {tag.name}" title="Quitar categoría">
                         <Icon name="remove" size={14} />
                     </button>
                 </span>

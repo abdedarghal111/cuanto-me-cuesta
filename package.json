@@ -2,21 +2,28 @@
     "name": "cuanto-me-cuesta",
     "private": true,
     "version": "0.1.0",
+    "description": "App para apuntar lo que cuesta cada cosa que hago y ver en qué se va el dinero.",
+    "homepage": "https://github.com/abdedarghal111/cuanto-me-cuesta",
     "license": "MIT",
     "author": {
         "name": "Abderrahim Darghal Belkacemi",
         "email": "abdedarghal111@gmail.com"
     },
     "type": "module",
+    "main": "src/main.server.ts",
     "scripts": {
-        "dev": "vite",
-        "abrir": "vite --open",
-        "check": "svelte-check --tsconfig ./tsconfig.json"
+        "dev": "electron .",
+        "check": "svelte-check --tsconfig ./tsconfig.json",
+        "build:win": "vite build && electron-builder --win",
+        "build:mac": "vite build && electron-builder --mac",
+        "build:linux": "vite build && electron-builder --linux"
     },
     "devDependencies": {
         "@sveltejs/vite-plugin-svelte": "^7.3.1",
         "@tailwindcss/vite": "^4.3.3",
         "@types/node": "^24.0.0",
+        "electron": "^45.1.0",
+        "electron-builder": "^26.18.0",
         "svelte": "^5.57.1",
         "svelte-check": "^4.0.0",
         "tailwindcss": "^4.3.3",

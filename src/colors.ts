@@ -16,8 +16,10 @@ export function tagColor(tag: string, tags: string[]): string {
 /** Versión clara de un color, para el fondo de las categorías. */
 export const softColor = (color: string) => `color-mix(in srgb, ${color} 22%, white)`
 
-/** Segmentos de un reparto por categoría, en el orden de `tags` y con «Sin categoría» al final. */
-export const tagSegments = (byTag: Map<string, number>, tags: string[]): Segment[] =>
-    [...tags, Category.UNTAGGED]
+/** Segmentos de un reparto por categoría (pares categoría-importe), en el orden de `tags` y con «Sin categoría» al final. */
+export function tagSegments(entries: [string, number][], tags: string[]): Segment[] {
+    const byTag = new Map(entries)
+    return [...tags, Category.UNTAGGED]
         .filter((t) => byTag.has(t))
         .map((t) => ({ label: t, value: byTag.get(t) ?? 0, color: tagColor(t, tags) }))
+}
