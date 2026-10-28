@@ -1,0 +1,95 @@
+# Publica una versión nueva: al subir un tag `vX.Y.Z`, compila los instaladores en Windows, macOS y Linux y crea la
+# release de GitHub con ellos. La app avisa de la versión nueva al abrirse. Basada en la de claude-lite-speaker.
+name: Release new version
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-latest
+            script: build:win
+            artifact: windows
+          - os: macos-latest
+            script: build:mac
+            artifact: macos
+          - os: ubuntu-24.04
+            script: build:linux
+            artifact: linux
+
+    steps:
+      - name: Check out Git repository
+        uses: actions/checkout@v5
+
+      - name: Install Node.js
+        uses: actions/setup-node@v5
+        with:
+          node-version: 26
+          check-latest: true
+          package-manager-cache: false
+
+      - name: Install the rpm and pacman tooling (Linux only)
+        if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y rpm libarchive-tools
+
+      - name: Install pnpm
+        run: npm install --global pnpm@12
+
+      - name: Install dependencies
+        run: pnpm install --no-frozen-lockfile
+
+      # La versión sale del tag (`v0.2.0` → `0.2.0`): la usan los nombres de los instaladores y el aviso de versión nueva.
+      - name: Set the version from the tag
+        shell: bash
+        run: npm version "${GITHUB_REF_NAME#v}" --no-git-tag-version --allow-same-version
+
+      - name: Build the installers
+        run: pnpm run ${{ matrix.script }} --publish never
+
+      - name: Upload the installers
+        uses: actions/upload-artifact@v4
+        with:
+          name: installers-${{ matrix.artifact }}
+          path: |
+            out/*.exe
+            out/*.dmg
+            out/*.deb
+            out/*.rpm
+            out/*.pacman
+          if-no-files-found: error
+          retention-days: 1
+
+  release:
+    runs-on: ubuntu-24.04
+    needs: build
+
+    steps:
+      - name: Download every installer
+        uses: actions/download-artifact@v4
+        with:
+          pattern: installers-*
+          merge-multiple: true
+          path: installers
+
+      - name: List what will be published
+        run: ls -lh installers
+
+      - name: Publish the release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release create "$GITHUB_REF_NAME" installers/* \
+            --repo "$GITHUB_REPOSITORY" \
+            --title "Cuánto me cuesta $GITHUB_REF_NAME" \
+            --notes "Los instaladores no están firmados (proyecto personal, sin certificados): Windows puede avisar con SmartScreen («Más información» → «Ejecutar de todas formas») y en macOS la primera vez se abre con clic derecho → «Abrir»." \
+            --generate-notes
