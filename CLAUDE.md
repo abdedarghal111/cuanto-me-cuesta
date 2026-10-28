@@ -2,37 +2,45 @@
 
 App local para apuntar lo que cuesta cada cosa que hago y ver en qué se va el dinero.
 
-- Svelte 5 (runes) + TypeScript + Tailwind 4 + Vite. Una sola app: `main.client.ts` la monta y lleva la URL, y `main.server.ts` conecta los endpoints al servidor de Vite (`connect`), montado como plugin.
-- Organización de `src/`, por funcionalidad:
-  - `routes/<ruta>/`: una carpeta por URL, solo con su vista (`Product.svelte`) y sus llamadas al servidor (`product.server.ts`) y desde el navegador (`product.client.ts`). La portada «Todo» (`/`) es `routes/home/Home.svelte`; `App.svelte` monta la barra, el diálogo y la vista de la URL.
-  - `components/`: el resto de piezas `.svelte`.
-  - `model/`: las clases de una hoja de costes, que hacen sus cuentas y se leen y escriben como `.txt`; en `model/text/`, el lector y las piezas del texto.
-  - `store.client.svelte.ts`: el estado de la app; `colors.ts`, `app.css` y `res/`.
-- Abrir: `npm run abrir`. Comprobar: `npm run check`.
+- Svelte 5 (runes) + TypeScript + Tailwind 4 + Vite, dentro de Electron.
+- Editor de escritorio de archivos `.cmctxt`, con una sola ventana: **el proceso principal tiene la app y la ventana solo la muestra**.
+  - Proceso principal: las hojas, las cuentas, el guardado, la vigilancia de los archivos, la recuperación y los diálogos.
+  - Ventana: pinta la foto de cada hoja (`SheetView`) y manda cada cambio como orden (`SheetEdit`) con ids fijos (`IdRegistry`).
+  - `ipc.ts`: el contrato entre los dos, con las órdenes (`Commands`) y los avisos (`Events`).
+- Mapa de `src/`:
+  - `main.server.ts`: el arranque.
+  - `app/`: los controladores, que son `Document`, `DocumentController`, `WindowController`, `RecentFiles`, `TemplateController` y `UpdateController`.
+  - `preload.server.ts`: el puente `window.api`, que la ventana usa desde `api.client.ts`.
+  - `model/`: la hoja y sus cuentas; `model/text/`: el lector del texto.
+  - `routes/`: las vistas por URL; `components/`: las piezas.
+  - `store.client.svelte.ts`: el estado de la ventana.
+- `pnpm run dev` abre la app y `pnpm run check` comprueba los tipos.
+- `pnpm run build:<win|mac|linux>` hace los instaladores, y un tag `vX.Y.Z` publica la release.
 - Interfaz en español de España, con coma decimal.
-- Los datos se guardan en `.txt` para que una persona o una IA los pueda leer y editar con facilidad, y así se pueda automatizar sin problemas. Por eso cada archivo es redundante a propósito: lleva costes, subtotales, resumen e instrucciones que la app recalcula o ignora al leer.
+- Los datos se guardan en texto plano para que una persona o una IA los pueda leer y editar con facilidad, y así se pueda automatizar sin problemas. Por eso cada archivo es redundante a propósito: lleva costes, subtotales, resumen e instrucciones que la app recalcula o ignora al leer.
 - Prioridad absoluta a la sencillez y al mantenimiento cero: usa solo las dependencias que ya tiene el proyecto.
-- Revisa los cambios razonando sobre el código; prueba en el navegador solo cuando te lo pida.
+- Revisa los cambios razonando sobre el código; prueba en la app solo cuando te lo pida.
 - Las decisiones que son mías, pregúntamelas; las demás, toma la más simple y dímelo.
 - Los archivos se modifican solo con las herramientas de edición (Edit y Write), para que yo vea cada cambio.
-- Para los `.txt` y la plantilla, usa la skill `formato-datos`; para la interfaz, `diseno-cuaderno`.
+- Para las hojas y las plantillas, usa la skill `formato-datos`; para la interfaz, `diseno-cuaderno`.
 
 ## Reglas del código
 
 - Código sencillo y mantenible: lo mínimo que resuelva el problema.
 - Todo `if`, `else`, `for` y `while` lleva llaves.
 - Indentación de 4 espacios.
-- Todo el código vive en `src/`, y el nombre de cada archivo dice dónde se ejecuta:
-  - `.server.ts`: solo en Node, dentro del servidor de Vite (p. ej. `main.server.ts` y `product.server.ts`, que usa `node:fs`).
-  - `.client.ts` (o `.client.svelte.ts` si usa runes): solo en el navegador (p. ej. `main.client.ts`, `product.client.ts`, `store.client.svelte.ts`).
-  - Sin sufijo: de uso general, sirve en los dos lados porque no depende ni de Node ni del navegador (p. ej. `model/`, `colors.ts`). Un archivo así no importa nunca uno `.server` ni `.client`.
-  - Los componentes `.svelte` son de navegador por naturaleza y no llevan sufijo.
-- Las importaciones relativas llevan la extensión del archivo (`.ts`, `.svelte.ts`, `.svelte`), como pide el cargador nativo de configuración de Vite.
-- Comentarios en español, formales, cortos, sobre lo que hace el código, y con el estándar de documentación oficial del lenguaje en funciones y tipos.
-- Cada archivo empieza con un comentario formal que describe su función, según el estándar de documentación oficial del lenguaje.
-- La lógica de los datos vive en el modelo (`model/`), y los componentes y el store la llaman:
-  - Lo que trabaja con un objeto concreto es un método de su clase (p. ej. `section.subtotal()`).
-  - Lo que no depende de ningún objeto es un método estático (p. ej. `Summary.combine()`).
+- El sufijo dice dónde se ejecuta cada archivo:
+  - `.server.ts` va en el proceso principal. Importa `.server.ts`, archivos generales, `electron` y Node.
+  - `.client.ts` y `.client.svelte.ts` van en la ventana. Importan `.client`, archivos generales, `ipc.ts` y `model/`.
+  - Sin sufijo es general: `model/`, `ipc.ts`, `colors.ts` y los `.svelte`.
+- Las importaciones relativas llevan la extensión (`.ts`, `.svelte.ts`, `.svelte`).
+- Comentarios en español, formales y cortos, con el estándar de documentación del lenguaje. Cada archivo empieza con uno que dice su función.
+- Dónde va cada cosa:
+  - Lógica de un objeto: método de su clase (`section.subtotal()`).
+  - Lógica sin objeto: método estático (`Summary.combine()`).
+  - Edición nueva: un caso de `SheetEdit`. Dato nuevo para la ventana: un campo de `SheetView`.
+  - Orden nueva: en `Commands` y `COMMANDS`, registrada con `handle()` en su controlador.
+  - Proceso principal: un controlador por responsabilidad, que recibe los demás por el constructor.
 
 ## Interfaz
 

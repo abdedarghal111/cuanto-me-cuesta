@@ -8,7 +8,7 @@
     <a href="#qué-es-esto">Qué es esto</a> ·
     <a href="#pensada-para-la-ia">Pensada para la IA</a> ·
     <a href="#funcionalidades">Funcionalidades</a> ·
-    <a href="#modo-de-uso">Modo de uso</a> ·
+    <a href="#instalar">Instalar</a> ·
     <a href="#desarrollo">Desarrollo</a> ·
     <a href="#galería">Galería</a>
 </p>
@@ -19,7 +19,7 @@ Una app local para apuntar lo que cuesta cada cosa que hago y ver en qué se va 
 
 Nace de una pregunta sencilla que nunca sabía responder: «¿cuánto me ha costado esto de verdad?». Una hoja de cálculo se quedaba corta o se volvía un lío de fórmulas, así que la app hace las cuentas y yo solo apunto.
 
-Los datos son archivos de texto normales, uno por producto, que se leen y se editan a mano con el Bloc de notas. No hay base de datos, ni cuentas, ni nada que salga de tu equipo.
+Los datos son archivos de texto normales (`.cmctxt`), uno por producto, que guardas donde quieras y se leen y se editan a mano con cualquier editor de texto. No hay base de datos, ni cuentas, ni nada que salga de tu equipo.
 
 Es un proyecto personal, nacido de una necesidad propia y sin capas de más, sobre todo buscando la simplicidad o soluciones sencillas a acciones cotidianas.
 
@@ -29,6 +29,8 @@ Lo peculiar de esta app es que cada hoja es un texto plano que se explica solo, 
 
 ## Funcionalidades
 
+- **Como un editor:** abres, arrastras y guardas las hojas `.cmctxt` donde quieras, y la app recuerda las que tienes abiertas.
+- **A prueba de pérdidas:** si la app se cierra sin guardar, recupera tus cambios, y si una persona o un agente edita la hoja mientras la tienes abierta, te avisa para quedarte con sus cambios o con los tuyos.
 - **Hojas de costes:** un producto por hoja, con sus secciones de gastos y sus observaciones.
 - **Cada línea hace sus cuentas:** precio de una unidad × cantidad, como en una factura. El precio puede ser suelto (`6,5 €`), de un lote (`4,2 € por 20 ud`), por horas (`12 €/h`) o de la luz (`140 W a 0,20 €/kWh`), y la cantidad un número o una duración (`3d 5h 1m`).
 - **Recetas:** una fórmula con hasta 3 datos, como «Impresión 3D (tiempo, gramos)», que no suma por sí sola y vive en el estante de arriba. Sus datos se arrastran a la cantidad de sus líneas, y cada línea que la usa rellena esos datos y cuesta lo que la receta, repartido por sus categorías.
@@ -36,38 +38,46 @@ Lo peculiar de esta app es que cada hoja es un texto plano que se explica solo, 
 - **Categorías:** cada línea lleva la suya, con su color, y el ranking «¿Dónde se va?» las compara.
 - **Portada «Todo»:** el gasto de todos los productos juntos.
 - **Asistente de hoja nueva:** empiezas en blanco, copiando otra hoja o desde una plantilla de oficio (impresión 3D, carpintería, manualidades, obra y reformas), y marcas solo lo que vas a usar. Las secciones nuevas se crean escribiendo su nombre, y las que ya hay se clonan.
-- **Guardado a mano:** nada se escribe hasta que pulsas «Guardar» o Ctrl+S, y si cambias un archivo por fuera, la app lo recarga.
 - **Lectura estricta:** si un archivo no encaja, la app dice en qué línea falla y qué esperaba.
 
-## Modo de uso
+## Instalar
 
-Hace falta [Node.js](https://nodejs.org). Desde una terminal, en cualquier sistema:
-
-```
-pnpm install
-pnpm run abrir
-```
-
-Los productos se guardan en `datos/`, como `titulo_fecha.txt`. Lo que borras desde la app se queda como `algo.txt.borrado`, por si acaso. Las plantillas de los productos nuevos están en `src/res/plantillas/`, una por oficio: hojas normales que puedes cambiar a tu gusto o ampliar con otra.
+Descarga el instalador de tu sistema en [Releases](https://github.com/abdedarghal111/cuanto-me-cuesta/releases/latest). La app avisa cuando sale una versión nueva.
 
 ## Desarrollo
 
+Hace falta [Node.js](https://nodejs.org) y [pnpm](https://pnpm.io).
+
 ```
-pnpm run dev       # arranca sin abrir el navegador
-pnpm run check     # comprueba los tipos
+pnpm install
+pnpm run dev            # abre la app
+pnpm run check          # comprueba los tipos
+pnpm run build:linux    # instaladores en out/ (también build:win y build:mac)
+```
+
+Las plantillas de las hojas nuevas están en `src/res/plantillas/`, una por oficio.
+
+Para publicar una versión basta con subir un tag: la acción [`release.yml`](.github/workflows/release.yml) compila los instaladores y crea la release.
+
+```
+git tag v0.2.0
+git push origin v0.2.0
 ```
 
 ### Cómo está montado
 
-Svelte 5, TypeScript y Tailwind 4 sobre Vite, sin servidor aparte: los endpoints se cuelgan del propio servidor de Vite.
+Svelte 5, TypeScript y Tailwind 4 sobre Vite, en una app de Electron. El proceso principal tiene la app entera y la ventana solo la muestra: recibe una foto de cada hoja con las cuentas hechas y manda cada cambio como una orden.
 
 | Pieza | Dónde | Qué hace |
 |---|---|---|
-| Modelo | `src/model/` | La hoja, sus secciones, recetas, líneas y recargos, con sus cuentas y cómo se escriben en texto |
-| Lector | `src/model/text/` | Lee el `.txt` línea a línea, de forma estricta |
-| Vistas | `src/routes/` | La portada «Todo» y la pantalla de cada producto, con sus llamadas al servidor |
+| Arranque | `src/main.server.ts` | Crea los controladores, abre la ventana y lleva una sola instancia |
+| Controladores | `src/app/` | Cada hoja abierta (`Document`) y quien las lleva todas, la ventana y el cierre, los recientes, las plantillas y las versiones nuevas |
+| Contrato | `src/ipc.ts`, `src/preload.server.ts` | Las órdenes y los avisos entre la ventana y el proceso principal, y el puente `window.api` |
+| Modelo | `src/model/` | La hoja, sus secciones, recetas, líneas y recargos, con sus cuentas, su foto, sus órdenes de edición y cómo se escriben en texto |
+| Lector | `src/model/text/` | Lee el texto de una hoja línea a línea, de forma estricta |
+| Vistas | `src/routes/` | La portada «Todo» y la pantalla de cada hoja |
 | Piezas | `src/components/` | Las piezas de la pantalla que comparten las vistas |
-| Estado | `src/store.client.svelte.ts` | Los productos abiertos, los cambios sin guardar y el guardado |
+| Estado | `src/store.client.svelte.ts` | Lo que manda el proceso principal y la hoja que se ve |
 
 ## Galería
 

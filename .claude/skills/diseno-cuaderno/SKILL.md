@@ -41,4 +41,5 @@ Locales, en `src/res/fonts/`.
 - Lenguaje llano en primera persona.
 - En escritorio, el contenido cabe a lo ancho; la tabla se desplaza de lado solo en pantallas estrechas.
 - Los iconos son SVG de trazo de `src/components/Icon.svelte`, donde se añaden los que falten. Los botones que solo llevan icono tienen `aria-label`.
-- Los diálogos se hacen con `src/components/Dialog.svelte`. Lo único que avisa el navegador es el cierre con cambios sin guardar.
+- Los diálogos se hacen con `src/components/Dialog.svelte`. Los diálogos nativos del sistema quedan para los archivos: abrir, guardar como, guardar los cambios al cerrar, y recuperar tras un cierre inesperado.
+- Los avisos que esperan una decisión sin bloquear la app, como un archivo cambiado fuera, son una notificación encima de la hoja: papel blanco con raya azul gruesa a la izquierda, un icono en un círculo azul claro, una frase sencilla y tranquila y sus botones (utilidades `notice` y `notice-icon`; p. ej. `OutsideChangeNotice.svelte` y `UpdateNotice.svelte`).

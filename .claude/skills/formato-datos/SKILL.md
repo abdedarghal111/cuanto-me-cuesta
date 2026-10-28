@@ -1,16 +1,15 @@
 ---
 name: formato-datos
-description: Formato de los archivos de texto de «Cuánto me cuesta»: las hojas de costes de datos/ y las plantillas de src/res/plantillas/. Estructura, columnas, tipos de línea, recetas, cálculo del coste, recargos, escapes, categorías y qué se ignora al leer. Úsala siempre que vayas a leer, escribir o editar uno de esos .txt, o a cambiar su formato.
+description: Formato de los archivos de texto de «Cuánto me cuesta»: las hojas de costes (.cmctxt, o .txt antiguos) y las plantillas de src/res/plantillas/. Estructura, columnas, tipos de línea, recetas, cálculo del coste, recargos, escapes, categorías y qué se ignora al leer. Úsala siempre que vayas a leer, escribir o editar una hoja o una plantilla, o a cambiar su formato.
 ---
 
 # Formato de los datos
 
-Los `.txt` son la fuente de verdad: una persona o una IA los lee y los edita a mano, y la app los lee de forma estricta.
+Las hojas son texto plano y la fuente de verdad: una persona o una IA las lee y las edita a mano, y la app las lee de forma estricta.
 
 ## Archivos
 
-- Cada hoja de costes es un archivo `datos/titulo_fecha.txt`; la app lo renombra al guardar si cambian el nombre o la fecha.
-- Borrar una hoja la renombra a `nombre.txt.borrado`.
+- Cada hoja de costes es un archivo de texto `.cmctxt` (las antiguas, `.txt`).
 - Las plantillas, una por oficio en `src/res/plantillas/`, son hojas normales con el mismo formato. Sus observaciones describen la plantilla en el asistente de hoja nueva, y Cuenta dice qué filas salen marcadas: `sí` las más probables y `no` el resto.
 - Una hoja nueva de plantilla lleva solo las filas marcadas, todas con `sí`, sin observaciones y sin las secciones y categorías que se quedan vacías.
 
